@@ -82,7 +82,7 @@ export function ItemView() {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <h1 className="text-xl font-semibold text-gray-900">
-                {data?.data?.attributes?.title}
+                {data?.data?.attributes?.dct_title_s}
               </h1>
             </div>
             <MetadataTable data={data} />
