@@ -9,6 +9,9 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ results, isLoading }: SearchResultsProps) {
+  console.log('Search Results:', results);
+  console.log('Search Results (detailed):', JSON.stringify(results, null, 2));
+
   const location = useLocation();
 
   if (isLoading) {
@@ -37,6 +40,7 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
           key={result.id}
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
         >
+          <pre className="overflow-auto text-xs">{JSON.stringify(result, null, 2)}</pre>
           <Link 
             to={`/items/${result.id}`}
             state={{ searchState }}
@@ -47,22 +51,10 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
             </h2>
           </Link>
           <p className="text-gray-600 mb-4 line-clamp-2">
-            {result.description?.[0]}
+            {result.dct_temporal_sm?.join(', ')}
           </p>
           
           <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-            {result.dct_issued_s && (
-              <div className="flex items-center gap-1">
-                <Calendar size={16} />
-                <span>{result.dct_issued_s}</span>
-              </div>
-            )}
-            {result.dct_provenance_s && (
-              <div className="flex items-center gap-1">
-                <Building2 size={16} />
-                <span>{result.dct_provenance_s}</span>
-              </div>
-            )}
             {result.dc_publisher_sm && result.dc_publisher_sm.length > 0 && (
               <div className="flex items-center gap-1">
                 <BookOpen size={16} />
