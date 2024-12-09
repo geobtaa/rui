@@ -53,6 +53,9 @@ export function ItemView() {
     return <ErrorMessage message={error} />;
   }
 
+  const viewerProtocol = data?.data?.attributes?.ui_viewer_protocol;
+  const viewerEndpoint = data?.data?.attributes?.ui_viewer_endpoint;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -78,7 +81,30 @@ export function ItemView() {
               <ExternalLink size={16} />
             </a>
           </div>
-
+          <div className="flex flex-col gap-4">
+          {viewerProtocol && viewerEndpoint && (
+            viewerProtocol === 'iiif_manifest' ? (
+              <div
+                id="clover-viewer"
+                className="viewer"
+                data-controller="clover-viewer"
+                data-clover-viewer-protocol-value="IiifManifest"
+                data-clover-viewer-url-value={viewerEndpoint}
+              >
+                <p>Viewer Protocol: {viewerProtocol}</p>
+                <p>Viewer Endpoint: {viewerEndpoint}</p>
+              </div>
+            ) : (
+              <div 
+                data-controller={viewerProtocol} 
+                data-viewer-endpoint={viewerEndpoint}
+              >
+                <p>Viewer Protocol: {viewerProtocol}</p>
+                <p>Viewer Endpoint: {viewerEndpoint}</p>
+              </div>
+            )
+          )}
+          </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <h1 className="text-xl font-semibold text-gray-900">
