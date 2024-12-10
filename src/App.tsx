@@ -2,8 +2,10 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { SearchPage } from './pages/SearchPage';
 import { ItemView } from './pages/ItemView';
-
 import { Application } from "@hotwired/stimulus";
+
+// Import Leaflet CSS
+import 'leaflet/dist/leaflet.css';
 
 // Ensure Stimulus is available globally
 const application = Application.start();

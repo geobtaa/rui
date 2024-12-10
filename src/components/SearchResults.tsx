@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { GeoDocument } from '../types/api';
 import { Calendar, Building2, BookOpen } from 'lucide-react';
@@ -9,6 +9,8 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ results, isLoading }: SearchResultsProps) {
+  const [showDetails, setShowDetails] = useState(false);
+
   console.log('Search Results:', results);
   console.log('Search Results (detailed):', JSON.stringify(results, null, 2));
 
@@ -35,12 +37,20 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
 
   return (
     <div className="space-y-6">
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        {showDetails ? 'Hide Details' : 'Show Details'}
+      </button>
       {results.map((result) => (
         <article
           key={result.id}
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
         >
-          <pre className="overflow-auto text-xs">{JSON.stringify(result, null, 2)}</pre>
+          {showDetails && (
+            <pre className="overflow-auto text-xs">{JSON.stringify(result, null, 2)}</pre>
+          )}
           <Link 
             to={`/items/${result.id}`}
             state={{ searchState }}

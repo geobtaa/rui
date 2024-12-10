@@ -7,6 +7,7 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
+import { ItemViewer } from '../components/item/ItemViewer';
 
 export function ItemView() {
   const { id } = useParams<{ id: string }>();
@@ -82,28 +83,14 @@ export function ItemView() {
             </a>
           </div>
           <div className="flex flex-col gap-4">
-          {viewerProtocol && viewerEndpoint && (
-            viewerProtocol === 'iiif_manifest' ? (
-              <div
-                id="clover-viewer"
-                className="viewer"
-                data-controller="clover-viewer"
-                data-clover-viewer-protocol-value="IiifManifest"
-                data-clover-viewer-url-value={viewerEndpoint}
-              >
-                <p>Viewer Protocol: {viewerProtocol}</p>
-                <p>Viewer Endpoint: {viewerEndpoint}</p>
+            {viewerProtocol && viewerEndpoint && (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <ItemViewer 
+                  protocol={viewerProtocol} 
+                  endpoint={viewerEndpoint} 
+                />
               </div>
-            ) : (
-              <div 
-                data-controller={viewerProtocol} 
-                data-viewer-endpoint={viewerEndpoint}
-              >
-                <p>Viewer Protocol: {viewerProtocol}</p>
-                <p>Viewer Endpoint: {viewerEndpoint}</p>
-              </div>
-            )
-          )}
+            )}
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
