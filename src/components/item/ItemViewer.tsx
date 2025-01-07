@@ -43,6 +43,8 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
     return titleize(protocol);
   }
 
+  const isWmsItem = protocol === 'wms';
+
   switch (viewerType) {
     case 'clover':
       return (
@@ -78,10 +80,10 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
           data-leaflet-viewer-options-value={JSON.stringify(leafletViewerOptions)}
           data-leaflet-viewer-page-value={pageValue}
           data-leaflet-viewer-draw-initial-bounds-value={true}
-          data-action="leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo"
-          data-wms-feature-info-url={`${import.meta.env.VITE_API_BASE_URL}/wms/handle`}
           {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
           {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
+          {...(isWmsItem ? { 'data-action': "leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo" } : {})}
+          {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_API_BASE_URL}/wms/handle` } : {})}
         />
       );
   }
