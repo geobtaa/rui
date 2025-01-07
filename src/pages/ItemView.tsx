@@ -9,6 +9,14 @@ import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
 import { ItemViewer } from '../components/item/ItemViewer';
 
+
+// New component for index map
+function IndexMap() {
+  return (
+    <div className="viewer-information"></div>
+  );
+}
+
 // New component for the attribute table
 function AttributeTable() {
   return (
@@ -124,8 +132,9 @@ export function ItemView() {
               </div>
             )}
 
-            {/* Conditionally render the attribute table if the protocol is 'wms' */}
-            {viewerProtocol === 'wms' && <AttributeTable />}
+            {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
+            {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
+            {viewerProtocol === 'open_index_map' && <IndexMap />}
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">

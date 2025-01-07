@@ -19,11 +19,14 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
 
   // Helper function to determine viewer type
   const getViewerType = (protocol: string) => {
-    if (protocol === 'iiif_manifest') {
+    if (['iiif_manifest', 'iiif_image'].includes(protocol)) {
       return 'clover';
     }
     if (['cog', 'pmtiles'].includes(protocol)) {
       return 'openlayers';
+    }
+    if (protocol === 'oembed') {
+      return 'oembed-viewer';
     }
     return 'leaflet';
   };
@@ -40,6 +43,24 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
     if (protocol === "tile_map_service") {
       return "Tms";
     }
+    if (protocol === "arcgis_tiled_map_layer") {
+      return "TiledMapLayer";
+    }
+    if (protocol === "arcgis_feature_layer") {
+      return "FeatureLayer";
+    }
+    if (protocol === "arcgis_image_map_layer") {
+      return "ImageMapLayer";
+    }
+    if (protocol === "open_index_map") {
+      return "IndexMap";
+    }
+    if (protocol === "xyz_tiles") {
+      return "Xyz";
+    }
+    if (protocol === "tile_json") {
+      return "Tilejson";
+    }
     return titleize(protocol);
   }
 
@@ -52,7 +73,7 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
           id="clover-viewer"
           className="viewer h-[600px]"
           data-controller="clover-viewer"
-          data-clover-viewer-protocol-value="IiifManifest"
+          data-clover-viewer-protocol-value={protocol === "iiif_manifest" ? "IiifManifest" : "Iiif"}
           data-clover-viewer-url-value={endpoint}
         />
       );
@@ -62,11 +83,19 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
         <div
           className="viewer h-[600px]"
           data-controller="openlayers-viewer"
-          data-openlayers-viewer-protocol-value={protocol}
+          data-openlayers-viewer-protocol-value={titleize(protocol)}
           data-openlayers-viewer-url-value={endpoint}
+          data-openlayers-viewer-map-geom-value={JSON.stringify(geometry)}
         />
       );
-
+    case 'oembed-viewer':
+      return (
+        <div
+          className="viewer h-[600px]"
+          data-controller="oembed-viewer"
+          data-oembed-viewer-url-value={endpoint}
+        />
+      );
     case 'leaflet':
     default:
       return (
