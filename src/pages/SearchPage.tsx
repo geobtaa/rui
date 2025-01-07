@@ -23,7 +23,7 @@ export function SearchPage() {
   } = useSearch();
 
   const totalPages = Math.ceil(totalResults / perPage);
-  const hasSearchCriteria = query || facets.length > 0;
+  const hasSearchCriteria = query !== undefined || facets.length > 0;
 
   const handleSearch = (newQuery: string) => {
     updateSearch({ query: newQuery });

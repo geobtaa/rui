@@ -34,7 +34,7 @@ export function SearchField({ initialQuery, onSearch, isLoading }: SearchFieldPr
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
         <button
           type="submit"
-          disabled={isLoading || !query.trim()}
+          disabled={isLoading}
           className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
           Search

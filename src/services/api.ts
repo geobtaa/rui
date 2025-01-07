@@ -31,7 +31,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
         dct_references_s: item.attributes.dct_references_s || ''
       })),
       numFound: jsonApiResponse.meta.pages.total_count,
-      start: (jsonApiResponse.meta.pages.current_page - 1) * 10
+      start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10
     }
   };
 }
@@ -49,7 +49,12 @@ export async function fetchSearchResults(
   const url = new URL(baseUrl);
   url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
-  url.searchParams.set('q', query);
+  if (query.trim()) {
+    url.searchParams.set('q', query);
+  } else {
+    // Allow an empty search query to return all results
+    url.searchParams.set('q', ' ');
+  }
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
   

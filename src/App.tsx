@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Application } from "@hotwired/stimulus";
 import { SearchPage } from './pages/SearchPage';
 import { ItemView } from './pages/ItemView';
-import { Application } from "@hotwired/stimulus";
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';

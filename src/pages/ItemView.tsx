@@ -9,6 +9,29 @@ import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
 import { ItemViewer } from '../components/item/ItemViewer';
 
+// New component for the attribute table
+function AttributeTable() {
+  return (
+    <div id="table-container" className="w-full">
+      <table id="attribute-table" className="w-full table-auto border-collapse">
+        <thead>
+          <tr>
+            <th className="border px-4 py-2">Attribute</th>
+            <th className="border px-4 py-2">Value</th>
+          </tr>
+        </thead>
+        <tbody className="attribute-table-body">
+          <tr>
+            <td className="border px-4 py-2" colSpan={2}>
+              <em>Click on map to inspect values</em>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function ItemView() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -88,9 +111,17 @@ export function ItemView() {
                 <ItemViewer 
                   protocol={viewerProtocol} 
                   endpoint={viewerEndpoint} 
+                  geometry={data?.data?.attributes?.ui_viewer_geometry}
+                  wxs_identifier={data?.data?.attributes?.gbl_wxsidentifier_s}
+                  available={data?.data?.attributes?.dct_accessrights_s === 'Public'}
+                  layerId={data?.data?.attributes?.id}
+                  pageValue="SHOW"
                 />
               </div>
             )}
+
+            {/* Conditionally render the attribute table if the protocol is 'wms' */}
+            {viewerProtocol === 'wms' && <AttributeTable />}
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
