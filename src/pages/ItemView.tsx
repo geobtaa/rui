@@ -14,14 +14,18 @@ function AttributeTable() {
   return (
     <div id="table-container" className="w-full">
       <table id="attribute-table" className="w-full table-auto border-collapse">
-        <thead>
+        <thead className="bg-gray-50">
           <tr>
-            <th className="border px-4 py-2">Attribute</th>
-            <th className="border px-4 py-2">Value</th>
+          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Attribute
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Value
+            </th>
           </tr>
         </thead>
-        <tbody className="attribute-table-body">
-          <tr>
+        <tbody className="attribute-table-body bg-white divide-y divide-gray-200">
+          <tr className="hover:bg-gray-50">
             <td className="border px-4 py-2" colSpan={2}>
               <em>Click on map to inspect values</em>
             </td>
