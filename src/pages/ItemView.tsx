@@ -110,7 +110,7 @@ export function ItemView() {
             </a>
           </div>
           <div className="flex flex-col gap-4">
-            {viewerProtocol && viewerEndpoint && (
+            {viewerProtocol && (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <ItemViewer 
                   protocol={viewerProtocol} 

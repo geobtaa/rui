@@ -30,6 +30,19 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
 
   const viewerType = getViewerType(protocol);
 
+  function formatProtocol(protocol: string): string {
+    if (protocol === "arcgis_dynamic_map_layer") {
+      return "DynamicMapLayer";
+    }
+    if (protocol === "geo_json") {
+      return null;
+    }
+    if (protocol === "tile_map_service") {
+      return "Tms";
+    }
+    return titleize(protocol);
+  }
+
   switch (viewerType) {
     case 'clover':
       return (
@@ -60,8 +73,6 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
           className="viewer h-[600px]"
           data-controller="leaflet-viewer"
           data-leaflet-viewer-available-value={available}
-          data-leaflet-viewer-protocol-value={titleize(protocol)}
-          data-leaflet-viewer-url-value={endpoint}
           data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
           data-leaflet-viewer-layer-id-value={wxs_identifier}
           data-leaflet-viewer-options-value={JSON.stringify(leafletViewerOptions)}
@@ -69,6 +80,8 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
           data-leaflet-viewer-draw-initial-bounds-value={true}
           data-action="leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo"
           data-wms-feature-info-url={`${import.meta.env.VITE_API_BASE_URL}/wms/handle`}
+          {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
+          {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
         />
       );
   }
