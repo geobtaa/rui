@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { fetchItemDetails, ApiError } from '../services/api';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
@@ -9,6 +9,11 @@ import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
 import { ItemViewer } from '../components/item/ItemViewer';
 
+interface SearchState {
+  searchResults: Array<{ id: string }>;
+  currentIndex: number;
+  searchUrl: string;
+}
 
 // New component for index map
 function IndexMap() {
@@ -47,13 +52,15 @@ function AttributeTable() {
 export function ItemView() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const searchState = location.state as SearchState;
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setLastApiUrl } = useApi();
 
-  // Get the previous search state from the location state
-  const searchState = location.state?.searchState || '';
+  // Get prev/next IDs if we have search results
+  const prevId = searchState?.searchResults[searchState.currentIndex - 1]?.id;
+  const nextId = searchState?.searchResults[searchState.currentIndex + 1]?.id;
 
   useEffect(() => {
     const loadItem = async () => {
@@ -99,14 +106,51 @@ export function ItemView() {
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-between items-center mb-6">
-            <Link 
-              to={`/${searchState}`} 
-              className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600"
+            <Link
+              to={searchState?.searchUrl || '/'}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
             >
               <ArrowLeft size={20} />
-              Back to Search
+              Back to Search Results
             </Link>
-            
+
+            {/* Pagination Controls */}
+            {searchState && (
+              <div className="flex items-center gap-4">
+                {prevId ? (
+                  <Link
+                    to={`/items/${prevId}`}
+                    state={{
+                      ...searchState,
+                      currentIndex: searchState.currentIndex - 1
+                    }}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                  >
+                    <ArrowLeft size={20} />
+                    Previous Result
+                  </Link>
+                ) : null}
+
+                <span className="text-gray-500">
+                  {searchState.currentIndex + 1} of {searchState.searchResults.length}
+                </span>
+
+                {nextId ? (
+                  <Link
+                    to={`/items/${nextId}`}
+                    state={{
+                      ...searchState,
+                      currentIndex: searchState.currentIndex + 1
+                    }}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                  >
+                    Next Result
+                    <ArrowRight size={20} />
+                  </Link>
+                ) : null}
+              </div>
+            )}
+
             <a
               href={`https://geo.btaa.org/catalog/${id}`}
               target="_blank"

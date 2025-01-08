@@ -32,9 +32,6 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
     );
   }
 
-  // Get the current search state from the URL
-  const searchState = location.search;
-
   return (
     <div className="space-y-6">
       <button
@@ -43,7 +40,7 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
       >
         {showDetails ? 'Hide Details' : 'Show Details'}
       </button>
-      {results.map((result) => (
+      {results.map((result, index) => (
         <article
           key={result.id}
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
@@ -53,7 +50,11 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
           )}
           <Link 
             to={`/items/${result.id}`}
-            state={{ searchState }}
+            state={{
+              searchResults: results,
+              currentIndex: index,
+              searchUrl: location.pathname + location.search
+            }}
             className="block"
           >
             <h2 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
