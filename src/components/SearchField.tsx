@@ -17,7 +17,8 @@ export function SearchField({ initialQuery, onSearch, isLoading }: SearchFieldPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(query);
+    console.log('Submitting search with query:', query);
+    onSearch(query || '');
   };
 
   return (

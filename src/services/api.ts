@@ -44,7 +44,7 @@ export async function fetchSearchResults(
   onApiCall?: (url: string) => void
 ): Promise<SearchResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
-    ? `${import.meta.env.VITE_API_BASE_URL}/documents/` 
+    ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
     : 'https://geo.btaa.org/';
   const url = new URL(baseUrl);
   url.searchParams.set('format', 'json');
@@ -88,7 +88,7 @@ export async function fetchSearchResults(
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to fetch search results');
+    throw new ApiError(`Failed to fetch search results: ${error.message}`);
   }
 }
 
