@@ -77,12 +77,12 @@ export function useSearch() {
     if (newFacets !== undefined) {
       // Clear existing facets
       Array.from(updatedParams.keys())
-        .filter(key => key.startsWith('f['))
+        .filter(key => key.startsWith('fq['))
         .forEach(key => updatedParams.delete(key));
 
-      // Add new facets
+      // Add new facets using fq[] format
       newFacets.forEach(({ field, value }) => {
-        updatedParams.append(`f[${field}][]`, value);
+        updatedParams.append(`fq[${field}][]`, value);
       });
     }
 

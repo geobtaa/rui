@@ -27,7 +27,7 @@ export function FacetList({ facets }: FacetListProps) {
   const handleFacetClick = (facetId: string, value: string | number) => {
     console.log('Facet clicked:', { facetId, value }); // Debug
     const newParams = new URLSearchParams(searchParams);
-    const facetKey = `f[${facetId}][]`;
+    const facetKey = `fq[${facetId}][]`;
     newParams.append(facetKey, value.toString());
     setSearchParams(newParams);
   };

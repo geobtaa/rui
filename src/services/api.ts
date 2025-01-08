@@ -68,20 +68,20 @@ export async function fetchSearchResults(
     ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
     : 'https://geo.btaa.org/';
   const url = new URL(baseUrl);
+  
   url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
   if (query.trim()) {
     url.searchParams.set('q', query);
   } else {
-    // Allow an empty search query to return all results
     url.searchParams.set('q', ' ');
   }
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
   
-  // Add facet filters
+  // Add facet filters using fq[] format
   facets.forEach(({ field, value }) => {
-    url.searchParams.append(`f[${field}][]`, value);
+    url.searchParams.append(`fq[${field}][]`, value);
   });
 
   const finalUrl = url.toString();
