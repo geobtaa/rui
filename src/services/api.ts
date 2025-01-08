@@ -9,6 +9,26 @@ export class ApiError extends Error {
 }
 
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
+  console.log('Transforming API Response:', jsonApiResponse); // Debug
+
+  // Transform included facets into the expected format
+  const facets = jsonApiResponse.included?.reduce((acc, facet) => {
+    if (facet.type === 'facet' && facet.attributes.items.length > 0) {
+      acc[facet.id] = {
+        label: facet.attributes.label,
+        items: facet.attributes.items.map(item => ({
+          label: item.attributes.label,
+          value: item.attributes.value,
+          hits: item.attributes.hits,
+          url: item.links.self
+        }))
+      };
+    }
+    return acc;
+  }, {} as SearchResponse['facets']);
+
+  console.log('Transformed facets:', facets); // Debug
+
   return {
     response: {
       docs: jsonApiResponse.data.map(item => ({
@@ -32,7 +52,8 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       })),
       numFound: jsonApiResponse.meta.pages.total_count,
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10
-    }
+    },
+    facets: facets || {} // Ensure facets is always at least an empty object
   };
 }
 

@@ -29,6 +29,26 @@ export interface ParsedFacet {
   value: string;
 }
 
+interface FacetItem {
+  attributes: {
+    label: string;
+    value: string | number;
+    hits: number;
+  };
+  links: {
+    self: string;
+  };
+}
+
+interface Facet {
+  type: 'facet';
+  id: string;
+  attributes: {
+    label: string;
+    items: FacetItem[];
+  };
+}
+
 export interface JsonApiResponse {
   data: Array<{
     id: string;
@@ -48,6 +68,7 @@ export interface JsonApiResponse {
       ui_viewer_endpoint?: string;
     };
   }>;
+  included?: Facet[];
   meta: {
     pages: {
       total_count: number;
@@ -62,5 +83,16 @@ export interface SearchResponse {
     docs: GeoDocument[];
     numFound: number;
     start: number;
+  };
+  facets?: {
+    [key: string]: {
+      label: string;
+      items: {
+        label: string;
+        value: string | number;
+        hits: number;
+        url: string;
+      }[];
+    };
   };
 }

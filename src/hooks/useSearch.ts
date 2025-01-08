@@ -1,83 +1,103 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SearchState, SearchParams } from '../types/search';
-import { parseSearchParams, buildSearchParams } from '../utils/searchParams';
 import { fetchSearchResults } from '../services/api';
+import { parseSearchParams } from '../utils/searchParams';
 import { useApi } from '../context/ApiContext';
-import type { GeoDocument } from '../types/api';
+import type { SearchResponse } from '../types/api';
+import type { FacetFilter } from '../types/search';
+
+interface SearchState {
+  query?: string;
+  page?: number;
+  facets?: FacetFilter[];
+}
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { setLastApiUrl } = useApi();
-  
-  const [state, setState] = useState<SearchState>(() => ({
-    ...parseSearchParams(searchParams),
-    isLoading: false,
-    error: null
-  }));
 
-  const [results, setResults] = useState<GeoDocument[]>([]);
-  const [totalResults, setTotalResults] = useState(0);
+  // Parse search parameters
+  const { query, page, facets } = parseSearchParams(searchParams);
 
   useEffect(() => {
-    const loadResults = async () => {
-      // Don't fetch results if there's no search criteria
-      if (!state.query && state.facets.length === 0) {
-        setResults([]);
-        setTotalResults(0);
-        return;
-      }
+    // Only fetch if we have a query or facets
+    if (!query && (!facets || facets.length === 0)) {
+      setResults(null);
+      return;
+    }
 
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+    const fetchResults = async () => {
+      setIsLoading(true);
+      setError(null);
 
       try {
-        const data = await fetchSearchResults(
-          state.query,
-          state.page,
-          state.perPage,
-          state.facets,
-          (url) => setLastApiUrl(url)
+        const searchResults = await fetchSearchResults(
+          query || '',
+          page,
+          10,
+          facets,
+          setLastApiUrl
         );
-        
-        setResults(data.response.docs);
-        setTotalResults(data.response.numFound);
-        
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: null
-        }));
+        setResults(searchResults);
       } catch (err) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: err instanceof Error ? err.message : 'An unexpected error occurred'
-        }));
-        setResults([]);
-        setTotalResults(0);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+        setResults(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadResults();
-  }, [state.query, state.page, state.perPage, state.facets, setLastApiUrl]);
+    fetchResults();
+  }, [query, page, facets?.length, setLastApiUrl]); // Note the facets?.length dependency
 
-  const updateSearch = (newParams: Partial<SearchParams>) => {
-    const currentParams = parseSearchParams(searchParams);
-    const updatedParams = { ...currentParams, ...newParams };
-    
-    // Reset page to 1 when changing search parameters
-    if (newParams.query !== undefined || newParams.facets !== undefined) {
-      updatedParams.page = 1;
+  const updateSearch = ({ query: newQuery, page: newPage, facets: newFacets }: SearchState) => {
+    const updatedParams = new URLSearchParams(searchParams);
+
+    if (newQuery !== undefined) {
+      if (newQuery) {
+        updatedParams.set('q', newQuery);
+      } else {
+        updatedParams.delete('q');
+      }
+      // Reset to page 1 when query changes
+      updatedParams.delete('page');
     }
-    
-    setSearchParams(buildSearchParams(updatedParams));
-    setState(prev => ({ ...prev, ...updatedParams }));
+
+    if (newPage !== undefined) {
+      if (newPage > 1) {
+        updatedParams.set('page', newPage.toString());
+      } else {
+        updatedParams.delete('page');
+      }
+    }
+
+    if (newFacets !== undefined) {
+      // Clear existing facets
+      Array.from(updatedParams.keys())
+        .filter(key => key.startsWith('f['))
+        .forEach(key => updatedParams.delete(key));
+
+      // Add new facets
+      newFacets.forEach(({ field, value }) => {
+        updatedParams.append(`f[${field}][]`, value);
+      });
+    }
+
+    setSearchParams(updatedParams);
   };
 
   return {
-    ...state,
+    query,
     results,
-    totalResults,
-    updateSearch
+    isLoading,
+    error,
+    page: page || 1,
+    perPage: 10,
+    totalResults: results?.response.numFound || 0,
+    facets: facets || [],
+    updateSearch,
   };
 }
