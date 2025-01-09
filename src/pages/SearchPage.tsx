@@ -108,8 +108,10 @@ export function SearchPage() {
                       )}
 
                       <SearchResults 
-                        results={results?.response?.docs || []} 
-                        isLoading={isLoading} 
+                        results={results?.response?.docs || []}
+                        isLoading={isLoading}
+                        totalResults={totalResults}
+                        currentPage={page}
                       />
                       
                       {!isLoading && totalPages > 1 && (

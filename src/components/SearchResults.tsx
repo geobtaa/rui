@@ -6,15 +6,27 @@ import { Calendar, Building2, BookOpen } from 'lucide-react';
 interface SearchResultsProps {
   results: GeoDocument[];
   isLoading: boolean;
+  totalResults: number;
+  currentPage: number;
 }
 
-export function SearchResults({ results, isLoading }: SearchResultsProps) {
+export function SearchResults({ 
+  results, 
+  isLoading, 
+  totalResults,
+  currentPage 
+}: SearchResultsProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   console.log('Search Results:', results);
   console.log('Search Results (detailed):', JSON.stringify(results, null, 2));
 
   const location = useLocation();
+
+  // Calculate absolute index in full result set
+  const getAbsoluteIndex = (relativeIndex: number) => {
+    return (currentPage - 1) * 10 + relativeIndex;
+  };
 
   if (isLoading) {
     return (
@@ -52,8 +64,10 @@ export function SearchResults({ results, isLoading }: SearchResultsProps) {
             to={`/items/${result.id}`}
             state={{
               searchResults: results,
-              currentIndex: index,
-              searchUrl: location.pathname + location.search
+              currentIndex: getAbsoluteIndex(index),
+              totalResults: totalResults,
+              searchUrl: location.pathname + location.search,
+              currentPage: currentPage
             }}
             className="block"
           >

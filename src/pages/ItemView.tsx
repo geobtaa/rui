@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
-import { fetchItemDetails, ApiError } from '../services/api';
+import { fetchSearchResults, fetchItemDetails, ApiError } from '../services/api';
+import { buildSearchParams } from '../utils/searchParams';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -12,7 +13,9 @@ import { ItemViewer } from '../components/item/ItemViewer';
 interface SearchState {
   searchResults: Array<{ id: string }>;
   currentIndex: number;
+  totalResults: number;
   searchUrl: string;
+  currentPage: number;
 }
 
 // New component for index map
@@ -52,15 +55,108 @@ function AttributeTable() {
 export function ItemView() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const searchState = location.state as SearchState;
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nextPageResults, setNextPageResults] = useState<any[]>([]);
+  const [prevPageResults, setPrevPageResults] = useState<any[]>([]);
   const { setLastApiUrl } = useApi();
 
-  // Get prev/next IDs if we have search results
-  const prevId = searchState?.searchResults[searchState.currentIndex - 1]?.id;
-  const nextId = searchState?.searchResults[searchState.currentIndex + 1]?.id;
+  // Calculate pagination state
+  const isLastInCurrentSet = searchState?.currentIndex === searchState?.searchResults.length - 1;
+  const isFirstInCurrentSet = searchState?.currentIndex === 0;
+  const hasMoreResults = searchState?.currentIndex < searchState?.totalResults - 1;
+  const hasPreviousResults = searchState?.currentIndex > 0;
+
+  // Get prev/next IDs from current result set
+  const prevId = !isFirstInCurrentSet ? searchState?.searchResults[searchState?.currentIndex - 1]?.id : null;
+  const nextId = !isLastInCurrentSet ? searchState?.searchResults[searchState?.currentIndex + 1]?.id : null;
+
+  // Function to fetch next page of results
+  const fetchNextPage = async () => {
+    if (!searchState) return null;
+    const nextPage = searchState.currentPage + 1;
+    const results = await fetchSearchResults(
+      new URLSearchParams(searchState.searchUrl).get('q') || '',
+      nextPage,
+      10,
+      [], // You'll need to pass the current facets here
+      setLastApiUrl
+    );
+    return results.response.docs;
+  };
+
+  // Function to fetch previous page of results
+  const fetchPrevPage = async () => {
+    if (!searchState) return null;
+    const prevPage = searchState.currentPage - 1;
+    const results = await fetchSearchResults(
+      new URLSearchParams(searchState.searchUrl).get('q') || '',
+      prevPage,
+      10,
+      [], // You'll need to pass the current facets here
+      setLastApiUrl
+    );
+    return results.response.docs;
+  };
+
+  // Handle next result click
+  const handleNextClick = async () => {
+    if (!searchState) return;
+
+    if (isLastInCurrentSet && hasMoreResults) {
+      // Need to fetch next page
+      const nextResults = await fetchNextPage();
+      if (nextResults && nextResults.length > 0) {
+        navigate(`/items/${nextResults[0].id}`, {
+          state: {
+            ...searchState,
+            searchResults: nextResults,
+            currentIndex: searchState.currentIndex + 1,
+            currentPage: searchState.currentPage + 1
+          }
+        });
+      }
+    } else if (!isLastInCurrentSet && nextId) {
+      // Just move to next item in current results
+      navigate(`/items/${nextId}`, {
+        state: {
+          ...searchState,
+          currentIndex: searchState.currentIndex + 1
+        }
+      });
+    }
+  };
+
+  // Handle previous result click
+  const handlePrevClick = async () => {
+    if (!searchState) return;
+
+    if (isFirstInCurrentSet && hasPreviousResults) {
+      // Need to fetch previous page
+      const prevResults = await fetchPrevPage();
+      if (prevResults && prevResults.length > 0) {
+        navigate(`/items/${prevResults[prevResults.length - 1].id}`, {
+          state: {
+            ...searchState,
+            searchResults: prevResults,
+            currentIndex: searchState.currentIndex - 1,
+            currentPage: searchState.currentPage - 1
+          }
+        });
+      }
+    } else if (!isFirstInCurrentSet && prevId) {
+      // Just move to previous item in current results
+      navigate(`/items/${prevId}`, {
+        state: {
+          ...searchState,
+          currentIndex: searchState.currentIndex - 1
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     const loadItem = async () => {
@@ -117,37 +213,29 @@ export function ItemView() {
             {/* Pagination Controls */}
             {searchState && (
               <div className="flex items-center gap-4">
-                {prevId ? (
-                  <Link
-                    to={`/items/${prevId}`}
-                    state={{
-                      ...searchState,
-                      currentIndex: searchState.currentIndex - 1
-                    }}
+                {hasPreviousResults && (
+                  <button
+                    onClick={handlePrevClick}
                     className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
                   >
                     <ArrowLeft size={20} />
                     Previous Result
-                  </Link>
-                ) : null}
+                  </button>
+                )}
 
                 <span className="text-gray-500">
-                  {searchState.currentIndex + 1} of {searchState.searchResults.length}
+                  {searchState?.currentIndex + 1} of {searchState?.totalResults}
                 </span>
 
-                {nextId ? (
-                  <Link
-                    to={`/items/${nextId}`}
-                    state={{
-                      ...searchState,
-                      currentIndex: searchState.currentIndex + 1
-                    }}
+                {hasMoreResults && (
+                  <button
+                    onClick={handleNextClick}
                     className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
                   >
                     Next Result
                     <ArrowRight size={20} />
-                  </Link>
-                ) : null}
+                  </button>
+                )}
               </div>
             )}
 
