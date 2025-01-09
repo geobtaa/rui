@@ -16,6 +16,7 @@ export interface GeoDocument {
   dct_license_sm: string[];
   dct_subject_sm: string[];
   dct_references_s: string;
+  ui_viewer_geometry?: string;
 }
 
 export interface GeoDocumentDetails extends GeoDocument {

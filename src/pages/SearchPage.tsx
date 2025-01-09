@@ -9,6 +9,7 @@ import { Footer } from '../components/layout/Footer';
 import { useSearch } from '../hooks/useSearch';
 import type { FacetFilter } from '../types/search';
 import { FacetList } from '../components/FacetList';
+import { MapView } from '../components/search/MapView';
 
 export function SearchPage() {
   const { 
@@ -58,13 +59,6 @@ export function SearchPage() {
 
       <main className="flex-1">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <SearchField 
-              initialQuery={query} 
-              onSearch={handleSearch} 
-              isLoading={isLoading}
-            />
-          </div>
 
           <SearchConstraints 
             facets={facets}
@@ -84,8 +78,8 @@ export function SearchPage() {
               )}
             </div>
 
-            {/* Main Content */}
-            <div className="col-span-10">
+            {/* Search Results */}
+            <div className="col-span-6">
               {error ? (
                 <ErrorMessage message={error} />
               ) : (
@@ -125,6 +119,11 @@ export function SearchPage() {
                   )}
                 </>
               )}
+            </div>
+
+            {/* Map View */}
+            <div className="col-span-4">
+              <MapView results={results?.response?.docs || []} />
             </div>
           </div>
         </div>
