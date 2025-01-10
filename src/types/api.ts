@@ -1,6 +1,7 @@
 export interface GeoDocument {
   id: string;
   dct_title_s: string;
+  dct_description_sm?: string[];
   dc_publisher_sm: string[];
   dct_spatial_sm: string[];
   gbl_resourceclass_sm: string[];
@@ -17,6 +18,7 @@ export interface GeoDocument {
   dct_subject_sm: string[];
   dct_references_s: string;
   ui_viewer_geometry?: string;
+  locn_geometry?: string;
 }
 
 export interface GeoDocumentDetails extends GeoDocument {
@@ -67,6 +69,7 @@ export interface JsonApiResponse {
       dct_references_s?: string;
       ui_viewer_protocol?: string;
       ui_viewer_endpoint?: string;
+      locn_geometry?: string;
     };
   }>;
   included?: Facet[];

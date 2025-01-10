@@ -1,9 +1,11 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '../../context/ApiContext';
+import { useDebug } from '../../context/DebugContext';
 
 export function Footer() {
   const { lastApiUrl } = useApi();
+  const { showDetails, toggleDetails } = useDebug();
 
   if (!lastApiUrl) {
     return null;
@@ -19,6 +21,12 @@ export function Footer() {
               © {new Date().getFullYear()} Big Ten Academic Alliance. All rights reserved.
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={toggleDetails}
+                className="text-sm text-gray-500 hover:text-gray-900"
+              >
+                {showDetails ? 'Hide Details' : 'Show Details'}
+              </button>
               <a 
                 href="https://www.btaa.org/library/geoportal/geoportal" 
                 target="_blank"

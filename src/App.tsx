@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Application } from "@hotwired/stimulus";
 import { SearchPage } from './pages/SearchPage';
 import { ItemView } from './pages/ItemView';
+import { DebugProvider } from './context/DebugContext';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -19,12 +20,13 @@ import('@geoblacklight/frontend').then((Geoblacklight) => {
 });
 
 function App() {
-
   return (
-    <Routes>
-      <Route path="/" element={<SearchPage />} />
-      <Route path="/items/:id" element={<ItemView />} />
-    </Routes>
+    <DebugProvider>
+      <Routes>
+        <Route path="/" element={<SearchPage />} />
+        <Route path="/items/:id" element={<ItemView />} />
+      </Routes>
+    </DebugProvider>
   );
 }
 

@@ -24,9 +24,6 @@ export function SearchPage() {
     updateSearch
   } = useSearch();
 
-  console.log('SearchPage - results:', results);
-  console.log('SearchPage - facets from results:', results?.facets);
-
   const totalPages = Math.ceil(totalResults / perPage);
   const hasSearchCriteria = query !== undefined || facets.length > 0;
 

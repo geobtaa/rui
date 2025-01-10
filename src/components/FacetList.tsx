@@ -21,11 +21,7 @@ interface FacetListProps {
 
 export function FacetList({ facets }: FacetListProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-
-  console.log('FacetList received facets:', facets); // Debug
-
   const handleFacetClick = (facetId: string, value: string | number) => {
-    console.log('Facet clicked:', { facetId, value }); // Debug
     const newParams = new URLSearchParams(searchParams);
     const facetKey = `fq[${facetId}][]`;
     newParams.append(facetKey, value.toString());
@@ -33,7 +29,6 @@ export function FacetList({ facets }: FacetListProps) {
   };
 
   if (!facets || Object.keys(facets).length === 0) {
-    console.log('No facets available'); // Debug
     return <div className="text-gray-500">No facets available</div>;
   }
 
@@ -49,7 +44,6 @@ export function FacetList({ facets }: FacetListProps) {
   return (
     <div className="space-y-6">
       {nonEmptyFacets.map(([id, facet]) => {
-        console.log('Rendering facet:', id, facet); // Debug
         return (
           <div key={id} className="border-b pb-4">
             <h3 className="font-semibold text-gray-900 mb-2">{facet.label}</h3>

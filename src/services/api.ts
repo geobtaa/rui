@@ -9,8 +9,6 @@ export class ApiError extends Error {
 }
 
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
-  console.log('Transforming API Response:', jsonApiResponse); // Debug
-
   // Transform included facets into the expected format
   const facets = jsonApiResponse.included?.reduce((acc, facet) => {
     if (facet.type === 'facet' && facet.attributes.items.length > 0) {
@@ -27,13 +25,12 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
     return acc;
   }, {} as SearchResponse['facets']);
 
-  console.log('Transformed facets:', facets); // Debug
-
   return {
     response: {
       docs: jsonApiResponse.data.map(item => ({
         id: item.id,
         dct_title_s: item.attributes.dct_title_s,
+        dct_description_sm: item.attributes.dct_description_sm || [],
         dc_publisher_sm: item.attributes.dc_publisher_sm || [],
         dct_spatial_sm: item.attributes.dct_spatial_sm || [],
         gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
@@ -48,7 +45,9 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
         dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
         dct_license_sm: item.attributes.dct_license_sm || [],
         dct_subject_sm: item.attributes.dct_subject_sm || [],
-        dct_references_s: item.attributes.dct_references_s || ''
+        dct_references_s: item.attributes.dct_references_s || '',
+        locn_geometry: item.attributes.locn_geometry,
+        ui_viewer_geometry: item.attributes.ui_viewer_geometry || ''
       })),
       numFound: jsonApiResponse.meta.pages.total_count,
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10

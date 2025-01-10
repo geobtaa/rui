@@ -35,7 +35,7 @@ export function MapView({ results }: MapViewProps) {
       .filter(result => result.ui_viewer_geometry)
       .map(result => ({
         type: 'Feature',
-        geometry: JSON.parse(result.ui_viewer_geometry),
+        geometry: result.ui_viewer_geometry,
         properties: {
           id: result.id,
           title: result.dct_title_s
