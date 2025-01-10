@@ -72,9 +72,11 @@ export function MapView({ results }: MapViewProps) {
   }, [results]);
 
   return (
-    <div 
-      ref={mapContainer} 
-      className="h-[calc(100vh-12rem)] w-full rounded-lg shadow-md"
-    />
+    <div className="sticky top-[88px]">
+      <div 
+        ref={mapContainer} 
+        className="h-[calc(100vh-120px)] w-full rounded-lg shadow-md"
+      />
+    </div>
   );
 } 
