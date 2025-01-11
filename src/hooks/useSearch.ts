@@ -10,6 +10,7 @@ interface SearchState {
   query?: string;
   page?: number;
   facets?: FacetFilter[];
+  sort?: string;
 }
 
 export function useSearch() {
@@ -18,6 +19,7 @@ export function useSearch() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setLastApiUrl } = useApi();
+  const sort = searchParams.get('sort') || 'relevance';
 
   // Parse search parameters
   const { query, page, facets } = parseSearchParams(searchParams);
@@ -39,7 +41,8 @@ export function useSearch() {
           page,
           10,
           facets,
-          setLastApiUrl
+          setLastApiUrl,
+          sort
         );
         setResults(searchResults);
       } catch (err) {
@@ -51,42 +54,59 @@ export function useSearch() {
     };
 
     fetchResults();
-  }, [query, page, facets?.length, setLastApiUrl]); // Note the facets?.length dependency
+  }, [query, page, facets?.length, sort, setLastApiUrl]);
 
-  const updateSearch = ({ query: newQuery, page: newPage, facets: newFacets }: SearchState) => {
-    const updatedParams = new URLSearchParams(searchParams);
-
-    if (newQuery !== undefined) {
-      if (newQuery) {
-        updatedParams.set('q', newQuery);
+  const updateSearch = ({ 
+    query, 
+    page, 
+    facets,
+    sort: newSort 
+  }: {
+    query?: string;
+    page?: number;
+    facets?: FacetFilter[];
+    sort?: string;
+  }) => {
+    const newParams = new URLSearchParams(searchParams);
+    
+    if (query !== undefined) {
+      if (query) {
+        newParams.set('q', query);
       } else {
-        updatedParams.delete('q');
+        newParams.delete('q');
       }
-      // Reset to page 1 when query changes
-      updatedParams.delete('page');
+      newParams.delete('page'); // Reset page when query changes
     }
 
-    if (newPage !== undefined) {
-      if (newPage > 1) {
-        updatedParams.set('page', newPage.toString());
+    if (page !== undefined) {
+      if (page > 1) {
+        newParams.set('page', page.toString());
       } else {
-        updatedParams.delete('page');
+        newParams.delete('page');
       }
     }
 
-    if (newFacets !== undefined) {
+    if (newSort !== undefined) {
+      if (newSort !== 'relevance') {
+        newParams.set('sort', newSort);
+      } else {
+        newParams.delete('sort');
+      }
+    }
+
+    if (facets !== undefined) {
       // Clear existing facets
-      Array.from(updatedParams.keys())
+      Array.from(newParams.keys())
         .filter(key => key.startsWith('fq['))
-        .forEach(key => updatedParams.delete(key));
+        .forEach(key => newParams.delete(key));
 
       // Add new facets using fq[] format
-      newFacets.forEach(({ field, value }) => {
-        updatedParams.append(`fq[${field}][]`, value);
+      facets.forEach(({ field, value }) => {
+        newParams.append(`fq[${field}][]`, value);
       });
     }
 
-    setSearchParams(updatedParams);
+    setSearchParams(newParams);
   };
 
   return {
@@ -99,5 +119,6 @@ export function useSearch() {
     totalResults: results?.response.numFound || 0,
     facets: facets || [],
     updateSearch,
+    sort,
   };
 }

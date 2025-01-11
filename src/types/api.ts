@@ -53,6 +53,17 @@ interface Facet {
   };
 }
 
+interface SortOption {
+  type: 'sort';
+  id: string;
+  attributes: {
+    label: string;
+  };
+  links: {
+    self: string;
+  };
+}
+
 export interface JsonApiResponse {
   data: Array<{
     id: string;
@@ -73,7 +84,7 @@ export interface JsonApiResponse {
       locn_geometry?: string;
     };
   }>;
-  included?: Facet[];
+  included?: Array<Facet | SortOption>;
   meta: {
     pages: {
       total_count: number;
@@ -100,4 +111,9 @@ export interface SearchResponse {
       }[];
     };
   };
+  sortOptions?: Array<{
+    id: string;
+    label: string;
+    url: string;
+  }>;
 }

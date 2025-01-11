@@ -11,6 +11,7 @@ import type { FacetFilter } from '../types/search';
 import { FacetList } from '../components/FacetList';
 import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
+import { SortControl } from '../components/search/SortControl';
 
 export function SearchPage() {
   const { 
@@ -22,6 +23,7 @@ export function SearchPage() {
     perPage,
     totalResults,
     facets,
+    sort,
     updateSearch
   } = useSearch();
 
@@ -49,6 +51,10 @@ export function SearchPage() {
 
   const handleClearAll = () => {
     updateSearch({ query: '', facets: [] });
+  };
+
+  const handleSortChange = (newSort: string) => {
+    updateSearch({ sort: newSort });
   };
 
   return (
@@ -90,14 +96,17 @@ export function SearchPage() {
                       </div>
                     ) : (
                       <>
-                        {totalResults > 0 && (
-                          <div className="mb-6">
-                            <h2 className="text-lg text-gray-600">
-                              Showing results {Math.min((page - 1) * perPage + 1, totalResults)}-
-                              {Math.min(page * perPage, totalResults)} of {totalResults}
-                            </h2>
-                          </div>
-                        )}
+                        <div className="mb-6 flex justify-between items-center">
+                          <h2 className="text-lg text-gray-600">
+                            Showing results {Math.min((page - 1) * perPage + 1, totalResults)}-
+                            {Math.min(page * perPage, totalResults)} of {totalResults}
+                          </h2>
+                          <SortControl
+                            options={results?.sortOptions || []}
+                            currentSort={sort || 'relevance'}
+                            onSortChange={handleSortChange}
+                          />
+                        </div>
 
                         <SearchResults 
                           results={results?.response?.docs || []}

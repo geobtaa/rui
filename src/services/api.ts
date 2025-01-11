@@ -1,4 +1,4 @@
-import { JsonApiResponse, SearchResponse, GeoDocumentDetails } from '../types/api';
+import { JsonApiResponse, SearchResponse, GeoDocumentDetails, SortOption } from '../types/api';
 import { FacetFilter } from '../types/search';
 
 export class ApiError extends Error {
@@ -10,11 +10,11 @@ export class ApiError extends Error {
 
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
   // Transform included facets into the expected format
-  const facets = jsonApiResponse.included?.reduce((acc, facet) => {
-    if (facet.type === 'facet' && facet.attributes.items.length > 0) {
-      acc[facet.id] = {
-        label: facet.attributes.label,
-        items: facet.attributes.items.map(item => ({
+  const facets = jsonApiResponse.included?.reduce((acc, item) => {
+    if (item.type === 'facet' && item.attributes.items.length > 0) {
+      acc[item.id] = {
+        label: item.attributes.label,
+        items: item.attributes.items.map(item => ({
           label: item.attributes.label,
           value: item.attributes.value,
           hits: item.attributes.hits,
@@ -24,6 +24,15 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
     }
     return acc;
   }, {} as SearchResponse['facets']);
+
+  // Transform sort options
+  const sortOptions = jsonApiResponse.included
+    ?.filter((item): item is SortOption => item.type === 'sort')
+    .map(item => ({
+      id: item.id,
+      label: item.attributes.label,
+      url: item.links.self
+    }));
 
   return {
     response: {
@@ -53,7 +62,8 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       numFound: jsonApiResponse.meta.pages.total_count,
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10
     },
-    facets: facets || {} // Ensure facets is always at least an empty object
+    facets: facets || {},
+    sortOptions
   };
 }
 
@@ -62,7 +72,8 @@ export async function fetchSearchResults(
   page: number = 1, 
   perPage: number = 10,
   facets: FacetFilter[] = [],
-  onApiCall?: (url: string) => void
+  onApiCall?: (url: string) => void,
+  sort?: string
 ): Promise<SearchResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
@@ -78,6 +89,10 @@ export async function fetchSearchResults(
   }
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
+  
+  if (sort && sort !== 'relevance') {
+    url.searchParams.set('sort', sort);
+  }
   
   // Add facet filters using fq[] format
   facets.forEach(({ field, value }) => {
