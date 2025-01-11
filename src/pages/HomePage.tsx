@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { SearchField } from '../components/SearchField';
-import { Database, Map, Globe, Library, Image, Folder, Globe2 } from 'lucide-react';
+import { Database, Map, Globe, Library, Image, Folder, Globe2, Search } from 'lucide-react';
 import { fetchSearchResults } from '../services/api';
 
 interface ResourceClass {
@@ -70,6 +70,10 @@ export function HomePage() {
     navigate(`/search?fq[resource_class_agg][]=${encodeURIComponent(aggValue)}`);
   };
 
+  const handleBrowseAll = () => {
+    navigate('/search?q=');
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -104,9 +108,23 @@ export function HomePage() {
         <div className="col-span-4 bg-gray-100 px-12 py-12 flex flex-col justify-center border-l border-gray-200">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Browse by Resource Type
+              Browse by Resource Class
             </h2>
             <div className="space-y-3">
+              <button
+                onClick={handleBrowseAll}
+                className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-gray-400 group-hover:text-blue-500">
+                    <Search className="w-6 h-6" />
+                  </div>
+                  <span className="text-gray-700 group-hover:text-gray-900">
+                    Browse All Resources
+                  </span>
+                </div>
+              </button>
+
               {resourceClasses.map((resource) => (
                 <button
                   key={resource.id}
