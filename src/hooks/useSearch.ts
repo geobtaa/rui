@@ -25,8 +25,8 @@ export function useSearch() {
   const { query, page, facets } = parseSearchParams(searchParams);
 
   useEffect(() => {
-    // Only fetch if we have a query or facets
-    if (!query && (!facets || facets.length === 0)) {
+    // Only fetch if we have a query parameter (even if empty) or facets
+    if (query === undefined && (!facets || facets.length === 0)) {
       setResults(null);
       return;
     }
@@ -37,7 +37,7 @@ export function useSearch() {
 
       try {
         const searchResults = await fetchSearchResults(
-          query || '',
+          query || '', // Pass empty string if query is undefined
           page,
           10,
           facets,

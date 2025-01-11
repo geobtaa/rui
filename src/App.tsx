@@ -1,9 +1,11 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Application } from "@hotwired/stimulus";
 import { SearchPage } from './pages/SearchPage';
 import { ItemView } from './pages/ItemView';
 import { DebugProvider } from './context/DebugContext';
+import { HomePage } from './pages/HomePage';
+import { useSearchParams } from 'react-router-dom';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -20,10 +22,17 @@ import('@geoblacklight/frontend').then((Geoblacklight) => {
 });
 
 function App() {
+  const [searchParams] = useSearchParams();
+  const hasSearchParams = Array.from(searchParams.entries()).length > 0;
+
   return (
     <DebugProvider>
       <Routes>
-        <Route path="/" element={<SearchPage />} />
+        <Route 
+          path="/" 
+          element={hasSearchParams ? <Navigate to={`/search${window.location.search}`} /> : <HomePage />} 
+        />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/items/:id" element={<ItemView />} />
       </Routes>
     </DebugProvider>

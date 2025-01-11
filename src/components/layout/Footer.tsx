@@ -16,7 +16,7 @@ export function Footer({ id }: FooterProps) {
   }
 
   return (
-    <footer className="bg-white shadow-sm mt-16">
+    <footer className="bg-white shadow-sm">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col space-y-4">
           {/* Links Row */}

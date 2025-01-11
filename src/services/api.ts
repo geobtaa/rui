@@ -82,11 +82,10 @@ export async function fetchSearchResults(
   
   url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
-  if (query.trim()) {
-    url.searchParams.set('q', query);
-  } else {
-    url.searchParams.set('q', ' ');
-  }
+  
+  // Set query parameter - empty string should result in q=
+  url.searchParams.set('q', query);
+  
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
   
