@@ -200,7 +200,8 @@ export function ItemView() {
       <Header />
 
       <main className="flex-1 bg-gray-50 pt-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          {/* Navigation and pagination controls */}
           <div className="flex justify-between items-center mb-6">
             <Link
               to={searchState?.searchUrl || '/'}
@@ -238,48 +239,49 @@ export function ItemView() {
                 )}
               </div>
             )}
-
-            <a
-              href={`https://geo.btaa.org/catalog/${id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              View in BTAA Geoportal
-              <ExternalLink size={16} />
-            </a>
           </div>
-          <div className="flex flex-col gap-4">
-            {viewerProtocol && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <ItemViewer 
-                  protocol={viewerProtocol} 
-                  endpoint={viewerEndpoint} 
-                  geometry={data?.data?.attributes?.ui_viewer_geometry}
-                  wxs_identifier={data?.data?.attributes?.gbl_wxsidentifier_s}
-                  available={data?.data?.attributes?.dct_accessrights_s === 'Public'}
-                  layerId={data?.data?.attributes?.id}
-                  pageValue="SHOW"
-                />
-              </div>
-            )}
 
-            {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
-            {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
-            {viewerProtocol === 'open_index_map' && <IndexMap />}
-          </div>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-              <h1 className="text-xl font-semibold text-gray-900">
-                {data?.data?.attributes?.dct_title_s}
-              </h1>
+          {/* Two column layout */}
+          <div className="grid grid-cols-12 gap-8">
+            {/* Viewer - spans first two columns */}
+            <div className="col-span-8 space-y-6">
+              {viewerProtocol && (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="">
+                    <ItemViewer 
+                      protocol={viewerProtocol} 
+                      endpoint={viewerEndpoint} 
+                      geometry={data?.data?.attributes?.ui_viewer_geometry}
+                      wxs_identifier={data?.data?.attributes?.gbl_wxsidentifier_s}
+                      available={data?.data?.attributes?.dct_accessrights_s === 'Public'}
+                      layerId={data?.data?.attributes?.id}
+                      pageValue="SHOW"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
+              {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
+              {viewerProtocol === 'open_index_map' && <IndexMap />}
             </div>
-            <MetadataTable data={data} />
+
+            {/* Metadata */}
+            <div className="col-span-4">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    {data?.data?.attributes?.dct_title_s}
+                  </h1>
+                </div>
+                <MetadataTable data={data} />
+              </div>
+            </div>
           </div>
         </div>
       </main>
 
-      <Footer />
+      <Footer id={id} />
     </div>
   );
 }

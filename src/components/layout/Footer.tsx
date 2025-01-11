@@ -3,7 +3,11 @@ import { ExternalLink } from 'lucide-react';
 import { useApi } from '../../context/ApiContext';
 import { useDebug } from '../../context/DebugContext';
 
-export function Footer() {
+interface FooterProps {
+  id?: string;  // Make optional since not all pages will have an ID
+}
+
+export function Footer({ id }: FooterProps) {
   const { lastApiUrl } = useApi();
   const { showDetails, toggleDetails } = useDebug();
 
@@ -12,7 +16,7 @@ export function Footer() {
   }
 
   return (
-    <footer className="bg-white shadow-sm mt-auto">
+    <footer className="bg-white shadow-sm mt-16">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col space-y-4">
           {/* Links Row */}
@@ -21,6 +25,17 @@ export function Footer() {
               © {new Date().getFullYear()} Big Ten Academic Alliance. All rights reserved.
             </div>
             <div className="flex items-center space-x-4">
+              {id && (
+                <a
+                  href={`https://geo.btaa.org/catalog/${id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1"
+                >
+                  View in BTAA Geoportal
+                  <ExternalLink size={14} />
+                </a>
+              )}
               <button
                 onClick={toggleDetails}
                 className="text-sm text-gray-500 hover:text-gray-900"

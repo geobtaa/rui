@@ -99,21 +99,23 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
     case 'leaflet':
     default:
       return (
-        <div
-          id="leaflet-viewer"
-          className="viewer h-[600px]"
-          data-controller="leaflet-viewer"
-          data-leaflet-viewer-available-value={available}
-          data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
-          data-leaflet-viewer-layer-id-value={wxs_identifier}
-          data-leaflet-viewer-options-value={JSON.stringify(leafletViewerOptions)}
-          data-leaflet-viewer-page-value={pageValue}
-          data-leaflet-viewer-draw-initial-bounds-value={true}
-          {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
-          {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
-          {...(isWmsItem ? { 'data-action': "leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo" } : {})}
-          {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_API_BASE_URL}/wms/handle` } : {})}
-        />
+        <div className="sticky top-[88px]">
+          <div
+            id="leaflet-viewer"
+            className="viewer h-[calc(100vh-120px)]"
+            data-controller="leaflet-viewer"
+            data-leaflet-viewer-available-value={available}
+            data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
+            data-leaflet-viewer-layer-id-value={wxs_identifier}
+            data-leaflet-viewer-options-value={JSON.stringify(leafletViewerOptions)}
+            data-leaflet-viewer-page-value={pageValue}
+            data-leaflet-viewer-draw-initial-bounds-value={true}
+            {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
+            {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
+            {...(isWmsItem ? { 'data-action': "leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo" } : {})}
+            {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_API_BASE_URL}/wms/handle` } : {})}
+          />
+        </div>
       );
   }
 } 

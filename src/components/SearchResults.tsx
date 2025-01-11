@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import type { GeoDocument } from '../types/api';
 import { Calendar, Building2, BookOpen } from 'lucide-react';
 import { useDebug } from '../context/DebugContext';
+import { useMap } from '../context/MapContext';
 
 interface SearchResultsProps {
   results: GeoDocument[];
@@ -19,6 +20,7 @@ export function SearchResults({
 }: SearchResultsProps) {
   const { showDetails } = useDebug();
   const location = useLocation();
+  const { setHoveredGeometry } = useMap();
 
   // Calculate absolute index in full result set
   const getAbsoluteIndex = (relativeIndex: number) => {
@@ -57,6 +59,8 @@ export function SearchResults({
             key={result.id}
             className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
             data-geom={geomData}
+            onMouseEnter={() => setHoveredGeometry(result.ui_viewer_geometry)}
+            onMouseLeave={() => setHoveredGeometry(null)}
           >
             {showDetails && (
               <pre className="overflow-auto text-xs">{JSON.stringify(result, null, 2)}</pre>

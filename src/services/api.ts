@@ -30,6 +30,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       docs: jsonApiResponse.data.map(item => ({
         id: item.id,
         dct_title_s: item.attributes.dct_title_s,
+        dct_creator_sm: item.attributes.dct_creator_sm || [],
         dct_description_sm: item.attributes.dct_description_sm || [],
         dc_publisher_sm: item.attributes.dc_publisher_sm || [],
         dct_spatial_sm: item.attributes.dct_spatial_sm || [],

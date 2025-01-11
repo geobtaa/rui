@@ -1,6 +1,7 @@
 export interface GeoDocument {
   id: string;
   dct_title_s: string;
+  dct_creator_sm: string[];
   dct_description_sm?: string[];
   dc_publisher_sm: string[];
   dct_spatial_sm: string[];

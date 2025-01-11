@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GeoDocument } from '../../types/api';
+import { useMap } from '../../context/MapContext';
 
 interface MapViewProps {
   results: GeoDocument[];
@@ -10,6 +11,8 @@ interface MapViewProps {
 export function MapView({ results }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
+  const highlightLayerRef = useRef<L.GeoJSON | null>(null);
+  const { hoveredGeometry } = useMap();
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -70,6 +73,38 @@ export function MapView({ results }: MapViewProps) {
       }
     };
   }, [results]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear existing highlight
+    if (highlightLayerRef.current) {
+      mapRef.current.removeLayer(highlightLayerRef.current);
+      highlightLayerRef.current = null;
+    }
+
+    // Add new highlight if there's a hovered geometry
+    if (hoveredGeometry) {
+      try {
+        highlightLayerRef.current = L.geoJSON(hoveredGeometry, {
+          style: {
+            color: '#2563eb',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.3,
+            fillColor: '#3b82f6'
+          }
+        }).addTo(mapRef.current);
+
+        // Fit bounds to the highlighted feature
+        mapRef.current.fitBounds(highlightLayerRef.current.getBounds(), {
+          padding: [50, 50]
+        });
+      } catch (error) {
+        console.error('Error highlighting geometry:', error);
+      }
+    }
+  }, [hoveredGeometry]);
 
   return (
     <div className="sticky top-[88px]">
