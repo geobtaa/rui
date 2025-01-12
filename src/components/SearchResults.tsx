@@ -4,6 +4,7 @@ import type { GeoDocument } from '../types/api';
 import { Calendar, Building2, BookOpen } from 'lucide-react';
 import { useDebug } from '../context/DebugContext';
 import { useMap } from '../context/MapContext';
+import { BookmarkButton } from './BookmarkButton';
 
 interface SearchResultsProps {
   results: GeoDocument[];
@@ -64,6 +65,10 @@ export function SearchResults({
           >
             <div className="absolute -left-4 top-6 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center text-sm text-gray-500 font-medium">
               {getAbsoluteIndex(index)}
+            </div>
+
+            <div className="absolute right-4 top-4">
+              <BookmarkButton itemId={result.id} />
             </div>
 
             {showDetails && (

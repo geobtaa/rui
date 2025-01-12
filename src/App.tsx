@@ -6,6 +6,8 @@ import { ItemView } from './pages/ItemView';
 import { DebugProvider } from './context/DebugContext';
 import { HomePage } from './pages/HomePage';
 import { useSearchParams } from 'react-router-dom';
+import { BookmarkProvider } from './context/BookmarkContext';
+import { BookmarksPage } from './pages/BookmarksPage';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -26,16 +28,19 @@ function App() {
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
 
   return (
-    <DebugProvider>
-      <Routes>
-        <Route 
-          path="/" 
-          element={hasSearchParams ? <Navigate to={`/search${window.location.search}`} /> : <HomePage />} 
-        />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/items/:id" element={<ItemView />} />
-      </Routes>
-    </DebugProvider>
+    <BookmarkProvider>
+      <DebugProvider>
+        <Routes>
+          <Route 
+            path="/" 
+            element={hasSearchParams ? <Navigate to={`/search${window.location.search}`} /> : <HomePage />} 
+          />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/bookmarks" element={<BookmarksPage />} />
+          <Route path="/items/:id" element={<ItemView />} />
+        </Routes>
+      </DebugProvider>
+    </BookmarkProvider>
   );
 }
 

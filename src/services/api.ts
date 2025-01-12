@@ -196,3 +196,57 @@ export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
     return [];
   }
 }
+
+export async function fetchBookmarkedItems(
+  ids: string[],
+  onApiCall?: (url: string) => void
+): Promise<SearchResponse> {
+  if (ids.length === 0) {
+    return {
+      response: { docs: [], numFound: 0, start: 0 },
+      facets: {},
+    };
+  }
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL 
+    ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
+    : 'https://geo.btaa.org/';
+  const url = new URL(baseUrl);
+  
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('search_field', 'all_fields');
+  url.searchParams.set('q', '');
+  
+  // Use id_agg instead of id for the facet filter
+  ids.forEach(id => {
+    url.searchParams.append('fq[id_agg][]', id);
+  });
+
+  const finalUrl = url.toString();
+  onApiCall?.(finalUrl);
+  
+  try {
+    const response = await fetch(finalUrl, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
+    }
+    
+    const data: JsonApiResponse = await response.json();
+    
+    if (!data.data || !Array.isArray(data.data)) {
+      throw new ApiError('Invalid response format from API');
+    }
+    
+    return transformJsonApiResponse(data);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(`Failed to fetch bookmarked items: ${error.message}`);
+  }
+}
