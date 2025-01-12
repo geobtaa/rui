@@ -24,7 +24,7 @@ export function SearchResults({
 
   // Calculate absolute index in full result set
   const getAbsoluteIndex = (relativeIndex: number) => {
-    return (currentPage - 1) * 10 + relativeIndex;
+    return (currentPage - 1) * 10 + relativeIndex + 1;
   };
 
   if (isLoading) {
@@ -57,11 +57,15 @@ export function SearchResults({
         return (
           <article
             key={result.id}
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow relative"
             data-geom={geomData}
             onMouseEnter={() => setHoveredGeometry(result.ui_viewer_geometry)}
             onMouseLeave={() => setHoveredGeometry(null)}
           >
+            <div className="absolute -left-4 top-6 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center text-sm text-gray-500 font-medium">
+              {getAbsoluteIndex(index)}
+            </div>
+
             {showDetails && (
               <pre className="overflow-auto text-xs">{JSON.stringify(result, null, 2)}</pre>
             )}
@@ -69,7 +73,7 @@ export function SearchResults({
               to={`/items/${result.id}`}
               state={{
                 searchResults: results,
-                currentIndex: getAbsoluteIndex(index),
+                currentIndex: getAbsoluteIndex(index) - 1,
                 totalResults: totalResults,
                 searchUrl: location.pathname + location.search,
                 currentPage: currentPage
