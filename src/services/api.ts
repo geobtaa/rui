@@ -153,3 +153,46 @@ export async function fetchItemDetails(id: string, onApiCall?: (url: string) => 
     throw new ApiError('Failed to fetch item details');
   }
 }
+
+interface Suggestion {
+  type: 'suggestion';
+  id: string;
+  attributes: {
+    text: string;
+    title: string;
+    score: number;
+  };
+}
+
+interface SuggestResponse {
+  data: Suggestion[];
+}
+
+export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
+  if (!query.trim()) return [];
+  
+  const baseUrl = import.meta.env.VITE_API_BASE_URL 
+    ? `${import.meta.env.VITE_API_BASE_URL}/suggest` 
+    : 'https://geo.btaa.org/suggest';
+  
+  const url = new URL(baseUrl);
+  url.searchParams.set('q', query);
+
+  try {
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    
+    const data: SuggestResponse = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching suggestions:', error);
+    return [];
+  }
+}

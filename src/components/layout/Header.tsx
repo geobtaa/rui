@@ -1,15 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Globe2 } from 'lucide-react';
 import { SearchField } from '../SearchField';
-import { useSearch } from '../../hooks/useSearch';
 
 export function Header() {
-  const { query, isLoading, updateSearch } = useSearch();
-
-  const handleSearch = (newQuery: string) => {
-    updateSearch({ query: newQuery });
-  };
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow">
@@ -22,14 +18,14 @@ export function Header() {
               BTAA Geoportal
             </Link>
           </div>
-          
+
           {/* Search Field - matches results column width */}
-          <div className="col-span-6">
-            <SearchField 
-              initialQuery={query} 
-              onSearch={handleSearch} 
-              isLoading={isLoading}
-            />
+          <div className="col-span-6">  
+            {!isHomePage && (
+              <SearchField 
+                placeholder="Search for maps, data, imagery..."
+              />
+            )}
           </div>
 
           {/* Navigation - matches map column width */}
