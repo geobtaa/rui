@@ -8,6 +8,10 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { useSearch } from '../hooks/useSearch';
 import type { FacetFilter } from '../types/search';
+import { FacetList } from '../components/FacetList';
+import { MapView } from '../components/search/MapView';
+import { MapProvider } from '../context/MapContext';
+import { SortControl } from '../components/search/SortControl';
 
 export function SearchPage() {
   const { 
@@ -19,11 +23,12 @@ export function SearchPage() {
     perPage,
     totalResults,
     facets,
+    sort,
     updateSearch
   } = useSearch();
 
   const totalPages = Math.ceil(totalResults / perPage);
-  const hasSearchCriteria = query || facets.length > 0;
+  const hasSearchCriteria = query !== undefined || facets.length > 0;
 
   const handleSearch = (newQuery: string) => {
     updateSearch({ query: newQuery });
@@ -48,66 +53,91 @@ export function SearchPage() {
     updateSearch({ query: '', facets: [] });
   };
 
+  const handleSortChange = (newSort: string) => {
+    updateSearch({ sort: newSort });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+    <MapProvider>
+      <div className="min-h-screen flex flex-col">
+        <Header />
 
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <SearchField 
-              initialQuery={query} 
-              onSearch={handleSearch} 
-              isLoading={isLoading}
+        <main className="flex-1 bg-gray-50">
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
+            <SearchConstraints 
+              facets={facets}
+              query={query}
+              onRemoveFacet={handleRemoveFacet}
+              onRemoveQuery={handleRemoveQuery}
+              onClearAll={handleClearAll}
             />
+
+            <div className="mt-8 grid grid-cols-12 gap-8">
+              {/* Facets Sidebar */}
+              <div className="col-span-2">
+                {results?.facets ? (
+                  <FacetList facets={results.facets} />
+                ) : (
+                  <div className="text-gray-500">Loading facets...</div>
+                )}
+              </div>
+
+              {/* Search Results */}
+              <div className="col-span-6">
+                {error ? (
+                  <ErrorMessage message={error} />
+                ) : (
+                  <>
+                    {!hasSearchCriteria ? (
+                      <div>
+                        <p className="text-gray-500">
+                          Enter a search term or apply filters to see results
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-6 flex justify-between items-center">
+                          <h2 className="text-lg text-gray-600">
+                            Showing results {Math.min((page - 1) * perPage + 1, totalResults)}-
+                            {Math.min(page * perPage, totalResults)} of {totalResults}
+                          </h2>
+                          <SortControl
+                            options={results?.sortOptions || []}
+                            currentSort={sort || 'relevance'}
+                            onSortChange={handleSortChange}
+                          />
+                        </div>
+
+                        <SearchResults 
+                          results={results?.response?.docs || []}
+                          isLoading={isLoading}
+                          totalResults={totalResults}
+                          currentPage={page}
+                        />
+                        
+                        {!isLoading && totalPages > 1 && (
+                          <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                          />
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Map View */}
+              <div className="col-span-4">
+                <MapView results={results?.response?.docs || []} />
+              </div>
+            </div>
           </div>
+        </main>
 
-          <SearchConstraints 
-            facets={facets}
-            query={query}
-            onRemoveFacet={handleRemoveFacet}
-            onRemoveQuery={handleRemoveQuery}
-            onClearAll={handleClearAll}
-          />
-
-          {error ? (
-            <ErrorMessage message={error} />
-          ) : (
-            <>
-              {!hasSearchCriteria ? (
-                <div>
-                  <p className="text-gray-500">
-                    Enter a search term or apply filters to see results
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {totalResults > 0 && (
-                    <div className="mb-6">
-                      <h2 className="text-lg text-gray-600">
-                        Showing results {Math.min((page - 1) * perPage + 1, totalResults)}-
-                        {Math.min(page * perPage, totalResults)} of {totalResults}
-                      </h2>
-                    </div>
-                  )}
-
-                  <SearchResults results={results} isLoading={isLoading} />
-                  
-                  {!isLoading && totalPages > 1 && (
-                    <Pagination
-                      currentPage={page}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </MapProvider>
   );
 }

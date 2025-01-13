@@ -1,6 +1,8 @@
 export interface GeoDocument {
   id: string;
   dct_title_s: string;
+  dct_creator_sm: string[];
+  dct_description_sm?: string[];
   dc_publisher_sm: string[];
   dct_spatial_sm: string[];
   gbl_resourceclass_sm: string[];
@@ -16,6 +18,9 @@ export interface GeoDocument {
   dct_license_sm: string[];
   dct_subject_sm: string[];
   dct_references_s: string;
+  ui_viewer_geometry?: string;
+  locn_geometry?: string;
+  ui_thumbnail_url?: string;
 }
 
 export interface GeoDocumentDetails extends GeoDocument {
@@ -27,6 +32,37 @@ export interface GeoDocumentDetails extends GeoDocument {
 export interface ParsedFacet {
   field: string;
   value: string;
+}
+
+interface FacetItem {
+  attributes: {
+    label: string;
+    value: string | number;
+    hits: number;
+  };
+  links: {
+    self: string;
+  };
+}
+
+interface Facet {
+  type: 'facet';
+  id: string;
+  attributes: {
+    label: string;
+    items: FacetItem[];
+  };
+}
+
+interface SortOption {
+  type: 'sort';
+  id: string;
+  attributes: {
+    label: string;
+  };
+  links: {
+    self: string;
+  };
 }
 
 export interface JsonApiResponse {
@@ -46,8 +82,11 @@ export interface JsonApiResponse {
       dct_references_s?: string;
       ui_viewer_protocol?: string;
       ui_viewer_endpoint?: string;
+      ui_thumbnail_url?: string;
+      locn_geometry?: string;
     };
   }>;
+  included?: Array<Facet | SortOption>;
   meta: {
     pages: {
       total_count: number;
@@ -63,4 +102,20 @@ export interface SearchResponse {
     numFound: number;
     start: number;
   };
+  facets?: {
+    [key: string]: {
+      label: string;
+      items: {
+        label: string;
+        value: string | number;
+        hits: number;
+        url: string;
+      }[];
+    };
+  };
+  sortOptions?: Array<{
+    id: string;
+    label: string;
+    url: string;
+  }>;
 }

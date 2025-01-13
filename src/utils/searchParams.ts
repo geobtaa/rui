@@ -1,25 +1,19 @@
 import { FacetFilter, SearchParams } from '../types/search';
 
-export function parseSearchParams(searchParams: URLSearchParams): SearchParams {
-  const facets: FacetFilter[] = [];
+export function parseSearchParams(searchParams: URLSearchParams) {
+  const query = searchParams.get('q') || '';
+  const page = parseInt(searchParams.get('page') || '1', 10);
   
-  // Extract facet parameters
-  for (const [key, value] of searchParams.entries()) {
-    if (key.startsWith('f[') && key.endsWith('][]')) {
-      const field = key.slice(2, -3); // Remove 'f[' and '][]'
-      facets.push({
-        field: decodeURIComponent(field),
-        value: decodeURIComponent(value)
-      });
-    }
-  }
+  // Get all facet parameters (now using fq instead of f)
+  const facets = Array.from(searchParams.entries())
+    .filter(([key]) => key.startsWith('fq['))
+    .map(([key, value]) => {
+      // Extract field name from fq[field_name][]
+      const field = key.match(/fq\[(.*?)\]/)?.[1] || '';
+      return { field, value };
+    });
 
-  return {
-    query: searchParams.get('q') || '',
-    page: parseInt(searchParams.get('page') || '1', 10),
-    perPage: parseInt(searchParams.get('per_page') || '10', 10),
-    facets
-  };
+  return { query, page, facets };
 }
 
 export function buildSearchParams(params: SearchParams): URLSearchParams {
@@ -37,9 +31,9 @@ export function buildSearchParams(params: SearchParams): URLSearchParams {
     searchParams.set('per_page', params.perPage.toString());
   }
   
-  // Add facet parameters
+  // Add facet parameters using fq[] format
   params.facets.forEach(({ field, value }) => {
-    searchParams.append(`f[${field}][]`, value);
+    searchParams.append(`fq[${field}][]`, value);
   });
   
   return searchParams;

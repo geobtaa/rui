@@ -1,83 +1,124 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SearchState, SearchParams } from '../types/search';
-import { parseSearchParams, buildSearchParams } from '../utils/searchParams';
 import { fetchSearchResults } from '../services/api';
+import { parseSearchParams } from '../utils/searchParams';
 import { useApi } from '../context/ApiContext';
-import type { GeoDocument } from '../types/api';
+import type { SearchResponse } from '../types/api';
+import type { FacetFilter } from '../types/search';
+
+interface SearchState {
+  query?: string;
+  page?: number;
+  facets?: FacetFilter[];
+  sort?: string;
+}
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { setLastApiUrl } = useApi();
-  
-  const [state, setState] = useState<SearchState>(() => ({
-    ...parseSearchParams(searchParams),
-    isLoading: false,
-    error: null
-  }));
+  const sort = searchParams.get('sort') || 'relevance';
 
-  const [results, setResults] = useState<GeoDocument[]>([]);
-  const [totalResults, setTotalResults] = useState(0);
+  // Parse search parameters
+  const { query, page, facets } = parseSearchParams(searchParams);
 
   useEffect(() => {
-    const loadResults = async () => {
-      // Don't fetch results if there's no search criteria
-      if (!state.query && state.facets.length === 0) {
-        setResults([]);
-        setTotalResults(0);
-        return;
-      }
+    // Only fetch if we have a query parameter (even if empty) or facets
+    if (query === undefined && (!facets || facets.length === 0)) {
+      setResults(null);
+      return;
+    }
 
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+    const fetchResults = async () => {
+      setIsLoading(true);
+      setError(null);
 
       try {
-        const data = await fetchSearchResults(
-          state.query,
-          state.page,
-          state.perPage,
-          state.facets,
-          (url) => setLastApiUrl(url)
+        const searchResults = await fetchSearchResults(
+          query || '', // Pass empty string if query is undefined
+          page,
+          10,
+          facets,
+          setLastApiUrl,
+          sort
         );
-        
-        setResults(data.response.docs);
-        setTotalResults(data.response.numFound);
-        
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: null
-        }));
+        setResults(searchResults);
       } catch (err) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: err instanceof Error ? err.message : 'An unexpected error occurred'
-        }));
-        setResults([]);
-        setTotalResults(0);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+        setResults(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadResults();
-  }, [state.query, state.page, state.perPage, state.facets, setLastApiUrl]);
+    fetchResults();
+  }, [query, page, facets?.length, sort, setLastApiUrl]);
 
-  const updateSearch = (newParams: Partial<SearchParams>) => {
-    const currentParams = parseSearchParams(searchParams);
-    const updatedParams = { ...currentParams, ...newParams };
+  const updateSearch = ({ 
+    query, 
+    page, 
+    facets,
+    sort: newSort 
+  }: {
+    query?: string;
+    page?: number;
+    facets?: FacetFilter[];
+    sort?: string;
+  }) => {
+    const newParams = new URLSearchParams(searchParams);
     
-    // Reset page to 1 when changing search parameters
-    if (newParams.query !== undefined || newParams.facets !== undefined) {
-      updatedParams.page = 1;
+    if (query !== undefined) {
+      if (query) {
+        newParams.set('q', query);
+      } else {
+        newParams.delete('q');
+      }
+      newParams.delete('page'); // Reset page when query changes
     }
-    
-    setSearchParams(buildSearchParams(updatedParams));
-    setState(prev => ({ ...prev, ...updatedParams }));
+
+    if (page !== undefined) {
+      if (page > 1) {
+        newParams.set('page', page.toString());
+      } else {
+        newParams.delete('page');
+      }
+    }
+
+    if (newSort !== undefined) {
+      if (newSort !== 'relevance') {
+        newParams.set('sort', newSort);
+      } else {
+        newParams.delete('sort');
+      }
+    }
+
+    if (facets !== undefined) {
+      // Clear existing facets
+      Array.from(newParams.keys())
+        .filter(key => key.startsWith('fq['))
+        .forEach(key => newParams.delete(key));
+
+      // Add new facets using fq[] format
+      facets.forEach(({ field, value }) => {
+        newParams.append(`fq[${field}][]`, value);
+      });
+    }
+
+    setSearchParams(newParams);
   };
 
   return {
-    ...state,
+    query,
     results,
-    totalResults,
-    updateSearch
+    isLoading,
+    error,
+    page: page || 1,
+    perPage: 10,
+    totalResults: results?.response.numFound || 0,
+    facets: facets || [],
+    updateSearch,
+    sort,
   };
 }
