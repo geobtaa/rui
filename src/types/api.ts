@@ -20,6 +20,7 @@ export interface GeoDocument {
   dct_references_s: string;
   ui_viewer_geometry?: string;
   locn_geometry?: string;
+  ui_thumbnail_url?: string;
 }
 
 export interface GeoDocumentDetails extends GeoDocument {
@@ -81,6 +82,7 @@ export interface JsonApiResponse {
       dct_references_s?: string;
       ui_viewer_protocol?: string;
       ui_viewer_endpoint?: string;
+      ui_thumbnail_url?: string;
       locn_geometry?: string;
     };
   }>;

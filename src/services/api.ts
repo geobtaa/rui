@@ -9,6 +9,41 @@ export class ApiError extends Error {
 }
 
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
+  // Add debug logging
+  console.log('Raw API Response:', jsonApiResponse);
+  
+  const docs = jsonApiResponse.data.map(item => {
+    const doc = {
+      id: item.id,
+      dct_title_s: item.attributes.dct_title_s,
+      dct_creator_sm: item.attributes.dct_creator_sm || [],
+      dct_description_sm: item.attributes.dct_description_sm || [],
+      dc_publisher_sm: item.attributes.dc_publisher_sm || [],
+      dct_spatial_sm: item.attributes.dct_spatial_sm || [],
+      gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
+      gbl_resourcetype_sm: item.attributes.gbl_resourcetype_sm || [],
+      b1g_language_sm: item.attributes.b1g_language_sm || [],
+      dc_subject_sm: item.attributes.dc_subject_sm || [],
+      schema_provider_s: item.attributes.schema_provider_s || '',
+      dct_accessrights_s: item.attributes.dct_accessrights_s || '',
+      gbl_georeferenced_b: item.attributes.gbl_georeferenced_b || '',
+      b1g_georeferenced_allmaps_b: item.attributes.b1g_georeferenced_allmaps_b || '',
+      dct_temporal_sm: item.attributes.dct_temporal_sm || [],
+      dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
+      dct_license_sm: item.attributes.dct_license_sm || [],
+      dct_subject_sm: item.attributes.dct_subject_sm || [],
+      dct_references_s: item.attributes.dct_references_s || '',
+      locn_geometry: item.attributes.locn_geometry,
+      ui_viewer_geometry: item.attributes.ui_viewer_geometry || '',
+      ui_thumbnail_url: item.attributes.ui_thumbnail_url,
+    };
+    console.log(`Transformed doc ${item.id}:`, { 
+      title: doc.dct_title_s, 
+      thumbnail: doc.ui_thumbnail_url 
+    });
+    return doc;
+  });
+
   // Transform included facets into the expected format
   const facets = jsonApiResponse.included?.reduce((acc, item) => {
     if (item.type === 'facet' && item.attributes.items.length > 0) {
@@ -36,29 +71,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
 
   return {
     response: {
-      docs: jsonApiResponse.data.map(item => ({
-        id: item.id,
-        dct_title_s: item.attributes.dct_title_s,
-        dct_creator_sm: item.attributes.dct_creator_sm || [],
-        dct_description_sm: item.attributes.dct_description_sm || [],
-        dc_publisher_sm: item.attributes.dc_publisher_sm || [],
-        dct_spatial_sm: item.attributes.dct_spatial_sm || [],
-        gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
-        gbl_resourcetype_sm: item.attributes.gbl_resourcetype_sm || [],
-        b1g_language_sm: item.attributes.b1g_language_sm || [],
-        dc_subject_sm: item.attributes.dc_subject_sm || [],
-        schema_provider_s: item.attributes.schema_provider_s || '',
-        dct_accessrights_s: item.attributes.dct_accessrights_s || '',
-        gbl_georeferenced_b: item.attributes.gbl_georeferenced_b || '',
-        b1g_georeferenced_allmaps_b: item.attributes.b1g_georeferenced_allmaps_b || '',
-        dct_temporal_sm: item.attributes.dct_temporal_sm || [],
-        dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
-        dct_license_sm: item.attributes.dct_license_sm || [],
-        dct_subject_sm: item.attributes.dct_subject_sm || [],
-        dct_references_s: item.attributes.dct_references_s || '',
-        locn_geometry: item.attributes.locn_geometry,
-        ui_viewer_geometry: item.attributes.ui_viewer_geometry || ''
-      })),
+      docs,
       numFound: jsonApiResponse.meta.pages.total_count,
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10
     },
