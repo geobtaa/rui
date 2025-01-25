@@ -1,0 +1,8 @@
+/* Import leaflet core styles */
+@import 'leaflet/dist/leaflet.css';
+
+/* Import leaflet fullscreen styles */
+@import 'leaflet-fullscreen/dist/leaflet.fullscreen.css';
+
+/* Import our custom opacity control styles */
+@import './leaflet-opacity-control.css'; 
