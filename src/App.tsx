@@ -30,7 +30,7 @@ function App() {
   return (
     <BookmarkProvider>
       <DebugProvider>
-        <Routes>
+        <Routes basename={import.meta.env.BASE_URL}>
           <Route 
             path="/" 
             element={hasSearchParams ? <Navigate to={`/search${window.location.search}`} /> : <HomePage />} 
