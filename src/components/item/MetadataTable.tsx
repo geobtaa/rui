@@ -28,8 +28,7 @@ export function MetadataTable({ data }: MetadataTableProps) {
 
   // Metadata field definitions with labels
   const metadataFields = [
-    { key: 'dct_creator_sm', label: 'Creator', colSpan: 3 },
-    { key: 'dct_description_sm', label: 'Description', colSpan: 3 },
+    { key: 'dct_description_sm', label: 'Item Description', colSpan: 3 },
     { key: 'dct_spatial_sm', label: 'Place(s)', colSpan: 3 },
     { 
       type: 'combined',

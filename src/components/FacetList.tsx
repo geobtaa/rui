@@ -36,17 +36,13 @@ export function FacetList({ facets, activeFacets = [] }: FacetListProps) {
     return <div className="text-gray-500">No facets available</div>;
   }
 
-  // Filter and sort facets according to CONFIGURED_FACETS
-  const orderedFacets = Object.entries(facets)
-    .filter(([key]) => 
-      CONFIGURED_FACETS.includes(key as typeof CONFIGURED_FACETS[number]) && 
-      facets[key].items.length > 0
-    )
-    .sort(([a], [b]) => {
-      const aIndex = CONFIGURED_FACETS.indexOf(a as typeof CONFIGURED_FACETS[number]);
-      const bIndex = CONFIGURED_FACETS.indexOf(b as typeof CONFIGURED_FACETS[number]);
-      return aIndex - bIndex;
-    });
+  // Create ordered facets array based on CONFIGURED_FACETS
+  const orderedFacets = CONFIGURED_FACETS
+    .map(facetId => {
+      const facet = facets[facetId];
+      return facet && facet.items.length > 0 ? [facetId, facet] : null;
+    })
+    .filter((item): item is [string, typeof facets[keyof typeof facets]] => item !== null);
 
   if (orderedFacets.length === 0) {
     return <div className="text-gray-500">No facets available for this search</div>;

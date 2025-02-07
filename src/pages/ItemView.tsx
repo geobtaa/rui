@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import { fetchSearchResults, fetchItemDetails, ApiError } from '../services/api';
 import { buildSearchParams } from '../utils/searchParams';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -9,6 +9,9 @@ import { Footer } from '../components/layout/Footer';
 import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
 import { ItemViewer } from '../components/item/ItemViewer';
+import { ItemBreadcrumbs } from '../components/item/ItemBreadcrumbs';
+import { ItemSubtitle } from '../components/item/ItemSubtitle';
+import { CitationTable } from '../components/item/CitationTable';
 
 interface SearchState {
   searchResults: Array<{ id: string }>;
@@ -201,83 +204,109 @@ export function ItemView() {
 
       <main className="flex-1 bg-gray-50 pt-6">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          {/* Navigation and pagination controls */}
-          <div className="flex justify-between items-center mb-6">
-            <Link
-              to={searchState?.searchUrl || '/'}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-            >
-              <ArrowLeft size={20} />
-              Back to Search Results
-            </Link>
-
-            {/* Pagination Controls */}
-            {searchState && (
-              <div className="flex items-center gap-4">
-                {hasPreviousResults && (
-                  <button
-                    onClick={handlePrevClick}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                  >
-                    <ArrowLeft size={20} />
-                    Previous Result
-                  </button>
-                )}
-
-                <span className="text-gray-500">
-                  {searchState?.currentIndex + 1} of {searchState?.totalResults}
-                </span>
-
-                {hasMoreResults && (
-                  <button
-                    onClick={handleNextClick}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                  >
-                    Next Result
-                    <ArrowRight size={20} />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Two column layout */}
-          <div className="grid grid-cols-12 gap-8">
-            {/* Viewer - spans first two columns */}
-            <div className="col-span-8 space-y-6">
-              {viewerProtocol && (
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className="">
-                    <ItemViewer 
-                      protocol={viewerProtocol} 
-                      endpoint={viewerEndpoint} 
-                      geometry={data?.data?.attributes?.ui_viewer_geometry}
-                      wxs_identifier={data?.data?.attributes?.gbl_wxsidentifier_s}
-                      available={data?.data?.attributes?.dct_accessrights_s === 'Public'}
-                      layerId={data?.data?.attributes?.id}
-                      pageValue="SHOW"
-                    />
+          {data?.data?.attributes && (
+            <>
+              {/* Header section with breadcrumbs and navigation */}
+              <div className="flex justify-between items-start mb-6">
+                {/* Left side: Breadcrumbs */}
+                <div className="space-y-4">
+                  <ItemBreadcrumbs item={data.data.attributes} />
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {data.data.attributes.dct_title_s}
+                    </h1>
+                    <ItemSubtitle item={data.data.attributes} />
                   </div>
                 </div>
-              )}
 
-              {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
-              {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
-              {viewerProtocol === 'open_index_map' && <IndexMap />}
-            </div>
+                {/* Right side: Navigation Controls */}
+                <div className="flex items-center gap-4">
+                  <Link
+                    to={searchState?.searchUrl || '/'}
+                    className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                    title="Back to Search Results"
+                  >
+                    <ArrowLeftCircle size={20} />
+                  </Link>
 
-            {/* Metadata */}
-            <div className="col-span-4">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    {data?.data?.attributes?.dct_title_s}
-                  </h1>
+                  {hasPreviousResults && (
+                    <button
+                      onClick={handlePrevClick}
+                      className="flex items-center gap-1 text-gray-500 hover:text-blue-600"
+                      title="Previous"
+                    >
+                      <ArrowLeft size={20} />
+                      Previous
+                    </button>
+                  )}
+
+                  {searchState && (
+                    <span className="text-gray-500 px-2">
+                      {searchState?.currentIndex + 1} of {searchState?.totalResults}
+                    </span>
+                  )}
+
+                  {hasMoreResults && (
+                    <button
+                      onClick={handleNextClick}
+                      className="flex items-center gap-1 text-gray-500 hover:text-blue-600"
+                      title="Next"
+                    >
+                      Next
+                      <ArrowRight size={20} />
+                    </button>
+                  )}
+
+                  <Link
+                    to="/"
+                    className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-2"
+                    title="Clear Search"
+                  >
+                    <XCircle size={20} />
+                  </Link>
                 </div>
-                <MetadataTable data={data} />
               </div>
-            </div>
-          </div>
+
+              {/* Rest of the content */}
+              <div className="grid grid-cols-12 gap-8">
+                {/* Viewer - spans first two columns */}
+                <div className="col-span-8 space-y-6">
+                  {viewerProtocol && (
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <div className="">
+                        <ItemViewer 
+                          protocol={viewerProtocol} 
+                          endpoint={viewerEndpoint} 
+                          geometry={data?.data?.attributes?.ui_viewer_geometry}
+                          wxs_identifier={data?.data?.attributes?.gbl_wxsidentifier_s}
+                          available={data?.data?.attributes?.dct_accessrights_s === 'Public'}
+                          layerId={data?.data?.attributes?.id}
+                          pageValue="SHOW"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
+                  {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
+                  {viewerProtocol === 'open_index_map' && <IndexMap />}
+                </div>
+
+                {/* Metadata */}
+                <div className="col-span-4">
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <MetadataTable data={data} />
+                  </div>
+                  
+                  {/* Add Citation Table */}
+                  <CitationTable 
+                    citation={data?.data?.attributes?.ui_citation || ''}
+                    permalink={window.location.href}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </main>
 

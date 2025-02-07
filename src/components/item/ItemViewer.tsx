@@ -2,6 +2,9 @@ import React from 'react';
 import { leafletViewerOptions } from '../../config/leafletConfig';
 import { parse } from 'terraformer-wkt-parser';
 import { getWmsFeatureInfo } from '../../services/wms';
+import { Link } from 'react-router-dom';
+import { MetadataTable } from './MetadataTable';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface ItemViewerProps {
   protocol: string;
@@ -11,9 +14,29 @@ interface ItemViewerProps {
   available: boolean;
   layerId: string;
   pageValue: string;
+  data: any;
+  searchResults?: any[];
+  currentIndex?: number;
+  totalResults?: number;
+  searchUrl?: string;
+  currentPage?: number;
 }
 
-export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, available, pageValue }: ItemViewerProps) {
+export function ItemViewer({ 
+  protocol,
+  endpoint,
+  geometry,
+  wxs_identifier,
+  available,
+  layerId,
+  pageValue,
+  data,
+  searchResults,
+  currentIndex,
+  totalResults,
+  searchUrl,
+  currentPage
+}: ItemViewerProps) {
   // Helper function to titleize a string
   const titleize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -65,6 +88,16 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
   }
 
   const isWmsItem = protocol === 'wms';
+
+  const hasMoreResults = searchResults && currentIndex !== undefined && 
+    currentIndex < searchResults.length - 1;
+  const hasPreviousResults = searchResults && currentIndex !== undefined && 
+    currentIndex > 0;
+
+  const nextItem = hasMoreResults && searchResults ? 
+    searchResults[currentIndex! + 1] : null;
+  const prevItem = hasPreviousResults && searchResults ? 
+    searchResults[currentIndex! - 1] : null;
 
   switch (viewerType) {
     case 'clover':
@@ -118,4 +151,12 @@ export function ItemViewer({ protocol, endpoint, geometry, wxs_identifier, avail
         </div>
       );
   }
+
+  return (
+    <div className="bg-white shadow-sm rounded-lg">
+      <div className="p-6">
+        <MetadataTable data={data} />
+      </div>
+    </div>
+  );
 } 

@@ -1,0 +1,97 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
+import type { GeoDocument } from '../../types/api';
+
+interface ItemBreadcrumbsProps {
+  item: GeoDocument;
+}
+
+export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
+  // Helper to build search URL with accumulated facets
+  const buildSearchUrl = (facets: Array<{ field: string; value: string }>) => {
+    const params = new URLSearchParams();
+    facets.forEach(({ field, value }) => {
+      params.append(`fq[${field}][]`, value);
+    });
+    return `/search?${params.toString()}`;
+  };
+
+  // Build breadcrumb items with accumulated facets
+  const breadcrumbs = [];
+
+  // Resource Class
+  if (item.gbl_resourceclass_sm?.[0]) {
+    breadcrumbs.push({
+      label: item.gbl_resourceclass_sm[0],
+      facets: [{
+        field: 'resource_class_agg',
+        value: item.gbl_resourceclass_sm[0]
+      }]
+    });
+  }
+
+  // Resource Type
+  if (item.gbl_resourcetype_sm?.[0]) {
+    breadcrumbs.push({
+      label: item.gbl_resourcetype_sm[0],
+      facets: [
+        ...breadcrumbs[0]?.facets || [],
+        {
+          field: 'resource_type_agg',
+          value: item.gbl_resourcetype_sm[0]
+        }
+      ]
+    });
+  }
+
+  // Place (first entry only)
+  if (item.dct_spatial_sm?.[0]) {
+    breadcrumbs.push({
+      label: item.dct_spatial_sm[0],
+      facets: [
+        ...breadcrumbs[1]?.facets || [],
+        {
+          field: 'spatial_agg',
+          value: item.dct_spatial_sm[0]
+        }
+      ]
+    });
+  }
+
+  // Index Year
+  if (item.dct_temporal_sm?.[0]) {
+    breadcrumbs.push({
+      label: item.dct_temporal_sm[0],
+      facets: [
+        ...breadcrumbs[2]?.facets || [],
+        {
+          field: 'index_year_agg',
+          value: item.dct_temporal_sm[0]
+        }
+      ]
+    });
+  }
+
+  if (breadcrumbs.length === 0) return null;
+
+  return (
+    <nav className="flex" aria-label="Breadcrumb">
+      <ol className="flex items-center space-x-2">
+        {breadcrumbs.map((crumb, index) => (
+          <li key={crumb.label} className="flex items-center">
+            {index > 0 && (
+              <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />
+            )}
+            <Link
+              to={buildSearchUrl(crumb.facets)}
+              className="text-sm font-medium text-blue-600 hover:text-blue-800"
+            >
+              {crumb.label}
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+} 
