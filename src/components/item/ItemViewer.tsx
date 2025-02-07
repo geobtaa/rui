@@ -135,7 +135,7 @@ export function ItemViewer({
         <div className="sticky top-[88px]">
           <div
             id="leaflet-viewer"
-            className="viewer h-[calc(100vh-120px)]"
+            className="viewer h-[500px]"
             data-controller="leaflet-viewer"
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}

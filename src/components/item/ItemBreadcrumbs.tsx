@@ -85,7 +85,7 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
             )}
             <Link
               to={buildSearchUrl(crumb.facets)}
-              className="text-sm font-medium text-blue-600 hover:text-blue-800"
+              className="text-sm font-medium text-gray-500 hover:text-blue-600"
             >
               {crumb.label}
             </Link>

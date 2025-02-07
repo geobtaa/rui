@@ -12,6 +12,7 @@ import { ItemViewer } from '../components/item/ItemViewer';
 import { ItemBreadcrumbs } from '../components/item/ItemBreadcrumbs';
 import { ItemSubtitle } from '../components/item/ItemSubtitle';
 import { CitationTable } from '../components/item/CitationTable';
+import { FullDetailsTable } from '../components/item/FullDetailsTable';
 
 interface SearchState {
   searchResults: Array<{ id: string }>;
@@ -202,24 +203,14 @@ export function ItemView() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 bg-gray-50 pt-6">
+      <main className="flex-1 bg-gray-50 pt-4 pb-8 mb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {data?.data?.attributes && (
             <>
-              {/* Header section with breadcrumbs and navigation */}
-              <div className="flex justify-between items-start mb-6">
-                {/* Left side: Breadcrumbs */}
-                <div className="space-y-4">
-                  <ItemBreadcrumbs item={data.data.attributes} />
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                      {data.data.attributes.dct_title_s}
-                    </h1>
-                    <ItemSubtitle item={data.data.attributes} />
-                  </div>
-                </div>
-
-                {/* Right side: Navigation Controls */}
+              {/* Navigation bar with breadcrumbs and pagination */}
+              <div className="flex justify-between items-center mb-6">
+                <ItemBreadcrumbs item={data.data.attributes} />
+                
                 <div className="flex items-center gap-4">
                   <Link
                     to={searchState?.searchUrl || '/'}
@@ -267,6 +258,14 @@ export function ItemView() {
                 </div>
               </div>
 
+              {/* Title section */}
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {data.data.attributes.dct_title_s}
+                </h1>
+                <ItemSubtitle item={data.data.attributes} />
+              </div>
+
               {/* Rest of the content */}
               <div className="grid grid-cols-12 gap-8">
                 {/* Viewer - spans first two columns */}
@@ -290,6 +289,9 @@ export function ItemView() {
                   {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
                   {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
+
+                  {/* Add Full Details table */}
+                  <FullDetailsTable data={data} />
                 </div>
 
                 {/* Metadata */}

@@ -26,10 +26,19 @@ export function MetadataTable({ data }: MetadataTableProps) {
     return value?.toString() || '';
   };
 
+  // Helper function to determine if a value is singular or plural
+  const getLabel = (key: string, label: string): string => {
+    const value = attributes[key];
+    if (Array.isArray(value) && value.length === 1) {
+      return label.replace('(s)', '');
+    }
+    return label;
+  };
+
   // Metadata field definitions with labels
   const metadataFields = [
-    { key: 'dct_description_sm', label: 'Item Description', colSpan: 3 },
-    { key: 'dct_spatial_sm', label: 'Place(s)', colSpan: 3 },
+    { key: 'dct_description_sm', label: 'Description', colSpan: 3 },
+    { key: 'dct_spatial_sm', label: getLabel('dct_spatial_sm', 'Places'), colSpan: 3 },
     { 
       type: 'combined',
       cells: [
@@ -55,48 +64,63 @@ export function MetadataTable({ data }: MetadataTableProps) {
   ];
 
   return (
-    <table className="min-w-full divide-y divide-gray-200">
-      <tbody className="divide-y divide-gray-200">
-        {metadataFields.map((field, index) => {
-          if (field.type === 'combined') {
-            // Handle the special combined row
-            const hasAnyValue = field.cells.some(cell => hasValue(attributes[cell.key]));
-            if (!hasAnyValue) return null;
+    <div>
+      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Item Summary
+          </h2>
+          <a 
+            href="#full-details"
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+          >
+            Full Details ↓
+          </a>
+        </div>
+      </div>
+      <table className="min-w-full divide-y divide-gray-200">
+        <tbody className="divide-y divide-gray-200">
+          {metadataFields.map((field, index) => {
+            if (field.type === 'combined') {
+              // Handle the special combined row
+              const hasAnyValue = field.cells.some(cell => hasValue(attributes[cell.key]));
+              if (!hasAnyValue) return null;
+
+              return (
+                <tr key={`combined-${index}`} className="hover:bg-gray-50">
+                  {field.cells.map(cell => (
+                    <td key={cell.key} className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-500 mb-1">
+                        {cell.label}
+                      </div>
+                      <div className="text-sm text-gray-900">
+                        {formatValue(attributes[cell.key])}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              );
+            }
+
+            // Handle regular rows
+            const value = attributes[field.key];
+            if (!hasValue(value)) return null;
 
             return (
-              <tr key={`combined-${index}`} className="hover:bg-gray-50">
-                {field.cells.map(cell => (
-                  <td key={cell.key} className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-500 mb-1">
-                      {cell.label}
-                    </div>
-                    <div className="text-sm text-gray-900">
-                      {formatValue(attributes[cell.key])}
-                    </div>
-                  </td>
-                ))}
+              <tr key={field.key} className="hover:bg-gray-50">
+                <td colSpan={field.colSpan} className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-500 mb-1">
+                    {field.label}
+                  </div>
+                  <div className="text-sm text-gray-900">
+                    {formatValue(value)}
+                  </div>
+                </td>
               </tr>
             );
-          }
-
-          // Handle regular rows
-          const value = attributes[field.key];
-          if (!hasValue(value)) return null;
-
-          return (
-            <tr key={field.key} className="hover:bg-gray-50">
-              <td colSpan={field.colSpan} className="px-6 py-4">
-                <div className="text-sm font-medium text-gray-500 mb-1">
-                  {field.label}
-                </div>
-                <div className="text-sm text-gray-900">
-                  {formatValue(value)}
-                </div>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
