@@ -1,26 +1,33 @@
 export interface GeoDocument {
   id: string;
-  dct_title_s: string;
-  dct_creator_sm: string[];
-  dct_description_sm?: string[];
-  dc_publisher_sm: string[];
-  dct_spatial_sm: string[];
-  gbl_resourceclass_sm: string[];
-  gbl_resourcetype_sm: string[];
-  b1g_language_sm: string[];
-  dc_subject_sm: string[];
-  schema_provider_s: string;
-  dct_accessrights_s: string;
-  gbl_georeferenced_b: string;
-  b1g_georeferenced_allmaps_b: string;
-  dct_temporal_sm: string[];
-  dct_rightsholder_sm: string[];
-  dct_license_sm: string[];
-  dct_subject_sm: string[];
-  dct_references_s: string;
-  ui_viewer_geometry?: string;
-  locn_geometry?: string;
-  ui_thumbnail_url?: string;
+  type: string;
+  attributes: {
+    id: string;
+    dct_title_s: string;
+    dct_creator_sm: string[];
+    dct_description_sm?: string[];
+    dc_publisher_sm: string[];
+    dct_spatial_sm: string[];
+    gbl_resourceclass_sm: string[];
+    gbl_resourcetype_sm: string[];
+    b1g_language_sm: string[];
+    dc_subject_sm: string[];
+    schema_provider_s: string;
+    dct_accessrights_s: string;
+    gbl_georeferenced_b: string;
+    b1g_georeferenced_allmaps_b: string;
+    dct_temporal_sm: string[];
+    dct_rightsholder_sm: string[];
+    dct_license_sm: string[];
+    dct_subject_sm: string[];
+    dct_references_s: string;
+    locn_geometry?: string;
+  };
+  ui_thumbnail_url: string;
+  ui_citation: string;
+  ui_viewer_protocol: string;
+  ui_viewer_endpoint: string;
+  ui_viewer_geometry: any;
 }
 
 export interface GeoDocumentDetails extends GeoDocument {

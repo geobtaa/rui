@@ -5,6 +5,7 @@ import { Calendar, Building2, BookOpen } from 'lucide-react';
 import { useDebug } from '../context/DebugContext';
 import { useMap } from '../context/MapContext';
 import { BookmarkButton } from './BookmarkButton';
+import { getResourceIcon } from '../utils/resourceIcons';
 
 interface SearchResultsProps {
   results: GeoDocument[];
@@ -57,6 +58,25 @@ export function SearchResults({
   return (
     <div className="space-y-6">
       {results.map((result, index) => {
+        // Add detailed debugging
+        console.log('Raw result object:', {
+          id: result.id,
+          type: result.type,
+          attributes: result.attributes,
+          thumbnail: result.ui_thumbnail_url,
+          // Log the full object to see its structure
+          fullResult: result
+        });
+
+        // Add detailed debug logging for thumbnails
+        console.log('Full result object:', result);
+        console.log('Result thumbnail debug:', {
+          id: result.id,
+          title: result.dct_title_s,
+          thumbnailUrl: result.ui_thumbnail_url,
+          resourceClass: result.gbl_resourceclass_sm?.[0]
+        });
+
         // Debug individual result
         console.log(`Rendering result ${result.id}:`, {
           title: result.dct_title_s,
@@ -75,22 +95,25 @@ export function SearchResults({
               {/* Thumbnail */}
               <div className="w-48 flex-shrink-0">
                 {result.ui_thumbnail_url ? (
-                  <>
-                    {/* Add debug output */}
-                    {console.log(`Rendering thumbnail for ${result.id}:`, result.ui_thumbnail_url)}
+                  <div className="h-48 w-48 rounded-l-lg">
                     <img
                       src={result.ui_thumbnail_url}
                       alt={`Thumbnail for ${result.dct_title_s}`}
                       className="h-48 w-48 object-cover rounded-l-lg"
                       onError={(e) => {
                         console.error(`Error loading thumbnail for ${result.id}:`, e);
-                        e.currentTarget.style.display = 'none';
+                        // Instead of hiding, replace with fallback icon
+                        e.currentTarget.parentElement!.innerHTML = `
+                          <div class="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
+                            ${getResourceIcon(result.gbl_resourceclass_sm?.[0])}
+                          </div>
+                        `;
                       }}
                     />
-                  </>
+                  </div>
                 ) : (
-                  <div className="h-48 w-48 bg-gray-100 flex items-center justify-center rounded-l-lg">
-                    <span className="text-gray-400">No thumbnail</span>
+                  <div className="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
+                    {getResourceIcon(result.gbl_resourceclass_sm?.[0])}
                   </div>
                 )}
               </div>
