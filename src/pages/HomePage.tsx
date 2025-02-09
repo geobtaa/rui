@@ -38,7 +38,7 @@ export function HomePage() {
     fetchCounts();
   }, []);
 
-  const resourceClasses: ResourceClass[] = [
+  const resourceClasses = [
     { 
       id: 'Dataset', 
       label: 'Datasets', 
@@ -53,11 +53,41 @@ export function HomePage() {
       icon: <Map className="w-6 h-6" />, 
       aggValue: 'Maps' 
     },
-    { id: 'Web service', label: 'Web Services', count: 5, icon: <Globe className="w-6 h-6" />, aggValue: 'Web services' },
-    { id: 'Collection', label: 'Collections', count: 2, icon: <Library className="w-6 h-6" />, aggValue: 'Collections' },
-    { id: 'Imagery', label: 'Imagery', count: 2, icon: <Image className="w-6 h-6" />, aggValue: 'Imagery' },
-    { id: 'Other', label: 'Other', count: 2, icon: <Folder className="w-6 h-6" />, aggValue: 'Other' },
-    { id: 'Website', label: 'Websites', count: 1, icon: <Globe2 className="w-6 h-6" />, aggValue: 'Websites' },
+    { 
+      id: 'Web service', 
+      label: 'Web Services', 
+      count: resourceCounts['Web services'] || 0,
+      icon: <Globe className="w-6 h-6" />, 
+      aggValue: 'Web services' 
+    },
+    { 
+      id: 'Collection', 
+      label: 'Collections', 
+      count: resourceCounts['Collections'] || 0,
+      icon: <Library className="w-6 h-6" />, 
+      aggValue: 'Collections' 
+    },
+    { 
+      id: 'Imagery', 
+      label: 'Imagery', 
+      count: resourceCounts['Imagery'] || 0,
+      icon: <Image className="w-6 h-6" />, 
+      aggValue: 'Imagery' 
+    },
+    { 
+      id: 'Other', 
+      label: 'Other', 
+      count: resourceCounts['Other'] || 0,
+      icon: <Folder className="w-6 h-6" />, 
+      aggValue: 'Other' 
+    },
+    { 
+      id: 'Website', 
+      label: 'Websites', 
+      count: resourceCounts['Websites'] || 0,
+      icon: <Globe2 className="w-6 h-6" />, 
+      aggValue: 'Websites' 
+    },
   ];
 
   const handleSearch = (query: string) => {

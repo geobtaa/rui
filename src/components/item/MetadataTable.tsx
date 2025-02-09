@@ -1,4 +1,5 @@
 import React from 'react';
+import { humanizeFieldName } from '../../constants/fieldLabels';
 
 interface MetadataTableProps {
   data: any;
@@ -37,8 +38,11 @@ export function MetadataTable({ data }: MetadataTableProps) {
 
   // Metadata field definitions with labels
   const metadataFields = [
+    // Core Descriptive Fields
     { key: 'dct_description_sm', label: 'Description', colSpan: 3 },
     { key: 'dct_spatial_sm', label: getLabel('dct_spatial_sm', 'Places'), colSpan: 3 },
+    
+    // Temporal and Format Information
     { 
       type: 'combined',
       cells: [
@@ -54,13 +58,16 @@ export function MetadataTable({ data }: MetadataTableProps) {
         { key: 'schema_provider_s', label: 'Provider' },
       ]
     },
+
+    // Institution and Access
     { key: 'dct_provenance_s', label: 'Institution', colSpan: 3 },
-    { key: 'dc_publisher_sm', label: 'Publisher', colSpan: 3 },
-    { key: 'dc_subject_sm', label: 'Subject', colSpan: 3 },
     { key: 'dct_accessRights_s', label: 'Access Rights', colSpan: 3 },
     { key: 'dct_license_sm', label: 'License', colSpan: 3 },
+
+    // Classification
+    { key: 'dc_subject_sm', label: 'Subject', colSpan: 3 },
     { key: 'gbl_resourceType_sm', label: 'Resource Type', colSpan: 3 },
-    { key: 'gbl_resourceClass_sm', label: 'Resource Class', colSpan: 3 },
+    { key: 'gbl_resourceClass_sm', label: 'Resource Class', colSpan: 3 }
   ];
 
   return (
