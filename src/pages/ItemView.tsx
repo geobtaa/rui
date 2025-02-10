@@ -208,7 +208,7 @@ export function ItemView() {
           {data?.data?.attributes && (
             <>
               {/* Navigation bar with breadcrumbs and pagination */}
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-2">
                 <ItemBreadcrumbs item={data.data.attributes} />
                 
                 <div className="flex items-center gap-4">
@@ -300,11 +300,15 @@ export function ItemView() {
                     <MetadataTable data={data} />
                   </div>
                   
-                  {/* Add Citation Table */}
-                  <CitationTable 
-                    citation={data?.data?.attributes?.ui_citation || ''}
-                    permalink={window.location.href}
-                  />
+                  {/* Update to use the correct nested path */}
+                  {data?.data?.attributes?.attributes?.ui_citation && (
+                    <div className="mt-6">
+                      <CitationTable 
+                        citation={data.data.attributes.attributes.ui_citation}
+                        permalink={window.location.href}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </>
