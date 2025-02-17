@@ -13,6 +13,7 @@ import { ItemBreadcrumbs } from '../components/item/ItemBreadcrumbs';
 import { ItemSubtitle } from '../components/item/ItemSubtitle';
 import { CitationTable } from '../components/item/CitationTable';
 import { FullDetailsTable } from '../components/item/FullDetailsTable';
+import { LocationMap } from '../components/item/LocationMap';
 
 interface SearchState {
   searchResults: Array<{ id: string }>;
@@ -295,12 +296,16 @@ export function ItemView() {
                 </div>
 
                 {/* Metadata */}
-                <div className="col-span-4">
+                <div className="col-span-4 space-y-6">
+                  {/* New Location Map Section */}
+                  {data?.data?.attributes?.ui_viewer_geometry && (
+                    <LocationMap geometry={data.data.attributes.ui_viewer_geometry} />
+                  )}
+
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <MetadataTable data={data} />
                   </div>
                   
-                  {/* Update to use the correct nested path */}
                   {data?.data?.attributes?.attributes?.ui_citation && (
                     <div className="mt-6">
                       <CitationTable 

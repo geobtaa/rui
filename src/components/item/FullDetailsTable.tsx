@@ -9,6 +9,19 @@ interface FullDetailsTableProps {
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.data?.attributes || {};
   
+  // Define the fields for the Document Metadata table
+  const documentMetadataFields = [
+    'dct_title_s', 'dct_alternative_sm', 'dct_description_sm', 'dct_creator_sm', 'dct_publisher_sm', 'dct_subject_sm', 'dcat_theme_sm', 'dcat_keyword_sm', 
+    'dct_temporal_sm', 'dct_issued_s', 'gbl_indexyear_im', 'gbl_daterange_drsim', 'dct_rights_sm', 'dc_rightsholder_sm', 
+    'dct_license_sm', 'dc_accessrights_s', 'dct_format_s', 'gbl_filesize_s', 'gbl_wxsidentifier_s', 'dct_references_s', 'dct_identifier_sm', 'dct_language_sm', 
+    'dct_date_added_s', 'locn_geometry', 'dcat_bbox', 'dcat_centroid', 'gbl_mdversion_s'
+  ];
+
+  // Define the fields for the Metadata Facets table
+  const metadataFacetsFields = [
+    'gbl_resourceclass_sm', 'gbl_resourcetype_sm', 'dct_spatial_sm', 'gbl_provider_sm'
+  ];
+
   // Group fields by their prefix/category
   const groupFields = () => {
     const entries = Object.entries(attributes)
@@ -21,53 +34,11 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
         shouldDisplayField(key)
       ));
 
-    // Define field groups in order
-    const groups = [
-      {
-        title: 'Dublin Core Terms',
-        prefix: 'dct_',
-        fields: entries.filter(([key]) => key.startsWith('dct_'))
-      },
-      {
-        title: 'Dublin Core',
-        prefix: 'dc_',
-        fields: entries.filter(([key]) => key.startsWith('dc_'))
-      },
-      {
-        title: 'GeoBlacklight',
-        prefix: 'gbl_',
-        fields: entries.filter(([key]) => key.startsWith('gbl_'))
-      },
-      {
-        title: 'DCAT',
-        prefix: 'dcat_',
-        fields: entries.filter(([key]) => key.startsWith('dcat_'))
-      },
-      {
-        title: 'Schema.org',
-        prefix: 'schema_',
-        fields: entries.filter(([key]) => key.startsWith('schema_'))
-      },
-      {
-        title: 'System Fields',
-        prefix: 'layer_',
-        fields: entries.filter(([key]) => key.startsWith('layer_'))
-      },
-      {
-        title: 'Other Fields',
-        prefix: '',
-        fields: entries.filter(([key]) => 
-          !key.startsWith('dct_') && 
-          !key.startsWith('dc_') && 
-          !key.startsWith('gbl_') && 
-          !key.startsWith('dcat_') && 
-          !key.startsWith('schema_') && 
-          !key.startsWith('layer_')
-        )
-      }
-    ];
+    // Separate fields into Document Metadata and Metadata Facets
+    const documentMetadata = entries.filter(([key]) => documentMetadataFields.includes(key));
+    const metadataFacets = entries.filter(([key]) => metadataFacetsFields.includes(key));
 
-    return groups.filter(group => group.fields.length > 0);
+    return { documentMetadata, metadataFacets };
   };
 
   const renderValue = (key: string, value: any) => {
@@ -100,46 +71,56 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     return Array.isArray(value) ? value.join(', ') : value.toString();
   };
 
-  const groups = groupFields();
+  const { documentMetadata, metadataFacets } = groupFields();
 
   return (
     <div id="full-details" className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Full Details
-        </h2>
+      <h2 className="text-lg font-semibold text-gray-900 px-6 py-4">
+        Full Details
+      </h2>
+      <div className="flex">
+        <div className="w-2/3">
+          <table className="min-w-full divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
+              {documentMetadata.map(([key, value]) => (
+                <tr key={key} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 w-1/3">
+                    <div className="text-sm font-medium text-gray-500">
+                      {humanizeFieldName(key)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">
+                      {renderValue(key, value)}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="w-1/3">
+          <div className="sr-only px-6 py-4 bg-gray-100 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Metadata Facets
+            </h2>
+          </div>
+          <div className="px-6 py-4 bg-gray-100">
+            {metadataFacets.map(([key, value]) => (
+              <div key={key} className="mb-4">
+                <h5 className="text-sm font-medium text-gray-500">
+                  {humanizeFieldName(key)}
+                </h5>
+                <ul className="list-none">
+                  <li className="text-sm text-gray-900">
+                    {renderValue(key, value)}
+                  </li>
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <table className="min-w-full divide-y divide-gray-200">
-        <tbody className="divide-y divide-gray-200">
-          {groups.map(group => (
-            <React.Fragment key={group.title}>
-              <tr className="bg-gray-50">
-                <td colSpan={2} className="px-6 py-3">
-                  <h3 className="text-sm font-medium text-gray-900">
-                    {group.title}
-                  </h3>
-                </td>
-              </tr>
-              {group.fields
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([key, value]) => (
-                  <tr key={key} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 w-1/3">
-                      <div className="text-sm font-medium text-gray-500">
-                        {humanizeFieldName(key)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {renderValue(key, value)}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 } 

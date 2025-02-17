@@ -48,6 +48,47 @@ function createApiUrl(baseUrl: string): URL {
   return url;
 }
 
+// Add this helper function to convert WKT to GeoJSON object
+function wktToGeoJSON(wkt: string | null): GeoJSON.FeatureCollection | null {
+  if (!wkt) return null;
+  
+  try {
+    // Match the polygon coordinates
+    const match = wkt.match(/POLYGON\(\((.*?)\)\)/);
+    if (!match) return null;
+    
+    // Split into coordinate pairs and convert to numbers
+    const coordinates = match[1].split(',').map(pair => {
+      try {
+        const [lon, lat] = pair.trim().split(' ').map(Number);
+        if (isNaN(lon) || isNaN(lat)) return null;
+        return [lon, lat];
+      } catch (e) {
+        return null;
+      }
+    }).filter((coord): coord is [number, number] => coord !== null);
+
+    // Ensure we have valid coordinates
+    if (coordinates.length < 3) return null;
+
+    // Create GeoJSON FeatureCollection structure
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coordinates]
+        }
+      }]
+    };
+  } catch (error) {
+    console.error('Error converting WKT to GeoJSON:', error);
+    return null;
+  }
+}
+
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
   console.log('Raw API Response:', jsonApiResponse);
   
@@ -88,7 +129,9 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
     ui_citation: '',  // Required by GeoDocument type
     ui_viewer_protocol: item.attributes.ui_viewer_protocol || '',
     ui_viewer_endpoint: item.attributes.ui_viewer_endpoint || '',
-    ui_viewer_geometry: item.attributes.ui_viewer_geometry || null
+    // Try ui_viewer_geometry first, fall back to converted locn_geometry
+    ui_viewer_geometry: item.attributes.ui_viewer_geometry || 
+                       wktToGeoJSON(item.attributes.locn_geometry)
   }));
 
   // Transform included facets into the expected format
