@@ -20,6 +20,11 @@ Run the server:
 npm run dev
 ```
 
+Push to the gh-pages branch:
+```bash
+npm run deploy
+```
+
 ## Todos
 
 - [ ] Item View - Catch up to BTAA redesign
