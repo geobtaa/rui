@@ -61,7 +61,7 @@ interface Facet {
   };
 }
 
-interface SortOption {
+export interface SortOption {
   type: 'sort';
   id: string;
   attributes: {

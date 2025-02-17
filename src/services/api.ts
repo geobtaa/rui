@@ -9,7 +9,7 @@ export class ApiError extends Error {
 }
 
 const defaultHeaders = {
-  'Accept': 'application/json',
+  'Accept': 'application/vnd.api+json',
   'Content-Type': 'application/json',
   // Only include CSRF token if it exists
   ...(import.meta.env.VITE_CSRF_TOKEN ? {
@@ -27,41 +27,51 @@ const fetchConfig = {
   mode: 'cors' as const
 };
 
+const defaultFetchOptions: FetchOptions = {
+  useJsonp: import.meta.env.VITE_USE_JSONP === 'true'
+};
+
+// Helper function to create a URL with common parameters
+function createApiUrl(baseUrl: string): URL {
+  const url = new URL(baseUrl);
+  url.searchParams.set('format', 'json');
+  return url;
+}
+
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
-  // Add debug logging
   console.log('Raw API Response:', jsonApiResponse);
   
-  const docs = jsonApiResponse.data.map(item => {
-    const doc = {
+  const docs = jsonApiResponse.data.map(item => ({
+    id: item.id,
+    type: item.type,
+    attributes: {
       id: item.id,
       dct_title_s: item.attributes.dct_title_s,
-      dct_creator_sm: item.attributes.dct_creator_sm || [],
-      dct_description_sm: item.attributes.dct_description_sm || [],
+      dct_creator_sm: item.attributes.creator_sm || [],
+      dct_description_sm: item.attributes.description || [],
       dc_publisher_sm: item.attributes.dc_publisher_sm || [],
       dct_spatial_sm: item.attributes.dct_spatial_sm || [],
-      gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
-      gbl_resourcetype_sm: item.attributes.gbl_resourcetype_sm || [],
-      b1g_language_sm: item.attributes.b1g_language_sm || [],
+      gbl_resourceclass_sm: [],  // Default empty arrays for optional fields
+      gbl_resourcetype_sm: [],
+      b1g_language_sm: [],
       dc_subject_sm: item.attributes.dc_subject_sm || [],
-      schema_provider_s: item.attributes.schema_provider_s || '',
-      dct_accessrights_s: item.attributes.dct_accessrights_s || '',
-      gbl_georeferenced_b: item.attributes.gbl_georeferenced_b || '',
-      b1g_georeferenced_allmaps_b: item.attributes.b1g_georeferenced_allmaps_b || '',
+      schema_provider_s: '',
+      dct_accessrights_s: '',
+      gbl_georeferenced_b: '',
+      b1g_georeferenced_allmaps_b: '',
       dct_temporal_sm: item.attributes.dct_temporal_sm || [],
-      dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
-      dct_license_sm: item.attributes.dct_license_sm || [],
-      dct_subject_sm: item.attributes.dct_subject_sm || [],
+      dct_rightsholder_sm: [],
+      dct_license_sm: [],
+      dct_subject_sm: item.attributes.dc_subject_sm || [], // Using dc_subject_sm as fallback
       dct_references_s: item.attributes.dct_references_s || '',
       locn_geometry: item.attributes.locn_geometry,
-      ui_viewer_geometry: item.attributes.ui_viewer_geometry || '',
-      ui_thumbnail_url: item.attributes.ui_thumbnail_url,
-    };
-    console.log(`Transformed doc ${item.id}:`, { 
-      title: doc.dct_title_s, 
-      thumbnail: doc.ui_thumbnail_url 
-    });
-    return doc;
-  });
+    },
+    ui_thumbnail_url: item.attributes.ui_thumbnail_url || '',
+    ui_citation: '',  // Required by GeoDocument type
+    ui_viewer_protocol: item.attributes.ui_viewer_protocol || '',
+    ui_viewer_endpoint: item.attributes.ui_viewer_endpoint || '',
+    ui_viewer_geometry: null
+  }));
 
   // Transform included facets into the expected format
   const facets = jsonApiResponse.included?.reduce((acc, item) => {
@@ -77,7 +87,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       };
     }
     return acc;
-  }, {} as SearchResponse['facets']);
+  }, {} as NonNullable<SearchResponse['facets']>);
 
   // Transform sort options
   const sortOptions = jsonApiResponse.included
@@ -95,36 +105,60 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10
     },
     facets: facets || {},
-    sortOptions
+    sortOptions: sortOptions || []
   };
 }
 
 function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
   return new Promise((resolve, reject) => {
-    // Create a unique callback name if needed
     const uniqueCallback = `${callbackName}_${Date.now()}`;
-    
-    // Add the callback to window
-    (window as any)[uniqueCallback] = (data: T) => {
-      // Clean up
-      document.head.removeChild(script);
+    let script: HTMLScriptElement | null = document.createElement('script');
+    let timeoutId: number;
+
+    // Cleanup function to remove script and callback
+    const cleanup = () => {
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
       delete (window as any)[uniqueCallback];
-      resolve(data);
+      window.clearTimeout(timeoutId);
+      script = null;
+    };
+
+    // Set timeout to prevent hanging requests
+    timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(new Error('JSONP request timed out'));
+    }, 30000); // 30 second timeout
+
+    // Add the callback to window
+    (window as any)[uniqueCallback] = (data: T | { detail: string, path: string, method: string }) => {
+      cleanup();
+      
+      // Check if response is an error
+      if (typeof data === 'object' && data !== null && 'detail' in data) {
+        reject(new ApiError(`API Error: ${data.detail}`));
+        return;
+      }
+      
+      resolve(data as T);
     };
 
     // Create script element
-    const script = document.createElement('script');
     const urlWithCallback = new URL(url);
     urlWithCallback.searchParams.set('callback', uniqueCallback);
-    script.src = urlWithCallback.toString();
-    script.onerror = () => {
-      document.head.removeChild(script);
-      delete (window as any)[uniqueCallback];
-      reject(new Error('JSONP request failed'));
-    };
-
-    // Add script to document
-    document.head.appendChild(script);
+    if (!urlWithCallback.searchParams.has('format')) {
+      urlWithCallback.searchParams.set('format', 'json');
+    }
+    
+    if (script) {
+      script.src = urlWithCallback.toString();
+      script.onerror = () => {
+        cleanup();
+        reject(new Error('JSONP request failed'));
+      };
+      document.head.appendChild(script);
+    }
   });
 }
 
@@ -132,22 +166,50 @@ interface FetchOptions {
   useJsonp?: boolean;
 }
 
-async function unifiedFetch<T>(url: string, options: FetchOptions = {}): Promise<T> {
+async function unifiedFetch<T>(url: string, options: FetchOptions = defaultFetchOptions): Promise<T> {
+  const finalUrl = new URL(url);
+  
+  // Ensure format parameter is set
+  if (!finalUrl.searchParams.has('format')) {
+    finalUrl.searchParams.set('format', 'json');
+  }
+
   if (options.useJsonp) {
-    return jsonp<T>(url);
+    console.log('Using JSONP for request:', finalUrl.toString());
+    return jsonp<T>(finalUrl.toString());
   }
 
-  const response = await fetch(url, {
-    headers: defaultHeaders,
-    mode: 'cors',
-    credentials: 'include'
-  });
-
-  if (!response.ok) {
-    throw new ApiError(`HTTP error ${response.status}`, response.status);
+  console.log('Using regular fetch:', finalUrl.toString());
+  
+  // For document endpoints, request a specific response format
+  if (url.includes('/documents/')) {
+    finalUrl.searchParams.set('response_format', 'json_api');
+    finalUrl.searchParams.set('datetime_format', 'iso8601');
   }
+  
+  try {
+    const response = await fetch(finalUrl.toString(), {
+      headers: defaultHeaders,
+      mode: 'cors',
+      credentials: 'include'
+    });
 
-  return response.json();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error response:', errorText);
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new ApiError(errorJson.detail || 'API request failed', response.status);
+      } catch (e) {
+        throw new ApiError(`HTTP error ${response.status}: ${errorText}`, response.status);
+      }
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
 }
 
 export async function fetchSearchResults(
@@ -157,14 +219,13 @@ export async function fetchSearchResults(
   facets: FacetFilter[] = [],
   onApiCall?: (url: string) => void,
   sort?: string,
-  options: FetchOptions = {}
+  options: FetchOptions = defaultFetchOptions
 ): Promise<SearchResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
     : 'https://geo.btaa.org/';
-  const url = new URL(baseUrl);
+  const url = createApiUrl(baseUrl);
   
-  url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
   url.searchParams.set('q', query);
   url.searchParams.set('page', page.toString());
@@ -198,18 +259,24 @@ export async function fetchSearchResults(
 export async function fetchItemDetails(
   id: string, 
   onApiCall?: (url: string) => void,
-  options: FetchOptions = {}
+  options: FetchOptions = defaultFetchOptions
 ): Promise<GeoDocumentDetails> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/documents/` 
     : 'https://geo.btaa.org/';
-  const url = `${baseUrl}${id}`;
-  onApiCall?.(url);
+  const url = createApiUrl(`${baseUrl}${id}`);
+  onApiCall?.(url.toString());
   
   try {
-    return await unifiedFetch<GeoDocumentDetails>(url, options);
+    const response = await unifiedFetch<GeoDocumentDetails>(url.toString(), options);
+    console.log('Item details response:', response); // Add debugging
+    return response;
   } catch (error) {
-    throw new ApiError('Failed to fetch item details');
+    console.error('Error fetching item details:', error); // Add debugging
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(`Failed to fetch item details: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -229,7 +296,7 @@ interface SuggestResponse {
 
 export async function fetchSuggestions(
   query: string,
-  options: FetchOptions = {}
+  options: FetchOptions = defaultFetchOptions
 ): Promise<Suggestion[]> {
   if (!query.trim()) return [];
   
@@ -237,7 +304,7 @@ export async function fetchSuggestions(
     ? `${import.meta.env.VITE_API_BASE_URL}/suggest` 
     : 'https://geo.btaa.org/suggest';
   
-  const url = new URL(baseUrl);
+  const url = createApiUrl(baseUrl);
   url.searchParams.set('q', query);
 
   try {
@@ -252,7 +319,7 @@ export async function fetchSuggestions(
 export async function fetchBookmarkedItems(
   ids: string[],
   onApiCall?: (url: string) => void,
-  options: FetchOptions = {}
+  options: FetchOptions = defaultFetchOptions
 ): Promise<SearchResponse> {
   if (ids.length === 0) {
     return {
@@ -264,9 +331,8 @@ export async function fetchBookmarkedItems(
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
     : 'https://geo.btaa.org/';
-  const url = new URL(baseUrl);
+  const url = createApiUrl(baseUrl);
   
-  url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
   url.searchParams.set('q', '');
   
