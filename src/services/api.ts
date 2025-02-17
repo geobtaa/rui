@@ -33,7 +33,12 @@ const defaultFetchOptions: FetchOptions = {
 
 // Helper function to ensure HTTPS URL
 function ensureHttps(url: string): string {
-  return url.replace(/^http:/, 'https:');
+  // Check if the environment variable for enforcing HTTPS is set to true
+  const enforceHttps = import.meta.env.VITE_ENFORCE_HTTPS === 'true';
+  if (enforceHttps) {
+    return url.replace(/^http:/, 'https:');
+  }
+  return url;
 }
 
 // Helper function to create a URL with common parameters
@@ -327,7 +332,15 @@ export async function fetchSuggestions(
 
   try {
     const data = await unifiedFetch<SuggestResponse>(url.toString(), options);
-    return data.data;
+    // Only return the text field from each suggestion
+    return data.data.map(suggestion => ({
+      ...suggestion,
+      attributes: {
+        ...suggestion.attributes,
+        // Remove the title from the display
+        title: ''
+      }
+    }));
   } catch (error) {
     console.error('Error fetching suggestions:', error);
     return [];
