@@ -8,6 +8,12 @@ export class ApiError extends Error {
   }
 }
 
+const defaultHeaders = {
+  'Accept': 'application/json',
+  'Content-Type': 'application/json',
+  'X-CSRF-Token': import.meta.env.VITE_CSRF_TOKEN
+};
+
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
   // Add debug logging
   console.log('Raw API Response:', jsonApiResponse);
@@ -116,9 +122,9 @@ export async function fetchSearchResults(
   
   try {
     const response = await fetch(finalUrl, {
-      headers: {
-        'Accept': 'application/json'
-      }
+      credentials: 'include',
+      headers: defaultHeaders,
+      mode: 'cors'
     });
     
     if (!response.ok) {
@@ -149,9 +155,9 @@ export async function fetchItemDetails(id: string, onApiCall?: (url: string) => 
   
   try {
     const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json'
-      }
+      credentials: 'include',
+      headers: defaultHeaders,
+      mode: 'cors'
     });
     
     if (!response.ok) {
@@ -193,9 +199,9 @@ export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
 
   try {
     const response = await fetch(url.toString(), {
-      headers: {
-        'Accept': 'application/json'
-      }
+      credentials: 'include',
+      headers: defaultHeaders,
+      mode: 'cors'
     });
     
     if (!response.ok) {
@@ -240,9 +246,9 @@ export async function fetchBookmarkedItems(
   
   try {
     const response = await fetch(finalUrl, {
-      headers: {
-        'Accept': 'application/json'
-      }
+      credentials: 'include',
+      headers: defaultHeaders,
+      mode: 'cors'
     });
     
     if (!response.ok) {
