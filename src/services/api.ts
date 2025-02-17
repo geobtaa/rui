@@ -31,9 +31,14 @@ const defaultFetchOptions: FetchOptions = {
   useJsonp: import.meta.env.VITE_USE_JSONP === 'true'
 };
 
+// Helper function to ensure HTTPS URL
+function ensureHttps(url: string): string {
+  return url.replace(/^http:/, 'https:');
+}
+
 // Helper function to create a URL with common parameters
 function createApiUrl(baseUrl: string): URL {
-  const url = new URL(baseUrl);
+  const url = new URL(ensureHttps(baseUrl));
   url.searchParams.set('format', 'json');
   return url;
 }
@@ -47,22 +52,22 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
     attributes: {
       id: item.id,
       dct_title_s: item.attributes.dct_title_s,
-      dct_creator_sm: item.attributes.creator_sm || [],
-      dct_description_sm: item.attributes.description || [],
+      dct_creator_sm: item.attributes.dct_creator_sm || [],
+      dct_description_sm: item.attributes.dct_description_sm || [],
       dc_publisher_sm: item.attributes.dc_publisher_sm || [],
       dct_spatial_sm: item.attributes.dct_spatial_sm || [],
-      gbl_resourceclass_sm: [],  // Default empty arrays for optional fields
-      gbl_resourcetype_sm: [],
-      b1g_language_sm: [],
+      gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
+      gbl_resourcetype_sm: item.attributes.gbl_resourcetype_sm || [],
+      b1g_language_sm: item.attributes.b1g_language_sm || [],
       dc_subject_sm: item.attributes.dc_subject_sm || [],
-      schema_provider_s: '',
-      dct_accessrights_s: '',
-      gbl_georeferenced_b: '',
-      b1g_georeferenced_allmaps_b: '',
+      schema_provider_s: item.attributes.schema_provider_s || '',
+      dct_accessrights_s: item.attributes.dct_accessrights_s || '',
+      gbl_georeferenced_b: item.attributes.gbl_georeferenced_b || '',
+      b1g_georeferenced_allmaps_b: item.attributes.b1g_georeferenced_allmaps_b || '',
       dct_temporal_sm: item.attributes.dct_temporal_sm || [],
-      dct_rightsholder_sm: [],
-      dct_license_sm: [],
-      dct_subject_sm: item.attributes.dc_subject_sm || [], // Using dc_subject_sm as fallback
+      dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
+      dct_license_sm: item.attributes.dct_license_sm || [],
+      dct_subject_sm: item.attributes.dct_subject_sm || [],
       dct_references_s: item.attributes.dct_references_s || '',
       locn_geometry: item.attributes.locn_geometry,
     },
@@ -151,7 +156,7 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
     };
 
     // Create script element
-    const urlWithCallback = new URL(url);
+    const urlWithCallback = new URL(ensureHttps(url));
     urlWithCallback.searchParams.set('callback', uniqueCallback);
     if (!urlWithCallback.searchParams.has('format')) {
       urlWithCallback.searchParams.set('format', 'json');
@@ -166,6 +171,8 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
         cleanup();
         reject(new Error('JSONP request failed'));
       };
+      // Add crossorigin attribute to handle CORS
+      script.crossOrigin = 'anonymous';
       document.head.appendChild(script);
       console.log('JSONP script added to document');
     }
@@ -177,8 +184,8 @@ interface FetchOptions {
 }
 
 async function unifiedFetch<T>(url: string, options: FetchOptions = defaultFetchOptions): Promise<T> {
-  const finalUrl = new URL(url);
-  console.log('unifiedFetch called with options:', { url, useJsonp: options.useJsonp, envValue: import.meta.env.VITE_USE_JSONP });
+  const finalUrl = new URL(ensureHttps(url));
+  console.log('unifiedFetch called with options:', { url: finalUrl.toString(), useJsonp: options.useJsonp, envValue: import.meta.env.VITE_USE_JSONP });
   
   // Ensure format parameter is set
   if (!finalUrl.searchParams.has('format')) {
@@ -200,9 +207,13 @@ async function unifiedFetch<T>(url: string, options: FetchOptions = defaultFetch
   
   try {
     const response = await fetch(finalUrl.toString(), {
-      headers: defaultHeaders,
+      headers: {
+        ...defaultHeaders,
+        'Accept': 'application/javascript, application/json',
+      },
       mode: 'cors',
-      credentials: 'include'
+      credentials: 'include',
+      redirect: 'follow'
     });
 
     if (!response.ok) {
@@ -233,8 +244,8 @@ export async function fetchSearchResults(
   options: FetchOptions = defaultFetchOptions
 ): Promise<SearchResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
-    ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
-    : 'https://geo.btaa.org/';
+    ? `${import.meta.env.VITE_API_BASE_URL}/search` 
+    : 'https://geo.btaa.org/api/v1/search';
   const url = createApiUrl(baseUrl);
   
   url.searchParams.set('search_field', 'all_fields');
@@ -250,19 +261,15 @@ export async function fetchSearchResults(
     url.searchParams.append(`fq[${field}][]`, value);
   });
 
-  const finalUrl = url.toString();
-  onApiCall?.(finalUrl);
-  
+  if (onApiCall) {
+    onApiCall(url.toString());
+  }
+
   try {
-    const data = await unifiedFetch<JsonApiResponse>(finalUrl, options);
-    
-    if (!data.data || !Array.isArray(data.data)) {
-      throw new ApiError('Invalid response format from API');
-    }
-    
-    return transformJsonApiResponse(data);
+    const response = await unifiedFetch<JsonApiResponse>(url.toString(), options);
+    return transformJsonApiResponse(response);
   } catch (error) {
-    console.error('Fetch error details:', error);
+    console.error('Search error:', error);
     throw error;
   }
 }
