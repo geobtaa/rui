@@ -11,7 +11,20 @@ export class ApiError extends Error {
 const defaultHeaders = {
   'Accept': 'application/json',
   'Content-Type': 'application/json',
-  'X-CSRF-Token': import.meta.env.VITE_CSRF_TOKEN
+  // Only include CSRF token if it exists
+  ...(import.meta.env.VITE_CSRF_TOKEN ? {
+    'X-CSRF-Token': import.meta.env.VITE_CSRF_TOKEN
+  } : {})
+};
+
+// Update the fetch configuration in all request functions
+const fetchConfig = {
+  // credentials: 'include', // Comment this out temporarily
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  },
+  mode: 'cors' as const
 };
 
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
@@ -118,14 +131,15 @@ export async function fetchSearchResults(
   });
 
   const finalUrl = url.toString();
+  console.log('Fetching from URL:', finalUrl);
+  console.log('With headers:', defaultHeaders);
+  
   onApiCall?.(finalUrl);
   
   try {
-    const response = await fetch(finalUrl, {
-      credentials: 'include',
-      headers: defaultHeaders,
-      mode: 'cors'
-    });
+    const response = await fetch(finalUrl, fetchConfig);
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers));
     
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
@@ -139,6 +153,7 @@ export async function fetchSearchResults(
     
     return transformJsonApiResponse(data);
   } catch (error) {
+    console.error('Fetch error details:', error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -154,11 +169,7 @@ export async function fetchItemDetails(id: string, onApiCall?: (url: string) => 
   onApiCall?.(url);
   
   try {
-    const response = await fetch(url, {
-      credentials: 'include',
-      headers: defaultHeaders,
-      mode: 'cors'
-    });
+    const response = await fetch(url, fetchConfig);
     
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`);
@@ -198,11 +209,7 @@ export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
   url.searchParams.set('q', query);
 
   try {
-    const response = await fetch(url.toString(), {
-      credentials: 'include',
-      headers: defaultHeaders,
-      mode: 'cors'
-    });
+    const response = await fetch(url.toString(), fetchConfig);
     
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
@@ -245,11 +252,7 @@ export async function fetchBookmarkedItems(
   onApiCall?.(finalUrl);
   
   try {
-    const response = await fetch(finalUrl, {
-      credentials: 'include',
-      headers: defaultHeaders,
-      mode: 'cors'
-    });
+    const response = await fetch(finalUrl, fetchConfig);
     
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
