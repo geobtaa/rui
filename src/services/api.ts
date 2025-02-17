@@ -54,10 +54,18 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
   const docs = jsonApiResponse.data.map(item => ({
     id: item.id,
     type: item.type,
+    // Move these fields to the top level for direct access
+    dct_title_s: item.attributes.dct_title_s,
+    dct_description_sm: item.attributes.dct_description_sm || [],
+    dct_temporal_sm: item.attributes.dct_temporal_sm || [],
+    dc_publisher_sm: item.attributes.dc_publisher_sm || [],
+    gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
+    
+    // Keep the rest under attributes
     attributes: {
       id: item.id,
       dct_title_s: item.attributes.dct_title_s,
-      dct_creator_sm: item.attributes.dct_creator_sm || [],
+      dct_creator_sm: item.attributes.creator_sm || [],
       dct_description_sm: item.attributes.dct_description_sm || [],
       dc_publisher_sm: item.attributes.dc_publisher_sm || [],
       dct_spatial_sm: item.attributes.dct_spatial_sm || [],
@@ -72,7 +80,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       dct_temporal_sm: item.attributes.dct_temporal_sm || [],
       dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
       dct_license_sm: item.attributes.dct_license_sm || [],
-      dct_subject_sm: item.attributes.dct_subject_sm || [],
+      dct_subject_sm: item.attributes.dc_subject_sm || [],
       dct_references_s: item.attributes.dct_references_s || '',
       locn_geometry: item.attributes.locn_geometry,
     },
