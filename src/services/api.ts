@@ -110,13 +110,16 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
 }
 
 function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
+  console.log('Starting JSONP request:', url);
   return new Promise((resolve, reject) => {
     const uniqueCallback = `${callbackName}_${Date.now()}`;
+    console.log('Using callback name:', uniqueCallback);
     let script: HTMLScriptElement | null = document.createElement('script');
     let timeoutId: number;
 
     // Cleanup function to remove script and callback
     const cleanup = () => {
+      console.log('Cleaning up JSONP request:', uniqueCallback);
       if (script && script.parentNode) {
         script.parentNode.removeChild(script);
       }
@@ -127,16 +130,19 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
 
     // Set timeout to prevent hanging requests
     timeoutId = window.setTimeout(() => {
+      console.error('JSONP request timed out:', url);
       cleanup();
       reject(new Error('JSONP request timed out'));
     }, 30000); // 30 second timeout
 
     // Add the callback to window
     (window as any)[uniqueCallback] = (data: T | { detail: string, path: string, method: string }) => {
+      console.log('JSONP callback received data:', data);
       cleanup();
       
       // Check if response is an error
       if (typeof data === 'object' && data !== null && 'detail' in data) {
+        console.error('JSONP error response:', data);
         reject(new ApiError(`API Error: ${data.detail}`));
         return;
       }
@@ -151,13 +157,17 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
       urlWithCallback.searchParams.set('format', 'json');
     }
     
+    console.log('Final JSONP URL:', urlWithCallback.toString());
+    
     if (script) {
       script.src = urlWithCallback.toString();
-      script.onerror = () => {
+      script.onerror = (error) => {
+        console.error('JSONP script error:', error);
         cleanup();
         reject(new Error('JSONP request failed'));
       };
       document.head.appendChild(script);
+      console.log('JSONP script added to document');
     }
   });
 }
@@ -168,6 +178,7 @@ interface FetchOptions {
 
 async function unifiedFetch<T>(url: string, options: FetchOptions = defaultFetchOptions): Promise<T> {
   const finalUrl = new URL(url);
+  console.log('unifiedFetch called with options:', { url, useJsonp: options.useJsonp, envValue: import.meta.env.VITE_USE_JSONP });
   
   // Ensure format parameter is set
   if (!finalUrl.searchParams.has('format')) {
