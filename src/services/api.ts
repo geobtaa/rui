@@ -154,10 +154,7 @@ export async function fetchSearchResults(
     return transformJsonApiResponse(data);
   } catch (error) {
     console.error('Fetch error details:', error);
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(`Failed to fetch search results: ${error.message}`);
+    throw error;
   }
 }
 
