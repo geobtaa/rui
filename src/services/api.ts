@@ -88,7 +88,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
     ui_citation: '',  // Required by GeoDocument type
     ui_viewer_protocol: item.attributes.ui_viewer_protocol || '',
     ui_viewer_endpoint: item.attributes.ui_viewer_endpoint || '',
-    ui_viewer_geometry: null
+    ui_viewer_geometry: item.attributes.ui_viewer_geometry || null
   }));
 
   // Transform included facets into the expected format
