@@ -170,7 +170,7 @@ export function HomePage() {
                     </span>
                   </div>
                   <span className="text-sm text-gray-500 group-hover:text-gray-700">
-                    {resource.count}
+                    {!isLoading ? resource.count : ''}
                   </span>
                 </button>
               ))}
