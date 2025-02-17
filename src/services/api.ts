@@ -99,13 +99,65 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
   };
 }
 
+function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
+  return new Promise((resolve, reject) => {
+    // Create a unique callback name if needed
+    const uniqueCallback = `${callbackName}_${Date.now()}`;
+    
+    // Add the callback to window
+    (window as any)[uniqueCallback] = (data: T) => {
+      // Clean up
+      document.head.removeChild(script);
+      delete (window as any)[uniqueCallback];
+      resolve(data);
+    };
+
+    // Create script element
+    const script = document.createElement('script');
+    const urlWithCallback = new URL(url);
+    urlWithCallback.searchParams.set('callback', uniqueCallback);
+    script.src = urlWithCallback.toString();
+    script.onerror = () => {
+      document.head.removeChild(script);
+      delete (window as any)[uniqueCallback];
+      reject(new Error('JSONP request failed'));
+    };
+
+    // Add script to document
+    document.head.appendChild(script);
+  });
+}
+
+interface FetchOptions {
+  useJsonp?: boolean;
+}
+
+async function unifiedFetch<T>(url: string, options: FetchOptions = {}): Promise<T> {
+  if (options.useJsonp) {
+    return jsonp<T>(url);
+  }
+
+  const response = await fetch(url, {
+    headers: defaultHeaders,
+    mode: 'cors',
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`HTTP error ${response.status}`, response.status);
+  }
+
+  return response.json();
+}
+
 export async function fetchSearchResults(
   query: string, 
   page: number = 1, 
   perPage: number = 10,
   facets: FacetFilter[] = [],
   onApiCall?: (url: string) => void,
-  sort?: string
+  sort?: string,
+  options: FetchOptions = {}
 ): Promise<SearchResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
@@ -114,10 +166,7 @@ export async function fetchSearchResults(
   
   url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
-  
-  // Set query parameter - empty string should result in q=
   url.searchParams.set('q', query);
-  
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
   
@@ -125,27 +174,15 @@ export async function fetchSearchResults(
     url.searchParams.set('sort', sort);
   }
   
-  // Add facet filters using fq[] format
   facets.forEach(({ field, value }) => {
     url.searchParams.append(`fq[${field}][]`, value);
   });
 
   const finalUrl = url.toString();
-  console.log('Fetching from URL:', finalUrl);
-  console.log('With headers:', defaultHeaders);
-  
   onApiCall?.(finalUrl);
   
   try {
-    const response = await fetch(finalUrl, fetchConfig);
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers));
-    
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-    
-    const data: JsonApiResponse = await response.json();
+    const data = await unifiedFetch<JsonApiResponse>(finalUrl, options);
     
     if (!data.data || !Array.isArray(data.data)) {
       throw new ApiError('Invalid response format from API');
@@ -158,7 +195,11 @@ export async function fetchSearchResults(
   }
 }
 
-export async function fetchItemDetails(id: string, onApiCall?: (url: string) => void): Promise<GeoDocumentDetails> {
+export async function fetchItemDetails(
+  id: string, 
+  onApiCall?: (url: string) => void,
+  options: FetchOptions = {}
+): Promise<GeoDocumentDetails> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/documents/` 
     : 'https://geo.btaa.org/';
@@ -166,17 +207,8 @@ export async function fetchItemDetails(id: string, onApiCall?: (url: string) => 
   onApiCall?.(url);
   
   try {
-    const response = await fetch(url, fetchConfig);
-    
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`);
-    }
-    
-    return await response.json();
+    return await unifiedFetch<GeoDocumentDetails>(url, options);
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
     throw new ApiError('Failed to fetch item details');
   }
 }
@@ -195,7 +227,10 @@ interface SuggestResponse {
   data: Suggestion[];
 }
 
-export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
+export async function fetchSuggestions(
+  query: string,
+  options: FetchOptions = {}
+): Promise<Suggestion[]> {
   if (!query.trim()) return [];
   
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
@@ -206,13 +241,7 @@ export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
   url.searchParams.set('q', query);
 
   try {
-    const response = await fetch(url.toString(), fetchConfig);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    
-    const data: SuggestResponse = await response.json();
+    const data = await unifiedFetch<SuggestResponse>(url.toString(), options);
     return data.data;
   } catch (error) {
     console.error('Error fetching suggestions:', error);
@@ -222,7 +251,8 @@ export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
 
 export async function fetchBookmarkedItems(
   ids: string[],
-  onApiCall?: (url: string) => void
+  onApiCall?: (url: string) => void,
+  options: FetchOptions = {}
 ): Promise<SearchResponse> {
   if (ids.length === 0) {
     return {
@@ -240,7 +270,6 @@ export async function fetchBookmarkedItems(
   url.searchParams.set('search_field', 'all_fields');
   url.searchParams.set('q', '');
   
-  // Use id_agg instead of id for the facet filter
   ids.forEach(id => {
     url.searchParams.append('fq[id_agg][]', id);
   });
@@ -249,13 +278,7 @@ export async function fetchBookmarkedItems(
   onApiCall?.(finalUrl);
   
   try {
-    const response = await fetch(finalUrl, fetchConfig);
-    
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-    
-    const data: JsonApiResponse = await response.json();
+    const data = await unifiedFetch<JsonApiResponse>(finalUrl, options);
     
     if (!data.data || !Array.isArray(data.data)) {
       throw new ApiError('Invalid response format from API');
@@ -263,9 +286,9 @@ export async function fetchBookmarkedItems(
     
     return transformJsonApiResponse(data);
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (error instanceof Error) {
+      throw new ApiError(`Failed to fetch bookmarked items: ${error.message}`);
     }
-    throw new ApiError(`Failed to fetch bookmarked items: ${error.message}`);
+    throw new ApiError('Failed to fetch bookmarked items');
   }
 }
