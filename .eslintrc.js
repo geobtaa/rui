@@ -44,34 +44,40 @@ module.exports = {
     'react/prop-types': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     'prettier/prettier': 'error',
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        'vars': 'all',
+        'varsIgnorePattern': '^_',
+        'args': 'after-used',
+        'argsIgnorePattern': '^_'
+      }
+    ],
+    '@typescript-eslint/no-unused-vars': ['error', {
+      'argsIgnorePattern': '^_',
+      'varsIgnorePattern': '^_',
+      'caughtErrorsIgnorePattern': '^_'
+    }],
+    '@typescript-eslint/no-explicit-any': 'warn',
     'import/order': [
       'error',
       {
-        groups: ['builtin', 'external', 'internal'],
-        pathGroups: [
+        'groups': ['builtin', 'external', 'internal'],
+        'pathGroups': [
           {
-            pattern: 'react',
-            group: 'external',
-            position: 'before',
-          },
+            'pattern': 'react',
+            'group': 'external',
+            'position': 'before'
+          }
         ],
-        pathGroupsExcludeImportType: ['react'],
+        'pathGroupsExcludeImportType': ['react'],
         'newlines-between': 'always',
-        alphabetize: {
-          order: 'asc',
-          caseInsensitive: true,
-        },
-      },
-    ],
-    '@typescript-eslint/no-unused-vars': ['error', { 
-      varsIgnorePattern: '^_',
-      argsIgnorePattern: '^_'
-    }],
-    'no-unused-vars': 'off',
-    'unused-imports/no-unused-imports': 'error',
-    'unused-imports/no-unused-vars': [
-      'error',
-      { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' }
-    ],
+        'alphabetize': {
+          'order': 'asc',
+          'caseInsensitive': true
+        }
+      }
+    ]
   },
 }; 

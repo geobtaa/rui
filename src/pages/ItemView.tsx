@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import { fetchSearchResults, fetchItemDetails, ApiError } from '../services/api';
-import { buildSearchParams } from '../utils/searchParams';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
-import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
 import { ItemViewer } from '../components/item/ItemViewer';
 import { ItemBreadcrumbs } from '../components/item/ItemBreadcrumbs';
@@ -15,8 +13,14 @@ import { CitationTable } from '../components/item/CitationTable';
 import { FullDetailsTable } from '../components/item/FullDetailsTable';
 import { LocationMap } from '../components/item/LocationMap';
 
+// Define types for search results
+interface SearchResult {
+  id: string;
+  // Add other properties as needed
+}
+
 interface SearchState {
-  searchResults: Array<{ id: string }>;
+  searchResults: SearchResult[];
   currentIndex: number;
   totalResults: number;
   searchUrl: string;
@@ -62,11 +66,9 @@ export function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchState = location.state as SearchState;
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ItemData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [nextPageResults, setNextPageResults] = useState<any[]>([]);
-  const [prevPageResults, setPrevPageResults] = useState<any[]>([]);
   const { setLastApiUrl } = useApi();
 
   // Calculate pagination state

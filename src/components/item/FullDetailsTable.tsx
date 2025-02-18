@@ -2,8 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { humanizeFieldName, isFieldHidden, shouldDisplayField, getFacetField } from '../../constants/fieldLabels';
 
+// Define a type for the attributes
+interface Attributes {
+  [key: string]: string | string[] | null | undefined;
+}
+
 interface FullDetailsTableProps {
-  data: any;
+  data: {
+    data: {
+      attributes: Attributes;
+    };
+  };
 }
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
@@ -41,7 +50,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     return { documentMetadata, metadataFacets };
   };
 
-  const renderValue = (key: string, value: any) => {
+  const renderValue = (key: string, value: string | string[] | null | undefined) => {
     const facetField = getFacetField(key);
     
     if (facetField) {

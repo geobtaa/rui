@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import { fetchSearchResults, fetchItemDetails, ApiError } from '../services/api';
-import { buildSearchParams } from '../utils/searchParams';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -20,6 +19,24 @@ interface SearchState {
   totalResults: number;
   searchUrl: string;
   currentPage: number;
+}
+
+// First, let's define an interface for our item data
+interface ItemData {
+  data: {
+    attributes: {
+      ui_viewer_protocol?: string;
+      ui_viewer_endpoint?: string;
+      ui_viewer_geometry?: string;
+      gbl_wxsidentifier_s?: string;
+      dct_accessrights_s?: string;
+      id?: string;
+      dct_title_s: string;
+      attributes?: {
+        ui_citation?: string;
+      };
+    };
+  };
 }
 
 // New component for index map
@@ -61,11 +78,10 @@ export function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchState = location.state as SearchState;
-  const [data, setData] = useState<any>(null);
+  // Replace any with ItemData
+  const [data, setData] = useState<ItemData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [nextPageResults, setNextPageResults] = useState<any[]>([]);
-  const [prevPageResults, setPrevPageResults] = useState<any[]>([]);
   const { setLastApiUrl } = useApi();
 
   // Calculate pagination state

@@ -1,4 +1,4 @@
-import { FacetFilter, SearchParams } from '../types/search';
+import { SearchParams } from '../types/search';
 
 export function parseSearchParams(searchParams: URLSearchParams) {
   const query = searchParams.get('q') || '';

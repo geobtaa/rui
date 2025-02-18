@@ -32,7 +32,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
     try {
       // Create a feature from the geometry
       const feature = {
-        type: 'Feature',
+        type: 'Feature' as const,
         geometry: geometry,
         properties: {}
       };
@@ -74,32 +74,4 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
       />
     </div>
   );
-};
-
-// Error boundary component that shows geometry data on error
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; geometry: GeoJSON.FeatureCollection },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error) {
-    console.error('Error rendering GeoJSON:', error);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="absolute bottom-0 left-0 right-0 bg-red-50 p-2 text-xs font-mono overflow-auto max-h-32">
-          Failed to render geometry:
-          <pre>{JSON.stringify(this.props.geometry, null, 2)}</pre>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-} 
+}; 

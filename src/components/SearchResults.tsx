@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { GeoDocument } from '../types/api';
-import { Calendar, Building2, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useDebug } from '../context/DebugContext';
 import { useMap } from '../context/MapContext';
 import { BookmarkButton } from './BookmarkButton';

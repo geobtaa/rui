@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FACET_LABELS } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
@@ -19,10 +18,9 @@ interface FacetListProps {
   facets: {
     [key: string]: FacetGroup;
   };
-  activeFacets?: string[];
 }
 
-export function FacetList({ facets, activeFacets = [] }: FacetListProps) {
+export function FacetList({ facets }: FacetListProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const handleFacetClick = (facetId: string, value: string | number) => {
@@ -36,13 +34,13 @@ export function FacetList({ facets, activeFacets = [] }: FacetListProps) {
     return <div className="text-gray-500">No facets available</div>;
   }
 
-  // Create ordered facets array based on CONFIGURED_FACETS
-  const orderedFacets = CONFIGURED_FACETS
+  // Ensure orderedFacets is correctly typed and filtered
+  const orderedFacets: [string, FacetGroup][] = CONFIGURED_FACETS
     .map(facetId => {
       const facet = facets[facetId];
       return facet && facet.items.length > 0 ? [facetId, facet] : null;
     })
-    .filter((item): item is [string, typeof facets[keyof typeof facets]] => item !== null);
+    .filter((item): item is [string, FacetGroup] => item !== null);
 
   if (orderedFacets.length === 0) {
     return <div className="text-gray-500">No facets available for this search</div>;
