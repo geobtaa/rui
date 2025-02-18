@@ -146,7 +146,7 @@ export function ItemViewer({
             {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
             {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
             {...(isWmsItem ? { 'data-action': "leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo" } : {})}
-            {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.BASE_URL}/wms/handle` } : {})}
+            {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_WMS_BASE_URL}` } : {})}
           />
         </div>
       );
