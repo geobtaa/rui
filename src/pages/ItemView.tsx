@@ -209,16 +209,19 @@ export function ItemView() {
           {data?.data?.attributes && (
             <>
               {/* Navigation bar with breadcrumbs and pagination */}
-              <div className="flex justify-between items-center mb-2">
-                <ItemBreadcrumbs item={data.data.attributes} />
+              <div className="grid grid-cols-12 gap-4 mb-2">
+                <div className="col-span-8 text-sm">
+                  <ItemBreadcrumbs item={data.data.attributes} />
+                </div>
                 
-                <div className="flex items-center gap-4">
+                <div className="col-span-4 flex items-center gap-4 justify-between text-sm">
                   <Link
                     to={searchState?.searchUrl || '/'}
-                    className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                    className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors px-2 py-1"
                     title="Back to Search Results"
                   >
                     <ArrowLeftCircle size={20} />
+                    <span className="ml-1">Back</span>
                   </Link>
 
                   {hasPreviousResults && (
@@ -228,7 +231,7 @@ export function ItemView() {
                       title="Previous"
                     >
                       <ArrowLeft size={20} />
-                      Previous
+                      Prev
                     </button>
                   )}
 
@@ -251,9 +254,10 @@ export function ItemView() {
 
                   <Link
                     to="/"
-                    className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-2"
+                    className="flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-2 px-2 py-1"
                     title="Clear Search"
                   >
+                    <span className="mr-1">Clear</span>
                     <XCircle size={20} />
                   </Link>
                 </div>
