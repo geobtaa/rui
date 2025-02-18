@@ -63,7 +63,7 @@ export function CitationTable({ citation, permalink }: CitationTableProps) {
           <tr className="hover:bg-gray-50">
             <td className="px-6 py-4">
               <div className="text-sm font-medium text-gray-500 mb-1">
-                Permalink
+                BTAA Geoportal Link
               </div>
               <div className="flex gap-2">
                 <input
