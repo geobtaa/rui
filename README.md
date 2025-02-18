@@ -25,6 +25,26 @@ Push to the gh-pages branch:
 npm run deploy
 ```
 
+Lint the code:
+```bash
+npm run lint
+```
+
+Fix lint errors:
+```bash
+npm run lint:fix
+```
+
+Format the code:
+```bash
+npm run format
+```
+
+Check formatting:
+```bash
+npm run format:check
+```
+
 ## Todos
 
 - [ ] Item View - Catch up to BTAA redesign
