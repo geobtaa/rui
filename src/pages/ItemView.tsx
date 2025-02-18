@@ -295,25 +295,22 @@ export function ItemView() {
                   <FullDetailsTable data={data} />
                 </div>
 
-                {/* Metadata */}
-                <div className="col-span-4 space-y-6">
-                  {/* New Location Map Section */}
-                  {data?.data?.attributes?.ui_viewer_geometry && (
-                    <LocationMap geometry={data.data.attributes.ui_viewer_geometry} />
-                  )}
-
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <MetadataTable data={data} />
+                {/* Sidebar - make it sticky */}
+                <div className="col-span-4">
+                  <div className="sticky top-[88px] space-y-6">
+                    {data?.data?.attributes?.ui_viewer_geometry && (
+                      <LocationMap geometry={data.data.attributes.ui_viewer_geometry} />
+                    )}
+                    
+                    {data?.data?.attributes?.attributes?.ui_citation && (
+                      <div className="mt-6">
+                        <CitationTable 
+                          citation={data.data.attributes.attributes.ui_citation}
+                          permalink={window.location.href}
+                        />
+                      </div>
+                    )}
                   </div>
-                  
-                  {data?.data?.attributes?.attributes?.ui_citation && (
-                    <div className="mt-6">
-                      <CitationTable 
-                        citation={data.data.attributes.attributes.ui_citation}
-                        permalink={window.location.href}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             </>
