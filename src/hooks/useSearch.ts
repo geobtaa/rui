@@ -6,7 +6,8 @@ import { useApi } from '../context/ApiContext';
 import type { SearchResponse } from '../types/api';
 import type { FacetFilter } from '../types/search';
 
-interface SearchState {
+// Export the interface so it can be used in ItemView.tsx
+export interface SearchState {
   query?: string;
   page?: number;
   facets?: FacetFilter[];
