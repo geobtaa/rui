@@ -2,20 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import { fetchSearchResults, fetchItemDetails, ApiError } from '../services/api';
-import { buildSearchParams } from '../utils/searchParams';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
-import { MetadataTable } from '../components/item/MetadataTable';
 import { useApi } from '../context/ApiContext';
 import { ItemViewer } from '../components/item/ItemViewer';
 import { ItemBreadcrumbs } from '../components/item/ItemBreadcrumbs';
 import { ItemSubtitle } from '../components/item/ItemSubtitle';
 import { CitationTable } from '../components/item/CitationTable';
 import { FullDetailsTable } from '../components/item/FullDetailsTable';
+import { LocationMap } from '../components/item/LocationMap';
+
+// Define types for search results
+interface SearchResult {
+  id: string;
+  // Add other properties as needed
+}
 
 interface SearchState {
-  searchResults: Array<{ id: string }>;
+  searchResults: SearchResult[];
   currentIndex: number;
   totalResults: number;
   searchUrl: string;
@@ -61,11 +66,9 @@ export function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchState = location.state as SearchState;
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ItemData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [nextPageResults, setNextPageResults] = useState<any[]>([]);
-  const [prevPageResults, setPrevPageResults] = useState<any[]>([]);
   const { setLastApiUrl } = useApi();
 
   // Calculate pagination state
@@ -208,16 +211,19 @@ export function ItemView() {
           {data?.data?.attributes && (
             <>
               {/* Navigation bar with breadcrumbs and pagination */}
-              <div className="flex justify-between items-center mb-2">
-                <ItemBreadcrumbs item={data.data.attributes} />
+              <div className="grid grid-cols-12 gap-4 mb-2">
+                <div className="col-span-8 text-sm">
+                  <ItemBreadcrumbs item={data.data.attributes} />
+                </div>
                 
-                <div className="flex items-center gap-4">
+                <div className="col-span-4 flex items-center gap-4 justify-between text-sm">
                   <Link
                     to={searchState?.searchUrl || '/'}
-                    className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                    className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors px-2 py-1"
                     title="Back to Search Results"
                   >
                     <ArrowLeftCircle size={20} />
+                    <span className="ml-1">Back</span>
                   </Link>
 
                   {hasPreviousResults && (
@@ -227,7 +233,7 @@ export function ItemView() {
                       title="Previous"
                     >
                       <ArrowLeft size={20} />
-                      Previous
+                      Prev
                     </button>
                   )}
 
@@ -250,9 +256,10 @@ export function ItemView() {
 
                   <Link
                     to="/"
-                    className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-2"
+                    className="flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-2 px-2 py-1"
                     title="Clear Search"
                   >
+                    <span className="mr-1">Clear</span>
                     <XCircle size={20} />
                   </Link>
                 </div>
@@ -294,21 +301,22 @@ export function ItemView() {
                   <FullDetailsTable data={data} />
                 </div>
 
-                {/* Metadata */}
+                {/* Sidebar - make it sticky */}
                 <div className="col-span-4">
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <MetadataTable data={data} />
+                  <div className="sticky top-[88px] space-y-6">
+                    {data?.data?.attributes?.ui_viewer_geometry && (
+                      <LocationMap geometry={data.data.attributes.ui_viewer_geometry} />
+                    )}
+                    
+                    {data?.data?.attributes?.attributes?.ui_citation && (
+                      <div className="mt-6">
+                        <CitationTable 
+                          citation={data.data.attributes.attributes.ui_citation}
+                          permalink={window.location.href}
+                        />
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Update to use the correct nested path */}
-                  {data?.data?.attributes?.attributes?.ui_citation && (
-                    <div className="mt-6">
-                      <CitationTable 
-                        citation={data.data.attributes.attributes.ui_citation}
-                        permalink={window.location.href}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             </>

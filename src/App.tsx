@@ -24,13 +24,17 @@ import('@geoblacklight/frontend').then((Geoblacklight) => {
 });
 
 function App() {
+  console.log('Environment variables:', {
+    VITE_USE_JSONP: import.meta.env.VITE_USE_JSONP,
+    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
+  });
   const [searchParams] = useSearchParams();
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
 
   return (
     <BookmarkProvider>
       <DebugProvider>
-        <Routes basename={import.meta.env.BASE_URL}>
+        <Routes>
           <Route 
             path="/" 
             element={hasSearchParams ? <Navigate to={`/search${window.location.search}`} /> : <HomePage />} 

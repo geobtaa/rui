@@ -1,15 +1,38 @@
 import React from 'react';
-import { humanizeFieldName } from '../../constants/fieldLabels';
+// Remove unused import
+// import { humanizeFieldName } from '../../constants/fieldLabels';
+
+// Define types for the metadata structure
+interface MetadataAttributes {
+  dct_description_sm?: string | string[];
+  dct_spatial_sm?: string | string[];
+  dct_temporal_sm?: string | string[];
+  dct_issued_s?: string;
+  dct_language_sm?: string | string[];
+  dct_format_s?: string;
+  schema_provider_s?: string;
+  dct_provenance_s?: string;
+  dct_accessRights_s?: string;
+  dct_license_sm?: string | string[];
+  dc_subject_sm?: string | string[];
+  gbl_resourceType_sm?: string | string[];
+  gbl_resourceClass_sm?: string | string[];
+  [key: string]: string | string[] | undefined;
+}
 
 interface MetadataTableProps {
-  data: any;
+  data: {
+    data: {
+      attributes: MetadataAttributes;
+    };
+  };
 }
 
 export function MetadataTable({ data }: MetadataTableProps) {
   const attributes = data?.data?.attributes || {};
 
   // Helper function to check if a value is empty
-  const hasValue = (value: any): boolean => {
+  const hasValue = (value: string | string[] | undefined): boolean => {
     if (Array.isArray(value)) {
       return value.length > 0;
     }
@@ -20,7 +43,7 @@ export function MetadataTable({ data }: MetadataTableProps) {
   };
 
   // Format value for display
-  const formatValue = (value: any): string => {
+  const formatValue = (value: string | string[] | undefined): string => {
     if (Array.isArray(value)) {
       return value.join(', ');
     }

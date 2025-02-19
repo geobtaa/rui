@@ -19,57 +19,64 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
 
   // Build breadcrumb items with accumulated facets
   const breadcrumbs = [];
+  let accumulatedFacets: Array<{ field: string; value: string }> = [];
 
   // Resource Class
   if (item.gbl_resourceclass_sm?.[0]) {
-    breadcrumbs.push({
-      label: item.gbl_resourceclass_sm[0],
-      facets: [{
+    accumulatedFacets = [
+      {
         field: 'resource_class_agg',
         value: item.gbl_resourceclass_sm[0]
-      }]
+      }
+    ];
+    breadcrumbs.push({
+      label: item.gbl_resourceclass_sm[0],
+      facets: [...accumulatedFacets]
     });
   }
 
   // Resource Type
   if (item.gbl_resourcetype_sm?.[0]) {
+    accumulatedFacets = [
+      ...accumulatedFacets,
+      {
+        field: 'resource_type_agg',
+        value: item.gbl_resourcetype_sm[0]
+      }
+    ];
     breadcrumbs.push({
       label: item.gbl_resourcetype_sm[0],
-      facets: [
-        ...breadcrumbs[0]?.facets || [],
-        {
-          field: 'resource_type_agg',
-          value: item.gbl_resourcetype_sm[0]
-        }
-      ]
+      facets: [...accumulatedFacets]
     });
   }
 
   // Place (first entry only)
   if (item.dct_spatial_sm?.[0]) {
+    accumulatedFacets = [
+      ...accumulatedFacets,
+      {
+        field: 'spatial_agg',
+        value: item.dct_spatial_sm[0]
+      }
+    ];
     breadcrumbs.push({
       label: item.dct_spatial_sm[0],
-      facets: [
-        ...breadcrumbs[1]?.facets || [],
-        {
-          field: 'spatial_agg',
-          value: item.dct_spatial_sm[0]
-        }
-      ]
+      facets: [...accumulatedFacets]
     });
   }
 
   // Index Year
   if (item.dct_temporal_sm?.[0]) {
+    accumulatedFacets = [
+      ...accumulatedFacets,
+      {
+        field: 'index_year_agg',
+        value: item.dct_temporal_sm[0]
+      }
+    ];
     breadcrumbs.push({
       label: item.dct_temporal_sm[0],
-      facets: [
-        ...breadcrumbs[2]?.facets || [],
-        {
-          field: 'index_year_agg',
-          value: item.dct_temporal_sm[0]
-        }
-      ]
+      facets: [...accumulatedFacets]
     });
   }
 

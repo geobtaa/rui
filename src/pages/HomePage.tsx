@@ -6,14 +6,6 @@ import { SearchField } from '../components/SearchField';
 import { Database, Map, Globe, Library, Image, Folder, Globe2, Search } from 'lucide-react';
 import { fetchSearchResults } from '../services/api';
 
-interface ResourceClass {
-  id: string;
-  label: string;
-  count: number;
-  icon: React.ReactNode;
-  aggValue: string;
-}
-
 export function HomePage() {
   const navigate = useNavigate();
   const [resourceCounts, setResourceCounts] = useState<Record<string, number>>({});
@@ -170,7 +162,7 @@ export function HomePage() {
                     </span>
                   </div>
                   <span className="text-sm text-gray-500 group-hover:text-gray-700">
-                    {resource.count}
+                    {!isLoading ? resource.count : ''}
                   </span>
                 </button>
               ))}

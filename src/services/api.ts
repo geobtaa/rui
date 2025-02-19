@@ -8,15 +8,96 @@ export class ApiError extends Error {
   }
 }
 
+const defaultHeaders = {
+  'Accept': 'application/vnd.api+json',
+  'Content-Type': 'application/json',
+  // Only include CSRF token if it exists
+  ...(import.meta.env.VITE_CSRF_TOKEN ? {
+    'X-CSRF-Token': import.meta.env.VITE_CSRF_TOKEN
+  } : {})
+};
+
+const defaultFetchOptions: FetchOptions = {
+  useJsonp: import.meta.env.VITE_USE_JSONP === 'true'
+};
+
+// Helper function to ensure HTTPS URL
+function ensureHttps(url: string): string {
+  // Check if the environment variable for enforcing HTTPS is set to true
+  const enforceHttps = import.meta.env.VITE_ENFORCE_HTTPS === 'true';
+  if (enforceHttps) {
+    return url.replace(/^http:/, 'https:');
+  }
+  return url;
+}
+
+// Helper function to create a URL with common parameters
+function createApiUrl(baseUrl: string): URL {
+  const url = new URL(ensureHttps(baseUrl));
+  url.searchParams.set('format', 'json');
+  return url;
+}
+
+// Add this helper function to convert WKT to GeoJSON object
+function wktToGeoJSON(wkt: string | null): GeoJSON.FeatureCollection | null {
+  if (!wkt) return null;
+  
+  try {
+    // Match the polygon coordinates
+    const match = wkt.match(/POLYGON\(\((.*?)\)\)/);
+    if (!match) return null;
+    
+    // Split into coordinate pairs and convert to numbers
+    const coordinates = match[1].split(',').map(pair => {
+      try {
+        const [lon, lat] = pair.trim().split(' ').map(Number);
+        if (isNaN(lon) || isNaN(lat)) return null;
+        return [lon, lat];
+      } catch (e) {
+        console.error('Error converting WKT to GeoJSON:', e);
+        return null;
+      }
+    }).filter((coord): coord is [number, number] => coord !== null);
+
+    // Ensure we have valid coordinates
+    if (coordinates.length < 3) return null;
+
+    // Create GeoJSON FeatureCollection structure
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coordinates]
+        }
+      }]
+    };
+  } catch (error) {
+    console.error('Error converting WKT to GeoJSON:', error);
+    return null;
+  }
+}
+
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
-  // Add debug logging
   console.log('Raw API Response:', jsonApiResponse);
   
-  const docs = jsonApiResponse.data.map(item => {
-    const doc = {
+  const docs = jsonApiResponse.data.map(item => ({
+    id: item.id,
+    type: item.type,
+    // Move these fields to the top level for direct access
+    dct_title_s: item.attributes.dct_title_s,
+    dct_description_sm: item.attributes.dct_description_sm || [],
+    dct_temporal_sm: item.attributes.dct_temporal_sm || [],
+    dc_publisher_sm: item.attributes.dc_publisher_sm || [],
+    gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
+    
+    // Keep the rest under attributes
+    attributes: {
       id: item.id,
       dct_title_s: item.attributes.dct_title_s,
-      dct_creator_sm: item.attributes.dct_creator_sm || [],
+      dct_creator_sm: item.attributes.creator_sm || [],
       dct_description_sm: item.attributes.dct_description_sm || [],
       dc_publisher_sm: item.attributes.dc_publisher_sm || [],
       dct_spatial_sm: item.attributes.dct_spatial_sm || [],
@@ -31,18 +112,18 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       dct_temporal_sm: item.attributes.dct_temporal_sm || [],
       dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
       dct_license_sm: item.attributes.dct_license_sm || [],
-      dct_subject_sm: item.attributes.dct_subject_sm || [],
+      dct_subject_sm: item.attributes.dc_subject_sm || [],
       dct_references_s: item.attributes.dct_references_s || '',
       locn_geometry: item.attributes.locn_geometry,
-      ui_viewer_geometry: item.attributes.ui_viewer_geometry || '',
-      ui_thumbnail_url: item.attributes.ui_thumbnail_url,
-    };
-    console.log(`Transformed doc ${item.id}:`, { 
-      title: doc.dct_title_s, 
-      thumbnail: doc.ui_thumbnail_url 
-    });
-    return doc;
-  });
+    },
+    ui_thumbnail_url: item.attributes.ui_thumbnail_url || '',
+    ui_citation: '',  // Required by GeoDocument type
+    ui_viewer_protocol: item.attributes.ui_viewer_protocol || '',
+    ui_viewer_endpoint: item.attributes.ui_viewer_endpoint || '',
+    // Try ui_viewer_geometry first, fall back to converted locn_geometry
+    ui_viewer_geometry: item.attributes.ui_viewer_geometry || 
+                       wktToGeoJSON(item.attributes.locn_geometry)
+  }));
 
   // Transform included facets into the expected format
   const facets = jsonApiResponse.included?.reduce((acc, item) => {
@@ -58,7 +139,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       };
     }
     return acc;
-  }, {} as SearchResponse['facets']);
+  }, {} as NonNullable<SearchResponse['facets']>);
 
   // Transform sort options
   const sortOptions = jsonApiResponse.included
@@ -76,8 +157,127 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10
     },
     facets: facets || {},
-    sortOptions
+    sortOptions: sortOptions || []
   };
+}
+
+function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
+  console.log('Starting JSONP request:', url);
+  return new Promise((resolve, reject) => {
+    const uniqueCallback = `${callbackName}_${Date.now()}`;
+    console.log('Using callback name:', uniqueCallback);
+    let script: HTMLScriptElement | null = document.createElement('script');
+    // Set timeout to prevent hanging requests
+    const timeoutId = window.setTimeout(() => {
+      console.error('JSONP request timed out:', url);
+      cleanup();
+      reject(new Error('JSONP request timed out'));
+    }, 30000); // 30 second timeout
+
+    // Cleanup function to remove script and callback
+    const cleanup = () => {
+      console.log('Cleaning up JSONP request:', uniqueCallback);
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      delete (window as any)[uniqueCallback];
+      window.clearTimeout(timeoutId);
+      script = null;
+    };
+
+    // Add the callback to window
+    (window as any)[uniqueCallback] = (data: T | { detail: string, path: string, method: string }) => {
+      console.log('JSONP callback received data:', data);
+      cleanup();
+      
+      // Check if response is an error
+      if (typeof data === 'object' && data !== null && 'detail' in data) {
+        console.error('JSONP error response:', data);
+        reject(new ApiError(`API Error: ${data.detail}`));
+        return;
+      }
+      
+      resolve(data as T);
+    };
+
+    // Create script element
+    const urlWithCallback = new URL(ensureHttps(url));
+    urlWithCallback.searchParams.set('callback', uniqueCallback);
+    if (!urlWithCallback.searchParams.has('format')) {
+      urlWithCallback.searchParams.set('format', 'json');
+    }
+    
+    console.log('Final JSONP URL:', urlWithCallback.toString());
+    
+    if (script) {
+      script.src = urlWithCallback.toString();
+      script.onerror = (error) => {
+        console.error('JSONP script error:', error);
+        cleanup();
+        reject(new Error('JSONP request failed'));
+      };
+      // Add crossorigin attribute to handle CORS
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+      console.log('JSONP script added to document');
+    }
+  });
+}
+
+interface FetchOptions {
+  useJsonp?: boolean;
+}
+
+async function unifiedFetch<T>(url: string, options: FetchOptions = defaultFetchOptions): Promise<T> {
+  const finalUrl = new URL(ensureHttps(url));
+  console.log('unifiedFetch called with options:', { url: finalUrl.toString(), useJsonp: options.useJsonp, envValue: import.meta.env.VITE_USE_JSONP });
+  
+  // Ensure format parameter is set
+  if (!finalUrl.searchParams.has('format')) {
+    finalUrl.searchParams.set('format', 'json');
+  }
+
+  if (options.useJsonp) {
+    console.log('Using JSONP for request:', finalUrl.toString());
+    return jsonp<T>(finalUrl.toString());
+  }
+
+  console.log('Using regular fetch:', finalUrl.toString());
+  
+  // For document endpoints, request a specific response format
+  if (url.includes('/documents/')) {
+    finalUrl.searchParams.set('response_format', 'json_api');
+    finalUrl.searchParams.set('datetime_format', 'iso8601');
+  }
+  
+  try {
+    const response = await fetch(finalUrl.toString(), {
+      headers: {
+        ...defaultHeaders,
+        'Accept': 'application/javascript, application/json',
+      },
+      mode: 'cors',
+      credentials: 'include',
+      redirect: 'follow'
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error response:', errorText);
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new ApiError(errorJson.detail || 'API request failed', response.status);
+      } catch (e) {
+        console.error('Error parsing API error response:', e);
+        throw new ApiError(`HTTP error ${response.status}: ${errorText}`, response.status);
+      }
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
 }
 
 export async function fetchSearchResults(
@@ -86,19 +286,16 @@ export async function fetchSearchResults(
   perPage: number = 10,
   facets: FacetFilter[] = [],
   onApiCall?: (url: string) => void,
-  sort?: string
+  sort?: string,
+  options: FetchOptions = defaultFetchOptions
 ): Promise<SearchResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
-    ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
-    : 'https://geo.btaa.org/';
-  const url = new URL(baseUrl);
+    ? `${import.meta.env.VITE_API_BASE_URL}/search` 
+    : 'https://geo.btaa.org/api/v1/search';
+  const url = createApiUrl(baseUrl);
   
-  url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
-  
-  // Set query parameter - empty string should result in q=
   url.searchParams.set('q', query);
-  
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
   
@@ -106,64 +303,44 @@ export async function fetchSearchResults(
     url.searchParams.set('sort', sort);
   }
   
-  // Add facet filters using fq[] format
   facets.forEach(({ field, value }) => {
     url.searchParams.append(`fq[${field}][]`, value);
   });
 
-  const finalUrl = url.toString();
-  onApiCall?.(finalUrl);
-  
+  if (onApiCall) {
+    onApiCall(url.toString());
+  }
+
   try {
-    const response = await fetch(finalUrl, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-    
-    const data: JsonApiResponse = await response.json();
-    
-    if (!data.data || !Array.isArray(data.data)) {
-      throw new ApiError('Invalid response format from API');
-    }
-    
-    return transformJsonApiResponse(data);
+    const response = await unifiedFetch<JsonApiResponse>(url.toString(), options);
+    return transformJsonApiResponse(response);
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(`Failed to fetch search results: ${error.message}`);
+    console.error('Search error:', error);
+    throw error;
   }
 }
 
-export async function fetchItemDetails(id: string, onApiCall?: (url: string) => void): Promise<GeoDocumentDetails> {
+export async function fetchItemDetails(
+  id: string, 
+  onApiCall?: (url: string) => void,
+  options: FetchOptions = defaultFetchOptions
+): Promise<GeoDocumentDetails> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/documents/` 
     : 'https://geo.btaa.org/';
-  const url = `${baseUrl}${id}`;
-  onApiCall?.(url);
+  const url = createApiUrl(`${baseUrl}${id}`);
+  onApiCall?.(url.toString());
   
   try {
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`);
-    }
-    
-    return await response.json();
+    const response = await unifiedFetch<GeoDocumentDetails>(url.toString(), options);
+    console.log('Item details response:', response); // Add debugging
+    return response;
   } catch (error) {
+    console.error('Error fetching item details:', error); // Add debugging
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to fetch item details');
+    throw new ApiError(`Failed to fetch item details: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -181,29 +358,30 @@ interface SuggestResponse {
   data: Suggestion[];
 }
 
-export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
+export async function fetchSuggestions(
+  query: string,
+  options: FetchOptions = defaultFetchOptions
+): Promise<Suggestion[]> {
   if (!query.trim()) return [];
   
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/suggest` 
     : 'https://geo.btaa.org/suggest';
   
-  const url = new URL(baseUrl);
+  const url = createApiUrl(baseUrl);
   url.searchParams.set('q', query);
 
   try {
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Accept': 'application/json'
+    const data = await unifiedFetch<SuggestResponse>(url.toString(), options);
+    // Only return the text field from each suggestion
+    return data.data.map(suggestion => ({
+      ...suggestion,
+      attributes: {
+        ...suggestion.attributes,
+        // Remove the title from the display
+        title: ''
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    
-    const data: SuggestResponse = await response.json();
-    return data.data;
+    }));
   } catch (error) {
     console.error('Error fetching suggestions:', error);
     return [];
@@ -212,7 +390,8 @@ export async function fetchSuggestions(query: string): Promise<Suggestion[]> {
 
 export async function fetchBookmarkedItems(
   ids: string[],
-  onApiCall?: (url: string) => void
+  onApiCall?: (url: string) => void,
+  options: FetchOptions = defaultFetchOptions
 ): Promise<SearchResponse> {
   if (ids.length === 0) {
     return {
@@ -224,13 +403,11 @@ export async function fetchBookmarkedItems(
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
     ? `${import.meta.env.VITE_API_BASE_URL}/search/` 
     : 'https://geo.btaa.org/';
-  const url = new URL(baseUrl);
+  const url = createApiUrl(baseUrl);
   
-  url.searchParams.set('format', 'json');
   url.searchParams.set('search_field', 'all_fields');
   url.searchParams.set('q', '');
   
-  // Use id_agg instead of id for the facet filter
   ids.forEach(id => {
     url.searchParams.append('fq[id_agg][]', id);
   });
@@ -239,17 +416,7 @@ export async function fetchBookmarkedItems(
   onApiCall?.(finalUrl);
   
   try {
-    const response = await fetch(finalUrl, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-    
-    const data: JsonApiResponse = await response.json();
+    const data = await unifiedFetch<JsonApiResponse>(finalUrl, options);
     
     if (!data.data || !Array.isArray(data.data)) {
       throw new ApiError('Invalid response format from API');
@@ -257,9 +424,9 @@ export async function fetchBookmarkedItems(
     
     return transformJsonApiResponse(data);
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (error instanceof Error) {
+      throw new ApiError(`Failed to fetch bookmarked items: ${error.message}`);
     }
-    throw new ApiError(`Failed to fetch bookmarked items: ${error.message}`);
+    throw new ApiError('Failed to fetch bookmarked items');
   }
 }

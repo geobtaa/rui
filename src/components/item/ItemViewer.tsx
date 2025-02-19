@@ -1,10 +1,12 @@
 import React from 'react';
 import { leafletViewerOptions } from '../../config/leafletConfig';
-import { parse } from 'terraformer-wkt-parser';
-import { getWmsFeatureInfo } from '../../services/wms';
-import { Link } from 'react-router-dom';
 import { MetadataTable } from './MetadataTable';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+
+// Define proper types for the data prop
+interface ViewerData {
+  // Add specific data structure here based on your needs
+  attributes: Record<string, unknown>;
+}
 
 interface ItemViewerProps {
   protocol: string;
@@ -14,9 +16,7 @@ interface ItemViewerProps {
   available: boolean;
   layerId: string;
   pageValue: string;
-  data: any;
-  searchResults?: any[];
-  currentIndex?: number;
+  data: ViewerData;
   totalResults?: number;
   searchUrl?: string;
   currentPage?: number;
@@ -28,14 +28,8 @@ export function ItemViewer({
   geometry,
   wxs_identifier,
   available,
-  layerId,
   pageValue,
   data,
-  searchResults,
-  currentIndex,
-  totalResults,
-  searchUrl,
-  currentPage
 }: ItemViewerProps) {
   // Helper function to titleize a string
   const titleize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -89,16 +83,6 @@ export function ItemViewer({
 
   const isWmsItem = protocol === 'wms';
 
-  const hasMoreResults = searchResults && currentIndex !== undefined && 
-    currentIndex < searchResults.length - 1;
-  const hasPreviousResults = searchResults && currentIndex !== undefined && 
-    currentIndex > 0;
-
-  const nextItem = hasMoreResults && searchResults ? 
-    searchResults[currentIndex! + 1] : null;
-  const prevItem = hasPreviousResults && searchResults ? 
-    searchResults[currentIndex! - 1] : null;
-
   switch (viewerType) {
     case 'clover':
       return (
@@ -146,7 +130,7 @@ export function ItemViewer({
             {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
             {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
             {...(isWmsItem ? { 'data-action': "leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo" } : {})}
-            {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_API_BASE_URL}/wms/handle` } : {})}
+            {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_WMS_BASE_URL}` } : {})}
           />
         </div>
       );
