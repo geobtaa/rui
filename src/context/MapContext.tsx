@@ -23,4 +23,4 @@ export function useMap() {
     throw new Error('useMap must be used within a MapProvider');
   }
   return context;
-} 
+}

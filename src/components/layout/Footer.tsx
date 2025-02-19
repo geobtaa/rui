@@ -4,7 +4,7 @@ import { useApi } from '../../context/ApiContext';
 import { useDebug } from '../../context/DebugContext';
 
 interface FooterProps {
-  id?: string;  // Make optional since not all pages will have an ID
+  id?: string; // Make optional since not all pages will have an ID
 }
 
 export function Footer({ id }: FooterProps) {
@@ -22,7 +22,8 @@ export function Footer({ id }: FooterProps) {
           {/* Links Row */}
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              © {new Date().getFullYear()} Big Ten Academic Alliance. All rights reserved.
+              © {new Date().getFullYear()} Big Ten Academic Alliance. All
+              rights reserved.
             </div>
             <div className="flex items-center space-x-4">
               {id && (
@@ -42,16 +43,16 @@ export function Footer({ id }: FooterProps) {
               >
                 {showDetails ? 'Hide Details' : 'Show Details'}
               </button>
-              <a 
-                href="https://www.btaa.org/library/geoportal/geoportal" 
+              <a
+                href="https://www.btaa.org/library/geoportal/geoportal"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-gray-500 hover:text-gray-900"
               >
                 About
               </a>
-              <a 
-                href="https://geo.btaa.org/docs" 
+              <a
+                href="https://geo.btaa.org/docs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-gray-500 hover:text-gray-900"
@@ -64,7 +65,7 @@ export function Footer({ id }: FooterProps) {
           {/* API URL Row */}
           <div className="text-sm text-gray-500">
             <p className="mb-2">Last API Request:</p>
-            <a 
+            <a
               href={lastApiUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -74,7 +75,10 @@ export function Footer({ id }: FooterProps) {
                 <code className="flex-1 overflow-x-auto text-blue-600">
                   {lastApiUrl}
                 </code>
-                <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-500" />
+                <ExternalLink
+                  size={14}
+                  className="text-gray-400 group-hover:text-blue-500"
+                />
               </div>
             </a>
           </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Application } from "@hotwired/stimulus";
+import { Application } from '@hotwired/stimulus';
 import { SearchPage } from './pages/SearchPage';
 import { ItemView } from './pages/ItemView';
 import { DebugProvider } from './context/DebugContext';
@@ -26,7 +26,7 @@ import('@geoblacklight/frontend').then((Geoblacklight) => {
 function App() {
   console.log('Environment variables:', {
     VITE_USE_JSONP: import.meta.env.VITE_USE_JSONP,
-    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
+    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
   });
   const [searchParams] = useSearchParams();
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
@@ -35,9 +35,15 @@ function App() {
     <BookmarkProvider>
       <DebugProvider>
         <Routes>
-          <Route 
-            path="/" 
-            element={hasSearchParams ? <Navigate to={`/search${window.location.search}`} /> : <HomePage />} 
+          <Route
+            path="/"
+            element={
+              hasSearchParams ? (
+                <Navigate to={`/search${window.location.search}`} />
+              ) : (
+                <HomePage />
+              )
+            }
           />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />

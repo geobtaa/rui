@@ -22,7 +22,7 @@ interface ItemViewerProps {
   currentPage?: number;
 }
 
-export function ItemViewer({ 
+export function ItemViewer({
   protocol,
   endpoint,
   geometry,
@@ -51,32 +51,32 @@ export function ItemViewer({
   const viewerType = getViewerType(protocol);
 
   function formatProtocol(protocol: string): string {
-    if (protocol === "arcgis_dynamic_map_layer") {
-      return "DynamicMapLayer";
+    if (protocol === 'arcgis_dynamic_map_layer') {
+      return 'DynamicMapLayer';
     }
-    if (protocol === "geo_json") {
+    if (protocol === 'geo_json') {
       return null;
     }
-    if (protocol === "tile_map_service") {
-      return "Tms";
+    if (protocol === 'tile_map_service') {
+      return 'Tms';
     }
-    if (protocol === "arcgis_tiled_map_layer") {
-      return "TiledMapLayer";
+    if (protocol === 'arcgis_tiled_map_layer') {
+      return 'TiledMapLayer';
     }
-    if (protocol === "arcgis_feature_layer") {
-      return "FeatureLayer";
+    if (protocol === 'arcgis_feature_layer') {
+      return 'FeatureLayer';
     }
-    if (protocol === "arcgis_image_map_layer") {
-      return "ImageMapLayer";
+    if (protocol === 'arcgis_image_map_layer') {
+      return 'ImageMapLayer';
     }
-    if (protocol === "open_index_map") {
-      return "IndexMap";
+    if (protocol === 'open_index_map') {
+      return 'IndexMap';
     }
-    if (protocol === "xyz_tiles") {
-      return "Xyz";
+    if (protocol === 'xyz_tiles') {
+      return 'Xyz';
     }
-    if (protocol === "tile_json") {
-      return "Tilejson";
+    if (protocol === 'tile_json') {
+      return 'Tilejson';
     }
     return titleize(protocol);
   }
@@ -90,7 +90,9 @@ export function ItemViewer({
           id="clover-viewer"
           className="viewer h-[600px]"
           data-controller="clover-viewer"
-          data-clover-viewer-protocol-value={protocol === "iiif_manifest" ? "IiifManifest" : "Iiif"}
+          data-clover-viewer-protocol-value={
+            protocol === 'iiif_manifest' ? 'IiifManifest' : 'Iiif'
+          }
           data-clover-viewer-url-value={endpoint}
         />
       );
@@ -124,13 +126,29 @@ export function ItemViewer({
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
             data-leaflet-viewer-layer-id-value={wxs_identifier}
-            data-leaflet-viewer-options-value={JSON.stringify(leafletViewerOptions)}
+            data-leaflet-viewer-options-value={JSON.stringify(
+              leafletViewerOptions
+            )}
             data-leaflet-viewer-page-value={pageValue}
             data-leaflet-viewer-draw-initial-bounds-value={true}
             {...(endpoint ? { 'data-leaflet-viewer-url-value': endpoint } : {})}
-            {...(protocol ? { 'data-leaflet-viewer-protocol-value': formatProtocol(protocol) } : {})}
-            {...(isWmsItem ? { 'data-action': "leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo" } : {})}
-            {...(isWmsItem ? { 'data-wms-feature-info-url': `${import.meta.env.VITE_WMS_BASE_URL}` } : {})}
+            {...(protocol
+              ? {
+                  'data-leaflet-viewer-protocol-value':
+                    formatProtocol(protocol),
+                }
+              : {})}
+            {...(isWmsItem
+              ? {
+                  'data-action':
+                    'leaflet-viewer:getFeatureInfo->application#handleWmsFeatureInfo',
+                }
+              : {})}
+            {...(isWmsItem
+              ? {
+                  'data-wms-feature-info-url': `${import.meta.env.VITE_WMS_BASE_URL}`,
+                }
+              : {})}
           />
         </div>
       );
@@ -143,4 +161,4 @@ export function ItemViewer({
       </div>
     </div>
   );
-} 
+}

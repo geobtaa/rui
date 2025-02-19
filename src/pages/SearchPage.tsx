@@ -14,17 +14,17 @@ import { SortControl } from '../components/search/SortControl';
 
 // Create a separate component for the search content
 function SearchContent() {
-  const { 
-    query, 
+  const {
+    query,
     results: searchResults,
-    isLoading: searchIsLoading, 
-    error, 
-    page, 
+    isLoading: searchIsLoading,
+    error,
+    page,
     perPage,
     totalResults: searchTotalResults,
     facets: searchFacets,
     sort,
-    updateSearch
+    updateSearch,
   } = useSearch();
 
   const totalPages = Math.ceil(searchTotalResults / perPage);
@@ -36,7 +36,11 @@ function SearchContent() {
 
   const handleRemoveFacet = (facetToRemove: FacetFilter) => {
     const updatedFacets = searchFacets.filter(
-      facet => !(facet.field === facetToRemove.field && facet.value === facetToRemove.value)
+      (facet) =>
+        !(
+          facet.field === facetToRemove.field &&
+          facet.value === facetToRemove.value
+        )
     );
     updateSearch({ facets: updatedFacets });
   };
@@ -58,7 +62,7 @@ function SearchContent() {
       <Header />
       <main className="flex-1 bg-gray-50 pb-8 mb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
-          <SearchConstraints 
+          <SearchConstraints
             facets={searchFacets}
             query={query}
             onRemoveFacet={handleRemoveFacet}
@@ -92,8 +96,13 @@ function SearchContent() {
                     <>
                       <div className="mb-6 flex justify-between items-center">
                         <h2 className="text-lg text-gray-600">
-                          Showing results {Math.min((page - 1) * perPage + 1, searchTotalResults)}-
-                          {Math.min(page * perPage, searchTotalResults)} of {searchTotalResults}
+                          Showing results{' '}
+                          {Math.min(
+                            (page - 1) * perPage + 1,
+                            searchTotalResults
+                          )}
+                          -{Math.min(page * perPage, searchTotalResults)} of{' '}
+                          {searchTotalResults}
                         </h2>
                         <SortControl
                           options={searchResults?.sortOptions || []}
@@ -102,13 +111,13 @@ function SearchContent() {
                         />
                       </div>
 
-                      <SearchResults 
+                      <SearchResults
                         results={searchResults?.response?.docs || []}
                         isLoading={searchIsLoading}
                         totalResults={searchTotalResults}
                         currentPage={page}
                       />
-                      
+
                       {!searchIsLoading && totalPages > 1 && (
                         <Pagination
                           currentPage={page}

@@ -57,11 +57,11 @@ export function useSearch() {
     fetchResults();
   }, [query, page, facets?.length, sort, setLastApiUrl]);
 
-  const updateSearch = ({ 
-    query, 
-    page, 
+  const updateSearch = ({
+    query,
+    page,
     facets,
-    sort: newSort 
+    sort: newSort,
   }: {
     query?: string;
     page?: number;
@@ -69,7 +69,7 @@ export function useSearch() {
     sort?: string;
   }) => {
     const newParams = new URLSearchParams(searchParams);
-    
+
     if (query !== undefined) {
       if (query) {
         newParams.set('q', query);
@@ -98,8 +98,8 @@ export function useSearch() {
     if (facets !== undefined) {
       // Clear existing facets
       Array.from(newParams.keys())
-        .filter(key => key.startsWith('fq['))
-        .forEach(key => newParams.delete(key));
+        .filter((key) => key.startsWith('fq['))
+        .forEach((key) => newParams.delete(key));
 
       // Add new facets using fq[] format
       facets.forEach(({ field, value }) => {

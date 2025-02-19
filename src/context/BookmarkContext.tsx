@@ -8,7 +8,9 @@ interface BookmarkContextType {
   isBookmarked: (id: string) => boolean;
 }
 
-const BookmarkContext = createContext<BookmarkContextType | undefined>(undefined);
+const BookmarkContext = createContext<BookmarkContextType | undefined>(
+  undefined
+);
 
 export function BookmarkProvider({ children }: { children: React.ReactNode }) {
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
@@ -21,17 +23,19 @@ export function BookmarkProvider({ children }: { children: React.ReactNode }) {
   }, [bookmarks]);
 
   const addBookmark = (id: string) => {
-    setBookmarks(prev => [...new Set([...prev, id])]);
+    setBookmarks((prev) => [...new Set([...prev, id])]);
   };
 
   const removeBookmark = (id: string) => {
-    setBookmarks(prev => prev.filter(bookmarkId => bookmarkId !== id));
+    setBookmarks((prev) => prev.filter((bookmarkId) => bookmarkId !== id));
   };
 
   const isBookmarked = (id: string) => bookmarks.includes(id);
 
   return (
-    <BookmarkContext.Provider value={{ bookmarks, addBookmark, removeBookmark, isBookmarked }}>
+    <BookmarkContext.Provider
+      value={{ bookmarks, addBookmark, removeBookmark, isBookmarked }}
+    >
       {children}
     </BookmarkContext.Provider>
   );
@@ -43,4 +47,4 @@ export function useBookmarks() {
     throw new Error('useBookmarks must be used within a BookmarkProvider');
   }
   return context;
-} 
+}

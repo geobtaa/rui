@@ -1,12 +1,12 @@
 export const FACET_LABELS: Record<string, string> = {
-  'spatial_agg': 'Place',
-  'resource_class_agg': 'Resource Class',
-  'resource_type_agg': 'Resource Type',
-  'provider_agg': 'Provider',
-  'creator_agg': 'Creator',
-  'access_agg': 'Access',
-  'index_year_agg': 'Year',
-  'language_agg': 'Language',
+  spatial_agg: 'Place',
+  resource_class_agg: 'Resource Class',
+  resource_type_agg: 'Resource Type',
+  provider_agg: 'Provider',
+  creator_agg: 'Creator',
+  access_agg: 'Access',
+  index_year_agg: 'Year',
+  language_agg: 'Language',
   // ... add more facets and control their order through this object
 };
 
@@ -19,7 +19,7 @@ export const FACET_ORDER = [
   'creator_agg',
   'access_agg',
   'index_year_agg',
-  'language_agg'
+  'language_agg',
   // ... etc
 ];
 

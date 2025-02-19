@@ -9,9 +9,15 @@ interface SearchFieldProps {
   autoFocus?: boolean;
 }
 
-export function SearchField({ onSearch, placeholder = 'Search...', autoFocus }: SearchFieldProps) {
+export function SearchField({
+  onSearch,
+  placeholder = 'Search...',
+  autoFocus,
+}: SearchFieldProps) {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<Array<{ text: string; title: string }>>([]);
+  const [suggestions, setSuggestions] = useState<
+    Array<{ text: string; title: string }>
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,10 +28,12 @@ export function SearchField({ onSearch, placeholder = 'Search...', autoFocus }: 
     const fetchSuggestionsDebounced = setTimeout(async () => {
       if (query.trim()) {
         const results = await fetchSuggestions(query);
-        setSuggestions(results.map(r => ({ 
-          text: r.attributes.text,
-          title: r.attributes.title
-        })));
+        setSuggestions(
+          results.map((r) => ({
+            text: r.attributes.text,
+            title: r.attributes.title,
+          }))
+        );
       } else {
         setSuggestions([]);
       }
@@ -37,7 +45,7 @@ export function SearchField({ onSearch, placeholder = 'Search...', autoFocus }: 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        suggestionsRef.current && 
+        suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target as Node) &&
         !inputRef.current?.contains(event.target as Node)
       ) {
@@ -60,12 +68,12 @@ export function SearchField({ onSearch, placeholder = 'Search...', autoFocus }: 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => 
+      setSelectedIndex((prev) =>
         prev < suggestions.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => prev > -1 ? prev - 1 : -1);
+      setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
     } else if (e.key === 'Enter' && selectedIndex >= 0) {
       e.preventDefault();
       const suggestion = suggestions[selectedIndex];
@@ -83,7 +91,7 @@ export function SearchField({ onSearch, placeholder = 'Search...', autoFocus }: 
           ref={inputRef}
           type="text"
           value={query}
-          onChange={e => {
+          onChange={(e) => {
             setQuery(e.target.value);
             setShowSuggestions(true);
             setSelectedIndex(-1);

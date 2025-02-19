@@ -14,11 +14,11 @@ interface SearchResultsProps {
   currentPage: number;
 }
 
-export function SearchResults({ 
-  results, 
-  isLoading, 
+export function SearchResults({
+  results,
+  isLoading,
   totalResults,
-  currentPage 
+  currentPage,
 }: SearchResultsProps) {
   const { showDetails } = useDebug();
   const location = useLocation();
@@ -30,13 +30,13 @@ export function SearchResults({
   };
 
   // Add debug logging
-  console.log('SearchResults props:', { 
+  console.log('SearchResults props:', {
     resultCount: results.length,
     firstResult: results[0],
-    thumbnailUrls: results.map(r => ({ 
-      id: r.id, 
-      thumbnail: r.ui_thumbnail_url 
-    }))
+    thumbnailUrls: results.map((r) => ({
+      id: r.id,
+      thumbnail: r.ui_thumbnail_url,
+    })),
   });
 
   if (isLoading) {
@@ -65,7 +65,7 @@ export function SearchResults({
           attributes: result.attributes,
           thumbnail: result.ui_thumbnail_url,
           // Log the full object to see its structure
-          fullResult: result
+          fullResult: result,
         });
 
         // Add detailed debug logging for thumbnails
@@ -74,13 +74,13 @@ export function SearchResults({
           id: result.id,
           title: result.dct_title_s,
           thumbnailUrl: result.ui_thumbnail_url,
-          resourceClass: result.gbl_resourceclass_sm?.[0]
+          resourceClass: result.gbl_resourceclass_sm?.[0],
         });
 
         // Debug individual result
         console.log(`Rendering result ${result.id}:`, {
           title: result.dct_title_s,
-          thumbnail: result.ui_thumbnail_url
+          thumbnail: result.ui_thumbnail_url,
         });
 
         return (
@@ -101,7 +101,10 @@ export function SearchResults({
                       alt={`Thumbnail for ${result.dct_title_s}`}
                       className="h-48 w-48 object-cover rounded-l-lg"
                       onError={(e) => {
-                        console.error(`Error loading thumbnail for ${result.id}:`, e);
+                        console.error(
+                          `Error loading thumbnail for ${result.id}:`,
+                          e
+                        );
                         // Instead of hiding, replace with fallback icon
                         e.currentTarget.parentElement!.innerHTML = `
                           <div class="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
@@ -129,17 +132,19 @@ export function SearchResults({
                 </div>
 
                 {showDetails && (
-                  <pre className="overflow-auto text-xs">{JSON.stringify(result, null, 2)}</pre>
+                  <pre className="overflow-auto text-xs">
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
                 )}
 
-                <Link 
+                <Link
                   to={`/items/${result.id}`}
                   state={{
                     searchResults: results,
                     currentIndex: getAbsoluteIndex(index) - 1,
                     totalResults: totalResults,
                     searchUrl: location.pathname + location.search,
-                    currentPage: currentPage
+                    currentPage: currentPage,
                   }}
                   className="block"
                 >
@@ -149,26 +154,29 @@ export function SearchResults({
                 </Link>
 
                 {/* Description */}
-                {result.dct_description_sm && result.dct_description_sm.length > 0 && (
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {result.dct_description_sm[0]}
-                  </p>
-                )}
+                {result.dct_description_sm &&
+                  result.dct_description_sm.length > 0 && (
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {result.dct_description_sm[0]}
+                    </p>
+                  )}
 
                 {/* Temporal information */}
-                {result.dct_temporal_sm && result.dct_temporal_sm.length > 0 && (
-                  <p className="text-gray-500 text-sm mb-4">
-                    {result.dct_temporal_sm.join(', ')}
-                  </p>
-                )}
-                
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                  {result.dc_publisher_sm && result.dc_publisher_sm.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <BookOpen size={16} />
-                      <span>{result.dc_publisher_sm.join(', ')}</span>
-                    </div>
+                {result.dct_temporal_sm &&
+                  result.dct_temporal_sm.length > 0 && (
+                    <p className="text-gray-500 text-sm mb-4">
+                      {result.dct_temporal_sm.join(', ')}
+                    </p>
                   )}
+
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                  {result.dc_publisher_sm &&
+                    result.dc_publisher_sm.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <BookOpen size={16} />
+                        <span>{result.dc_publisher_sm.join(', ')}</span>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

@@ -7,5 +7,5 @@ export const CONFIGURED_FACETS = [
   'creator_agg',
   'provider_agg',
   'access_rights_agg',
-  'georeferenced_agg'
-] as const; 
+  'georeferenced_agg',
+] as const;

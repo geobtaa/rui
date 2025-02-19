@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
-import { fetchSearchResults, fetchItemDetails, ApiError } from '../services/api';
+import {
+  fetchSearchResults,
+  fetchItemDetails,
+  ApiError,
+} from '../services/api';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -41,9 +45,7 @@ interface ItemData {
 
 // New component for index map
 function IndexMap() {
-  return (
-    <div className="viewer-information"></div>
-  );
+  return <div className="viewer-information"></div>;
 }
 
 // New component for the attribute table
@@ -53,10 +55,16 @@ function AttributeTable() {
       <table id="attribute-table" className="w-full table-auto border-collapse">
         <thead className="bg-gray-50">
           <tr>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
               Attribute
             </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
               Value
             </th>
           </tr>
@@ -85,14 +93,20 @@ export function ItemView() {
   const { setLastApiUrl } = useApi();
 
   // Calculate pagination state
-  const isLastInCurrentSet = searchState?.currentIndex === searchState?.searchResults.length - 1;
+  const isLastInCurrentSet =
+    searchState?.currentIndex === searchState?.searchResults.length - 1;
   const isFirstInCurrentSet = searchState?.currentIndex === 0;
-  const hasMoreResults = searchState?.currentIndex < searchState?.totalResults - 1;
+  const hasMoreResults =
+    searchState?.currentIndex < searchState?.totalResults - 1;
   const hasPreviousResults = searchState?.currentIndex > 0;
 
   // Get prev/next IDs from current result set
-  const prevId = !isFirstInCurrentSet ? searchState?.searchResults[searchState?.currentIndex - 1]?.id : null;
-  const nextId = !isLastInCurrentSet ? searchState?.searchResults[searchState?.currentIndex + 1]?.id : null;
+  const prevId = !isFirstInCurrentSet
+    ? searchState?.searchResults[searchState?.currentIndex - 1]?.id
+    : null;
+  const nextId = !isLastInCurrentSet
+    ? searchState?.searchResults[searchState?.currentIndex + 1]?.id
+    : null;
 
   // Function to fetch next page of results
   const fetchNextPage = async () => {
@@ -135,8 +149,8 @@ export function ItemView() {
             ...searchState,
             searchResults: nextResults,
             currentIndex: searchState.currentIndex + 1,
-            currentPage: searchState.currentPage + 1
-          }
+            currentPage: searchState.currentPage + 1,
+          },
         });
       }
     } else if (!isLastInCurrentSet && nextId) {
@@ -144,8 +158,8 @@ export function ItemView() {
       navigate(`/items/${nextId}`, {
         state: {
           ...searchState,
-          currentIndex: searchState.currentIndex + 1
-        }
+          currentIndex: searchState.currentIndex + 1,
+        },
       });
     }
   };
@@ -163,8 +177,8 @@ export function ItemView() {
             ...searchState,
             searchResults: prevResults,
             currentIndex: searchState.currentIndex - 1,
-            currentPage: searchState.currentPage - 1
-          }
+            currentPage: searchState.currentPage - 1,
+          },
         });
       }
     } else if (!isFirstInCurrentSet && prevId) {
@@ -172,8 +186,8 @@ export function ItemView() {
       navigate(`/items/${prevId}`, {
         state: {
           ...searchState,
-          currentIndex: searchState.currentIndex - 1
-        }
+          currentIndex: searchState.currentIndex - 1,
+        },
       });
     }
   };
@@ -181,16 +195,19 @@ export function ItemView() {
   useEffect(() => {
     const loadItem = async () => {
       if (!id) return;
-      
+
       setIsLoading(true);
       setError(null);
       try {
-        const jsonData = await fetchItemDetails(id, (url) => setLastApiUrl(url));
+        const jsonData = await fetchItemDetails(id, (url) =>
+          setLastApiUrl(url)
+        );
         setData(jsonData);
       } catch (err) {
-        const message = err instanceof ApiError 
-          ? err.message 
-          : 'An unexpected error occurred while fetching item details';
+        const message =
+          err instanceof ApiError
+            ? err.message
+            : 'An unexpected error occurred while fetching item details';
         setError(message);
       } finally {
         setIsLoading(false);
@@ -226,7 +243,7 @@ export function ItemView() {
               {/* Navigation bar with breadcrumbs and pagination */}
               <div className="flex justify-between items-center mb-2">
                 <ItemBreadcrumbs item={data.data.attributes} />
-                
+
                 <div className="flex items-center gap-4">
                   <Link
                     to={searchState?.searchUrl || '/'}
@@ -249,7 +266,8 @@ export function ItemView() {
 
                   {searchState && (
                     <span className="text-gray-500 px-2">
-                      {searchState?.currentIndex + 1} of {searchState?.totalResults}
+                      {searchState?.currentIndex + 1} of{' '}
+                      {searchState?.totalResults}
                     </span>
                   )}
 
@@ -289,12 +307,17 @@ export function ItemView() {
                   {viewerProtocol && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
-                        <ItemViewer 
-                          protocol={viewerProtocol} 
-                          endpoint={viewerEndpoint} 
+                        <ItemViewer
+                          protocol={viewerProtocol}
+                          endpoint={viewerEndpoint}
                           geometry={data?.data?.attributes?.ui_viewer_geometry}
-                          wxs_identifier={data?.data?.attributes?.gbl_wxsidentifier_s}
-                          available={data?.data?.attributes?.dct_accessrights_s === 'Public'}
+                          wxs_identifier={
+                            data?.data?.attributes?.gbl_wxsidentifier_s
+                          }
+                          available={
+                            data?.data?.attributes?.dct_accessrights_s ===
+                            'Public'
+                          }
                           layerId={data?.data?.attributes?.id}
                           pageValue="SHOW"
                         />
@@ -303,7 +326,10 @@ export function ItemView() {
                   )}
 
                   {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
-                  {(viewerProtocol === 'wms' || viewerProtocol === 'arcgis_feature_layer') && <AttributeTable />}
+                  {(viewerProtocol === 'wms' ||
+                    viewerProtocol === 'arcgis_feature_layer') && (
+                    <AttributeTable />
+                  )}
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
@@ -315,11 +341,11 @@ export function ItemView() {
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <MetadataTable data={data} />
                   </div>
-                  
+
                   {/* Update to use the correct nested path */}
                   {data?.data?.attributes?.attributes?.ui_citation && (
                     <div className="mt-6">
-                      <CitationTable 
+                      <CitationTable
                         citation={data.data.attributes.attributes.ui_citation}
                         permalink={window.location.href}
                       />

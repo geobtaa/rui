@@ -3,7 +3,10 @@
   background-color: #a9acb1;
   border-radius: 15px;
   color: black;
-  font: bold 18px 'Lucida Console', Monaco, monospace;
+  font:
+    bold 18px 'Lucida Console',
+    Monaco,
+    monospace;
   display: block;
   height: 200px;
   left: 11px;
@@ -84,4 +87,4 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-} 
+}

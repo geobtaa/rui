@@ -22,7 +22,7 @@ interface FacetListProps {
 
 export function FacetList({ facets }: FacetListProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const handleFacetClick = (facetId: string, value: string | number) => {
     const newParams = new URLSearchParams(searchParams);
     const facetKey = `fq[${facetId}][]`;
@@ -35,15 +35,17 @@ export function FacetList({ facets }: FacetListProps) {
   }
 
   // Ensure orderedFacets is correctly typed and filtered
-  const orderedFacets: [string, FacetGroup][] = CONFIGURED_FACETS
-    .map(facetId => {
+  const orderedFacets: [string, FacetGroup][] = CONFIGURED_FACETS.map(
+    (facetId) => {
       const facet = facets[facetId];
       return facet && facet.items.length > 0 ? [facetId, facet] : null;
-    })
-    .filter((item): item is [string, FacetGroup] => item !== null);
+    }
+  ).filter((item): item is [string, FacetGroup] => item !== null);
 
   if (orderedFacets.length === 0) {
-    return <div className="text-gray-500">No facets available for this search</div>;
+    return (
+      <div className="text-gray-500">No facets available for this search</div>
+    );
   }
 
   return (
@@ -70,4 +72,4 @@ export function FacetList({ facets }: FacetListProps) {
       ))}
     </div>
   );
-} 
+}

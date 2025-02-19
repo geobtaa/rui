@@ -46,15 +46,17 @@ export function CitationTable({ citation, permalink }: CitationTableProps) {
                   Citation
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 text-sm text-gray-900">
-                    {citation}
-                  </div>
+                  <div className="flex-1 text-sm text-gray-900">{citation}</div>
                   <button
                     onClick={handleCopyCitation}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     title="Copy citation"
                   >
-                    {copiedCitation ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                    {copiedCitation ? (
+                      <Check size={16} className="text-green-500" />
+                    ) : (
+                      <Copy size={16} />
+                    )}
                   </button>
                 </div>
               </td>
@@ -77,7 +79,11 @@ export function CitationTable({ citation, permalink }: CitationTableProps) {
                   className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   title="Copy permalink"
                 >
-                  {copiedPermalink ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                  {copiedPermalink ? (
+                    <Check size={16} className="text-green-500" />
+                  ) : (
+                    <Copy size={16} />
+                  )}
                 </button>
               </div>
             </td>
@@ -86,4 +92,4 @@ export function CitationTable({ citation, permalink }: CitationTableProps) {
       </table>
     </div>
   );
-} 
+}

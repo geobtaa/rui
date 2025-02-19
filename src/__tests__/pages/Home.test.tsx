@@ -29,4 +29,4 @@ describe('Home Page', () => {
       expect(screen.getByRole('listbox')).toBeInTheDocument();
     });
   });
-}); 
+});

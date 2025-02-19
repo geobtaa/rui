@@ -3,22 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { SearchField } from '../components/SearchField';
-import { Database, Map, Globe, Library, Image, Folder, Globe2, Search } from 'lucide-react';
+import {
+  Database,
+  Map,
+  Globe,
+  Library,
+  Image,
+  Folder,
+  Globe2,
+  Search,
+} from 'lucide-react';
 import { fetchSearchResults } from '../services/api';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [resourceCounts, setResourceCounts] = useState<Record<string, number>>({});
+  const [resourceCounts, setResourceCounts] = useState<Record<string, number>>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCounts = async () => {
       try {
         const results = await fetchSearchResults('', 1, 0);
-        const facetCounts = results.facets?.['resource_class_agg']?.items.reduce((acc, item) => {
-          acc[item.value as string] = item.hits;
-          return acc;
-        }, {} as Record<string, number>) || {};
+        const facetCounts =
+          results.facets?.['resource_class_agg']?.items.reduce(
+            (acc, item) => {
+              acc[item.value as string] = item.hits;
+              return acc;
+            },
+            {} as Record<string, number>
+          ) || {};
         setResourceCounts(facetCounts);
       } catch (error) {
         console.error('Error fetching resource counts:', error);
@@ -31,54 +46,54 @@ export function HomePage() {
   }, []);
 
   const resourceClasses = [
-    { 
-      id: 'Dataset', 
-      label: 'Datasets', 
+    {
+      id: 'Dataset',
+      label: 'Datasets',
       count: resourceCounts['Datasets'] || 0,
-      icon: <Database className="w-6 h-6" />, 
-      aggValue: 'Datasets' 
+      icon: <Database className="w-6 h-6" />,
+      aggValue: 'Datasets',
     },
-    { 
-      id: 'Map', 
-      label: 'Maps', 
+    {
+      id: 'Map',
+      label: 'Maps',
       count: resourceCounts['Maps'] || 0,
-      icon: <Map className="w-6 h-6" />, 
-      aggValue: 'Maps' 
+      icon: <Map className="w-6 h-6" />,
+      aggValue: 'Maps',
     },
-    { 
-      id: 'Web service', 
-      label: 'Web Services', 
+    {
+      id: 'Web service',
+      label: 'Web Services',
       count: resourceCounts['Web services'] || 0,
-      icon: <Globe className="w-6 h-6" />, 
-      aggValue: 'Web services' 
+      icon: <Globe className="w-6 h-6" />,
+      aggValue: 'Web services',
     },
-    { 
-      id: 'Collection', 
-      label: 'Collections', 
+    {
+      id: 'Collection',
+      label: 'Collections',
       count: resourceCounts['Collections'] || 0,
-      icon: <Library className="w-6 h-6" />, 
-      aggValue: 'Collections' 
+      icon: <Library className="w-6 h-6" />,
+      aggValue: 'Collections',
     },
-    { 
-      id: 'Imagery', 
-      label: 'Imagery', 
+    {
+      id: 'Imagery',
+      label: 'Imagery',
       count: resourceCounts['Imagery'] || 0,
-      icon: <Image className="w-6 h-6" />, 
-      aggValue: 'Imagery' 
+      icon: <Image className="w-6 h-6" />,
+      aggValue: 'Imagery',
     },
-    { 
-      id: 'Other', 
-      label: 'Other', 
+    {
+      id: 'Other',
+      label: 'Other',
       count: resourceCounts['Other'] || 0,
-      icon: <Folder className="w-6 h-6" />, 
-      aggValue: 'Other' 
+      icon: <Folder className="w-6 h-6" />,
+      aggValue: 'Other',
     },
-    { 
-      id: 'Website', 
-      label: 'Websites', 
+    {
+      id: 'Website',
+      label: 'Websites',
       count: resourceCounts['Websites'] || 0,
-      icon: <Globe2 className="w-6 h-6" />, 
-      aggValue: 'Websites' 
+      icon: <Globe2 className="w-6 h-6" />,
+      aggValue: 'Websites',
     },
   ];
 
@@ -89,7 +104,9 @@ export function HomePage() {
   };
 
   const handleResourceClassClick = (aggValue: string) => {
-    navigate(`/search?fq[resource_class_agg][]=${encodeURIComponent(aggValue)}`);
+    navigate(
+      `/search?fq[resource_class_agg][]=${encodeURIComponent(aggValue)}`
+    );
   };
 
   const handleBrowseAll = () => {
@@ -99,20 +116,19 @@ export function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 bg-gray-50 grid grid-cols-12">
         <div className="col-span-8 px-12 py-12 flex flex-col justify-center">
           <div className="space-y-8 max-w-3xl">
-            <h1 className="text-4xl font-bold text-gray-900">
-              BTAA Geoportal
-            </h1>
-            
+            <h1 className="text-4xl font-bold text-gray-900">BTAA Geoportal</h1>
+
             <p className="text-xl text-gray-600">
-              Search geospatial resources from Big Ten Academic Alliance institutions
+              Search geospatial resources from Big Ten Academic Alliance
+              institutions
             </p>
 
             <div>
-              <SearchField 
+              <SearchField
                 onSearch={handleSearch}
                 placeholder="Search for maps, data, imagery..."
                 autoFocus
@@ -121,7 +137,8 @@ export function HomePage() {
 
             <div className="text-sm text-gray-500">
               <p>
-                Browse and download GIS data, maps, and other geospatial resources from Big Ten universities and other partners.
+                Browse and download GIS data, maps, and other geospatial
+                resources from Big Ten universities and other partners.
               </p>
             </div>
           </div>
@@ -174,4 +191,4 @@ export function HomePage() {
       <Footer />
     </div>
   );
-} 
+}
