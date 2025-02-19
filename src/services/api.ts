@@ -17,16 +17,6 @@ const defaultHeaders = {
   } : {})
 };
 
-// Update the fetch configuration in all request functions
-const fetchConfig = {
-  // credentials: 'include', // Comment this out temporarily
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  },
-  mode: 'cors' as const
-};
-
 const defaultFetchOptions: FetchOptions = {
   useJsonp: import.meta.env.VITE_USE_JSONP === 'true'
 };
@@ -64,6 +54,7 @@ function wktToGeoJSON(wkt: string | null): GeoJSON.FeatureCollection | null {
         if (isNaN(lon) || isNaN(lat)) return null;
         return [lon, lat];
       } catch (e) {
+        console.error('Error converting WKT to GeoJSON:', e);
         return null;
       }
     }).filter((coord): coord is [number, number] => coord !== null);
@@ -176,7 +167,12 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
     const uniqueCallback = `${callbackName}_${Date.now()}`;
     console.log('Using callback name:', uniqueCallback);
     let script: HTMLScriptElement | null = document.createElement('script');
-    let timeoutId: number;
+    // Set timeout to prevent hanging requests
+    const timeoutId = window.setTimeout(() => {
+      console.error('JSONP request timed out:', url);
+      cleanup();
+      reject(new Error('JSONP request timed out'));
+    }, 30000); // 30 second timeout
 
     // Cleanup function to remove script and callback
     const cleanup = () => {
@@ -188,13 +184,6 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
       window.clearTimeout(timeoutId);
       script = null;
     };
-
-    // Set timeout to prevent hanging requests
-    timeoutId = window.setTimeout(() => {
-      console.error('JSONP request timed out:', url);
-      cleanup();
-      reject(new Error('JSONP request timed out'));
-    }, 30000); // 30 second timeout
 
     // Add the callback to window
     (window as any)[uniqueCallback] = (data: T | { detail: string, path: string, method: string }) => {
@@ -279,6 +268,7 @@ async function unifiedFetch<T>(url: string, options: FetchOptions = defaultFetch
         const errorJson = JSON.parse(errorText);
         throw new ApiError(errorJson.detail || 'API request failed', response.status);
       } catch (e) {
+        console.error('Error parsing API error response:', e);
         throw new ApiError(`HTTP error ${response.status}: ${errorText}`, response.status);
       }
     }
