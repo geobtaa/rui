@@ -32,4 +32,4 @@ describe('Item View Page', () => {
       expect(screen.getByText(/location/i)).toBeInTheDocument();
     });
   });
-}); 
+});

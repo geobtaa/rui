@@ -1,7 +1,17 @@
 import React from 'react';
-import { Database, Map, Globe, Library, Image, Folder, Globe2 } from 'lucide-react';
+import {
+  Database,
+  Map,
+  Globe,
+  Library,
+  Image,
+  Folder,
+  Globe2,
+} from 'lucide-react';
 
-export function getResourceIcon(resourceClass: string | undefined): React.ReactNode {
+export function getResourceIcon(
+  resourceClass: string | undefined
+): React.ReactNode {
   switch (resourceClass?.toLowerCase()) {
     case 'datasets':
       return <Database className="w-24 h-24 text-gray-400" />;
@@ -18,4 +28,4 @@ export function getResourceIcon(resourceClass: string | undefined): React.ReactN
     default:
       return <Folder className="w-24 h-24 text-gray-400" />;
   }
-} 
+}

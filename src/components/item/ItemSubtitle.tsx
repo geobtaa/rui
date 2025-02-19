@@ -7,14 +7,16 @@ interface ItemSubtitleProps {
 
 export function ItemSubtitle({ item }: ItemSubtitleProps) {
   // Get publisher or creator
-  const mainCredit = item.dc_publisher_sm?.length 
+  const mainCredit = item.dc_publisher_sm?.length
     ? item.dc_publisher_sm.join(', ')
-    : item.dct_creator_sm?.length 
+    : item.dct_creator_sm?.length
       ? item.dct_creator_sm.join(', ')
       : null;
 
   // Get year
-  const year = item.dct_temporal_sm?.length ? item.dct_temporal_sm.join(', ') : null;
+  const year = item.dct_temporal_sm?.length
+    ? item.dct_temporal_sm.join(', ')
+    : null;
 
   if (!mainCredit && !year) return null;
 
@@ -25,4 +27,4 @@ export function ItemSubtitle({ item }: ItemSubtitleProps) {
       {year}
     </h3>
   );
-} 
+}

@@ -63,23 +63,27 @@ export function MetadataTable({ data }: MetadataTableProps) {
   const metadataFields = [
     // Core Descriptive Fields
     { key: 'dct_description_sm', label: 'Description', colSpan: 3 },
-    { key: 'dct_spatial_sm', label: getLabel('dct_spatial_sm', 'Places'), colSpan: 3 },
-    
+    {
+      key: 'dct_spatial_sm',
+      label: getLabel('dct_spatial_sm', 'Places'),
+      colSpan: 3,
+    },
+
     // Temporal and Format Information
-    { 
+    {
       type: 'combined',
       cells: [
         { key: 'dct_temporal_sm', label: 'Temporal Coverage' },
         { key: 'dct_issued_s', label: 'Date Issued' },
-        { key: 'dct_language_sm', label: 'Language' }
-      ]
+        { key: 'dct_language_sm', label: 'Language' },
+      ],
     },
     {
       type: 'combined',
       cells: [
         { key: 'dct_format_s', label: 'Format' },
         { key: 'schema_provider_s', label: 'Provider' },
-      ]
+      ],
     },
 
     // Institution and Access
@@ -90,17 +94,15 @@ export function MetadataTable({ data }: MetadataTableProps) {
     // Classification
     { key: 'dc_subject_sm', label: 'Subject', colSpan: 3 },
     { key: 'gbl_resourceType_sm', label: 'Resource Type', colSpan: 3 },
-    { key: 'gbl_resourceClass_sm', label: 'Resource Class', colSpan: 3 }
+    { key: 'gbl_resourceClass_sm', label: 'Resource Class', colSpan: 3 },
   ];
 
   return (
     <div>
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Item Summary
-          </h2>
-          <a 
+          <h2 className="text-lg font-semibold text-gray-900">Item Summary</h2>
+          <a
             href="#full-details"
             className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
           >
@@ -113,12 +115,14 @@ export function MetadataTable({ data }: MetadataTableProps) {
           {metadataFields.map((field, index) => {
             if (field.type === 'combined') {
               // Handle the special combined row
-              const hasAnyValue = field.cells.some(cell => hasValue(attributes[cell.key]));
+              const hasAnyValue = field.cells.some((cell) =>
+                hasValue(attributes[cell.key])
+              );
               if (!hasAnyValue) return null;
 
               return (
                 <tr key={`combined-${index}`} className="hover:bg-gray-50">
-                  {field.cells.map(cell => (
+                  {field.cells.map((cell) => (
                     <td key={cell.key} className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-500 mb-1">
                         {cell.label}

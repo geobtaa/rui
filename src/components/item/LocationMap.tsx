@@ -16,9 +16,9 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
     // Initialize map if it doesn't exist
     if (!mapRef.current) {
       mapRef.current = L.map(mapContainer.current).setView([0, 0], 2);
-      
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors',
       }).addTo(mapRef.current);
     }
 
@@ -34,7 +34,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
       const feature = {
         type: 'Feature' as const,
         geometry: geometry,
-        properties: {}
+        properties: {},
       };
 
       // Add the GeoJSON layer
@@ -43,13 +43,13 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
           color: '#2563eb',
           weight: 2,
           opacity: 0.6,
-          fillOpacity: 0.1
-        }
+          fillOpacity: 0.1,
+        },
       }).addTo(mapRef.current);
 
       // Fit bounds to show the feature
       mapRef.current.fitBounds(geoJsonLayer.getBounds(), {
-        padding: [20, 20]
+        padding: [20, 20],
       });
     } catch (error) {
       console.error('Error rendering geometry:', error);
@@ -68,10 +68,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
       <h2 className="text-lg font-semibold text-gray-900 px-6 py-4">
         Location
       </h2>
-      <div 
-        ref={mapContainer} 
-        className="h-[300px] w-full"
-      />
+      <div ref={mapContainer} className="h-[300px] w-full" />
     </div>
   );
-}; 
+};

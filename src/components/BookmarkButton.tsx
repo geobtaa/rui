@@ -27,7 +27,10 @@ export function BookmarkButton({ itemId }: BookmarkButtonProps) {
       }`}
       aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
     >
-      <Bookmark className="w-5 h-5" fill={bookmarked ? 'currentColor' : 'none'} />
+      <Bookmark
+        className="w-5 h-5"
+        fill={bookmarked ? 'currentColor' : 'none'}
+      />
     </button>
   );
-} 
+}

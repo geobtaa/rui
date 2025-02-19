@@ -26,12 +26,12 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
     accumulatedFacets = [
       {
         field: 'resource_class_agg',
-        value: item.gbl_resourceclass_sm[0]
-      }
+        value: item.gbl_resourceclass_sm[0],
+      },
     ];
     breadcrumbs.push({
       label: item.gbl_resourceclass_sm[0],
-      facets: [...accumulatedFacets]
+      facets: [...accumulatedFacets],
     });
   }
 
@@ -41,12 +41,12 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
       ...accumulatedFacets,
       {
         field: 'resource_type_agg',
-        value: item.gbl_resourcetype_sm[0]
-      }
+        value: item.gbl_resourcetype_sm[0],
+      },
     ];
     breadcrumbs.push({
       label: item.gbl_resourcetype_sm[0],
-      facets: [...accumulatedFacets]
+      facets: [...accumulatedFacets],
     });
   }
 
@@ -56,12 +56,12 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
       ...accumulatedFacets,
       {
         field: 'spatial_agg',
-        value: item.dct_spatial_sm[0]
-      }
+        value: item.dct_spatial_sm[0],
+      },
     ];
     breadcrumbs.push({
       label: item.dct_spatial_sm[0],
-      facets: [...accumulatedFacets]
+      facets: [...accumulatedFacets],
     });
   }
 
@@ -71,12 +71,12 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
       ...accumulatedFacets,
       {
         field: 'index_year_agg',
-        value: item.dct_temporal_sm[0]
-      }
+        value: item.dct_temporal_sm[0],
+      },
     ];
     breadcrumbs.push({
       label: item.dct_temporal_sm[0],
-      facets: [...accumulatedFacets]
+      facets: [...accumulatedFacets],
     });
   }
 
@@ -101,4 +101,4 @@ export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
       </ol>
     </nav>
   );
-} 
+}

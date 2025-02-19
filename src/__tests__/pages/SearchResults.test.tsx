@@ -25,4 +25,4 @@ describe('Search Results Page', () => {
     renderSearchResults();
     expect(screen.getByRole('button', { name: /map/i })).toBeInTheDocument();
   });
-}); 
+});

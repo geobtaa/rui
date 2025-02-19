@@ -22,7 +22,9 @@ export function ItemMetadata({ item }: ItemMetadataProps) {
             <h2 className="text-sm font-medium text-gray-500">Publishers</h2>
             <ul className="mt-1 space-y-1">
               {item.dc_publisher_sm.map((publisher, index) => (
-                <li key={index} className="text-gray-900">{publisher}</li>
+                <li key={index} className="text-gray-900">
+                  {publisher}
+                </li>
               ))}
             </ul>
           </div>
@@ -36,7 +38,9 @@ export function ItemMetadata({ item }: ItemMetadataProps) {
             </h2>
             <ul className="mt-1 space-y-1">
               {item.creator_sm.map((creator, index) => (
-                <li key={index} className="text-gray-900">{creator}</li>
+                <li key={index} className="text-gray-900">
+                  {creator}
+                </li>
               ))}
             </ul>
           </div>
@@ -52,7 +56,9 @@ export function ItemMetadata({ item }: ItemMetadataProps) {
             </h2>
             <ul className="mt-1 space-y-1">
               {item.dct_spatial_sm.map((location, index) => (
-                <li key={index} className="text-gray-900">{location}</li>
+                <li key={index} className="text-gray-900">
+                  {location}
+                </li>
               ))}
             </ul>
           </div>

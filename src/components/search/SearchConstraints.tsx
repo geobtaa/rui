@@ -11,12 +11,12 @@ interface SearchConstraintsProps {
   onClearAll: () => void;
 }
 
-export function SearchConstraints({ 
-  facets, 
-  query, 
-  onRemoveFacet, 
+export function SearchConstraints({
+  facets,
+  query,
+  onRemoveFacet,
   onRemoveQuery,
-  onClearAll
+  onClearAll,
 }: SearchConstraintsProps) {
   if (facets.length === 0 && !query) return null;
 

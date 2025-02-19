@@ -35,10 +35,11 @@ export function BookmarksPage() {
     fetchResults();
   }, [bookmarks, setLastApiUrl]);
 
-  const filteredFacets = results?.facets 
+  const filteredFacets = results?.facets
     ? Object.fromEntries(
-        Object.entries(results.facets)
-          .filter(([key]) => CONFIGURED_FACETS.includes(key as typeof CONFIGURED_FACETS[number]))
+        Object.entries(results.facets).filter(([key]) =>
+          CONFIGURED_FACETS.includes(key as (typeof CONFIGURED_FACETS)[number])
+        )
       )
     : {};
 
@@ -57,10 +58,7 @@ export function BookmarksPage() {
                       Filter Results
                     </h2>
                     {results?.facets && (
-                      <FacetList 
-                        facets={filteredFacets}
-                        activeFacets={[]}
-                      />
+                      <FacetList facets={filteredFacets} activeFacets={[]} />
                     )}
                   </div>
                 </div>
@@ -81,7 +79,7 @@ export function BookmarksPage() {
                       />
                     )}
                   </div>
-                  
+
                   <SearchResults
                     results={results?.response.docs || []}
                     isLoading={isLoading}
@@ -94,7 +92,7 @@ export function BookmarksPage() {
               {/* Map Column */}
               <div className="col-span-4 bg-gray-100">
                 <div className="sticky top-16 h-[calc(100vh-4rem)]">
-                  <MapView 
+                  <MapView
                     results={results?.response.docs || []}
                     isLoading={isLoading}
                   />
@@ -107,4 +105,4 @@ export function BookmarksPage() {
       <Footer />
     </div>
   );
-} 
+}
