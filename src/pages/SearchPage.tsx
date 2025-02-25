@@ -60,7 +60,7 @@ function SearchContent() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 bg-gray-50 pb-8 mb-8">
+      <main className="flex-1 bg-gray-50 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
           <SearchConstraints
             facets={searchFacets}
@@ -70,18 +70,31 @@ function SearchContent() {
             onClearAll={handleClearAll}
           />
 
-          <div className="mt-8 grid grid-cols-12 gap-8">
-            {/* Facets Sidebar */}
-            <div className="col-span-2">
-              {searchResults?.facets ? (
-                <FacetList facets={searchResults.facets} />
-              ) : (
-                <div className="text-gray-500">Loading facets...</div>
-              )}
+          {/* Responsive grid layout */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Facets - Collapsible on mobile */}
+            <div className="lg:col-span-2">
+              <details className="lg:hidden mb-4">
+                <summary className="text-lg font-semibold cursor-pointer py-2">
+                  Filter Results
+                </summary>
+                {searchResults?.facets ? (
+                  <FacetList facets={searchResults.facets} />
+                ) : (
+                  <div className="text-gray-500">Loading facets...</div>
+                )}
+              </details>
+              <div className="hidden lg:block">
+                {searchResults?.facets ? (
+                  <FacetList facets={searchResults.facets} />
+                ) : (
+                  <div className="text-gray-500">Loading facets...</div>
+                )}
+              </div>
             </div>
 
-            {/* Search Results */}
-            <div className="col-span-6">
+            {/* Results - Full width on mobile */}
+            <div className="lg:col-span-6">
               {error ? (
                 <ErrorMessage message={error} />
               ) : (
@@ -131,9 +144,11 @@ function SearchContent() {
               )}
             </div>
 
-            {/* Map View */}
-            <div className="col-span-4">
-              <MapView results={searchResults?.response?.docs || []} />
+            {/* Map - Hidden by default on mobile, toggleable */}
+            <div className="lg:col-span-4">
+              <div className="lg:sticky lg:top-[88px]">
+                <MapView results={searchResults?.response?.docs || []} />
+              </div>
             </div>
           </div>
         </div>
