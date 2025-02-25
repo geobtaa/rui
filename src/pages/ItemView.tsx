@@ -223,17 +223,17 @@ export function ItemView() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 bg-gray-50 pt-4 pb-8 mb-8">
+      <main className="flex-1 bg-gray-50 pt-4 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {data?.data?.attributes && (
             <>
-              {/* Navigation bar with breadcrumbs and pagination */}
-              <div className="grid grid-cols-12 gap-4 mb-2">
-                <div className="col-span-8 text-sm">
+              {/* Navigation bar - Stack elements on mobile */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-2">
+                <div className="lg:col-span-8 text-sm">
                   <ItemBreadcrumbs item={data.data.attributes} />
                 </div>
 
-                <div className="col-span-4 flex items-center gap-4 justify-between text-sm">
+                <div className="lg:col-span-4 flex flex-wrap items-center gap-2 lg:gap-4 justify-between text-sm">
                   <Link
                     to={searchState?.searchUrl || '/'}
                     className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors px-2 py-1"
@@ -283,18 +283,10 @@ export function ItemView() {
                 </div>
               </div>
 
-              {/* Title section */}
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {data.data.attributes.dct_title_s}
-                </h1>
-                <ItemSubtitle item={data.data.attributes} />
-              </div>
-
-              {/* Rest of the content */}
-              <div className="grid grid-cols-12 gap-8">
-                {/* Viewer - spans first two columns */}
-                <div className="col-span-8 space-y-6">
+              {/* Main content - Stack on mobile */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Viewer section */}
+                <div className="lg:col-span-8 space-y-6">
                   {viewerProtocol && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
@@ -327,9 +319,9 @@ export function ItemView() {
                   <FullDetailsTable data={data} />
                 </div>
 
-                {/* Sidebar - make it sticky */}
-                <div className="col-span-4">
-                  <div className="sticky top-[88px] space-y-6">
+                {/* Sidebar */}
+                <div className="lg:col-span-4">
+                  <div className="lg:sticky lg:top-[88px] space-y-6">
                     {data?.data?.attributes?.ui_viewer_geometry && (
                       <LocationMap
                         geometry={data.data.attributes.ui_viewer_geometry}
@@ -352,7 +344,7 @@ export function ItemView() {
         </div>
       </main>
 
-      <Footer id={id} />
+      <Footer />
     </div>
   );
 }
