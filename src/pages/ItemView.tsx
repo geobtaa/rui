@@ -285,6 +285,14 @@ export function ItemView() {
 
               {/* Main content - Stack on mobile */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Title section */}
+                <div className="lg:col-span-8">
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {data.data.attributes.dct_title_s}
+                  </h1>
+                  <ItemSubtitle item={data.data.attributes} />
+                </div>
+
                 {/* Viewer section */}
                 <div className="lg:col-span-8 space-y-6">
                   {viewerProtocol && (
