@@ -16,6 +16,7 @@ import { ItemSubtitle } from '../components/item/ItemSubtitle';
 import { CitationTable } from '../components/item/CitationTable';
 import { FullDetailsTable } from '../components/item/FullDetailsTable';
 import { LocationMap } from '../components/item/LocationMap';
+import { DownloadsTable } from '../components/item/DownloadsTable';
 
 // Define types for search results
 interface SearchResult {
@@ -218,6 +219,10 @@ export function ItemView() {
 
   const viewerProtocol = data?.data?.attributes?.ui_viewer_protocol;
   const viewerEndpoint = data?.data?.attributes?.ui_viewer_endpoint;
+  const wxsIdentifier = data?.data?.attributes?.gbl_wxsidentifier_s;
+  const accessRights = data?.data?.attributes?.dct_accessrights_s;
+  const layerId = data?.data?.attributes?.id;
+  const geometry = data?.data?.attributes?.ui_viewer_geometry;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -285,6 +290,14 @@ export function ItemView() {
 
               {/* Main content - Stack on mobile */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Title section */}
+                <div className="lg:col-span-8">
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {data.data.attributes.dct_title_s}
+                  </h1>
+                  <ItemSubtitle item={data.data.attributes} />
+                </div>
+
                 {/* Viewer section */}
                 <div className="lg:col-span-8 space-y-6">
                   {viewerProtocol && (
@@ -293,15 +306,11 @@ export function ItemView() {
                         <ItemViewer
                           protocol={viewerProtocol}
                           endpoint={viewerEndpoint}
-                          geometry={data?.data?.attributes?.ui_viewer_geometry}
-                          wxs_identifier={
-                            data?.data?.attributes?.gbl_wxsidentifier_s
-                          }
-                          available={
-                            data?.data?.attributes?.dct_accessrights_s ===
-                            'Public'
-                          }
-                          layerId={data?.data?.attributes?.id}
+                          geometry={geometry}
+                          wxs_identifier={wxsIdentifier}
+                          available={accessRights === 'Public'}
+                          layerId={layerId}
+                          data={data.data}
                           pageValue="SHOW"
                         />
                       </div>
@@ -322,16 +331,23 @@ export function ItemView() {
                 {/* Sidebar */}
                 <div className="lg:col-span-4">
                   <div className="lg:sticky lg:top-[88px] space-y-6">
-                    {data?.data?.attributes?.ui_viewer_geometry && (
+                    {/* Location Map - using locn_geometry if ui_viewer_geometry is null */}
+                    {(data.data.attributes.ui_viewer_geometry || data.data.attributes.locn_geometry) && (
                       <LocationMap
-                        geometry={data.data.attributes.ui_viewer_geometry}
+                        geometry={data.data.attributes.ui_viewer_geometry || data.data.attributes.locn_geometry}
                       />
                     )}
 
-                    {data?.data?.attributes?.attributes?.ui_citation && (
+                    {/* Downloads section */}
+                    {data.data.attributes.ui_downloads && (
+                      <DownloadsTable downloads={data.data.attributes.ui_downloads} />
+                    )}
+
+                    {/* Citation - fixed path to ui_citation */}
+                    {data.data.attributes.ui_citation && (
                       <div className="mt-6">
                         <CitationTable
-                          citation={data.data.attributes.attributes.ui_citation}
+                          citation={data.data.attributes.ui_citation}
                           permalink={window.location.href}
                         />
                       </div>

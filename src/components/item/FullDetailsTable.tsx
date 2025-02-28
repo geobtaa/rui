@@ -128,8 +128,8 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
       <h2 className="text-lg font-semibold text-gray-900 px-6 py-4">
         Full Details
       </h2>
-      <div className="flex">
-        <div className="w-2/3">
+      <div className="flex flex-col sm:flex-row">
+        <div className="w-full sm:w-2/3">
           <table className="min-w-full divide-y divide-gray-200">
             <tbody className="divide-y divide-gray-200">
               {documentMetadata.map(([key, value]) => (
@@ -149,7 +149,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
             </tbody>
           </table>
         </div>
-        <div className="w-1/3">
+        <div className="w-full sm:w-1/3">
           <div className="sr-only px-6 py-4 bg-gray-100 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
               Metadata Facets
