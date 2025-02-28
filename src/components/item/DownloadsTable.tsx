@@ -46,4 +46,4 @@ export function DownloadsTable({ downloads }: DownloadsTableProps) {
       </div>
     </div>
   );
-} 
+}

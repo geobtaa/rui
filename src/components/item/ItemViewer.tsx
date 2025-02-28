@@ -35,12 +35,13 @@ export function ItemViewer({
   available,
   layerId,
   data,
-  pageValue
+  pageValue,
 }: ItemViewerProps) {
   // Convert dct_references_s to string if it's an object
-  const references = typeof data.attributes.dct_references_s === 'string' 
-    ? data.attributes.dct_references_s
-    : JSON.stringify(data.attributes.dct_references_s);
+  const references =
+    typeof data.attributes.dct_references_s === 'string'
+      ? data.attributes.dct_references_s
+      : JSON.stringify(data.attributes.dct_references_s);
 
   // Helper function to titleize a string
   const titleize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);

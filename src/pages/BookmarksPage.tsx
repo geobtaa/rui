@@ -73,9 +73,7 @@ export function BookmarksPage() {
                   <summary className="text-lg font-semibold cursor-pointer py-2">
                     Filter Results
                   </summary>
-                  {results?.facets && (
-                    <FacetList facets={filteredFacets} />
-                  )}
+                  {results?.facets && <FacetList facets={filteredFacets} />}
                 </details>
                 <div className="hidden lg:block">
                   <div className="sticky top-16">
@@ -83,9 +81,7 @@ export function BookmarksPage() {
                       <h2 className="text-lg font-semibold text-gray-900 mb-4">
                         Filter Results
                       </h2>
-                      {results?.facets && (
-                        <FacetList facets={filteredFacets} />
-                      )}
+                      {results?.facets && <FacetList facets={filteredFacets} />}
                     </div>
                   </div>
                 </div>

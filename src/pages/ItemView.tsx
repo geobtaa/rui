@@ -332,15 +332,21 @@ export function ItemView() {
                 <div className="lg:col-span-4">
                   <div className="lg:sticky lg:top-[88px] space-y-6">
                     {/* Location Map - using locn_geometry if ui_viewer_geometry is null */}
-                    {(data.data.attributes.ui_viewer_geometry || data.data.attributes.locn_geometry) && (
+                    {(data.data.attributes.ui_viewer_geometry ||
+                      data.data.attributes.locn_geometry) && (
                       <LocationMap
-                        geometry={data.data.attributes.ui_viewer_geometry || data.data.attributes.locn_geometry}
+                        geometry={
+                          data.data.attributes.ui_viewer_geometry ||
+                          data.data.attributes.locn_geometry
+                        }
                       />
                     )}
 
                     {/* Downloads section */}
                     {data.data.attributes.ui_downloads && (
-                      <DownloadsTable downloads={data.data.attributes.ui_downloads} />
+                      <DownloadsTable
+                        downloads={data.data.attributes.ui_downloads}
+                      />
                     )}
 
                     {/* Citation - fixed path to ui_citation */}

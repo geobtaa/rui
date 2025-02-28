@@ -39,8 +39,8 @@ export function FacetList({ facets }: FacetListProps) {
       const currentValues = newParams.getAll(facetKey);
       newParams.delete(facetKey);
       currentValues
-        .filter(v => v !== value.toString())
-        .forEach(v => newParams.append(facetKey, v));
+        .filter((v) => v !== value.toString())
+        .forEach((v) => newParams.append(facetKey, v));
     } else {
       // Add the facet if it's not active
       newParams.append(facetKey, value.toString());
@@ -88,7 +88,9 @@ export function FacetList({ facets }: FacetListProps) {
                     }`}
                   >
                     <span>{item.label}</span>
-                    <span className={`${isActive ? 'text-blue-400' : 'text-gray-400'}`}>
+                    <span
+                      className={`${isActive ? 'text-blue-400' : 'text-gray-400'}`}
+                    >
                       ({item.hits})
                     </span>
                     {isActive && (
