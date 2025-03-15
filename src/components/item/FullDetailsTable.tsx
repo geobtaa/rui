@@ -20,8 +20,33 @@ interface FullDetailsTableProps {
   };
 }
 
+// Function to fetch document title by ID
+const fetchDocumentTitle = async (id: string): Promise<string> => {
+  // Replace with actual API call to fetch document details
+  const response = await fetch(`/api/documents/${id}`);
+  const data = await response.json();
+  return data.dct_title_s || 'Unknown Title';
+};
+
+const relationshipLabels: { [key: string]: string } = {
+  memberOf: 'Belongs to collection...',
+  hasMember: 'Collection records...',
+  isPartOf: 'Is part of...',
+  hasPart: 'Has part...',
+  relation: 'Related records...',
+  replaces: 'Replaces...',
+  isReplacedBy: 'Is replaced by...',
+  isSourceOf: 'Source records...',
+  source: 'Derived records...',
+  isVersionOf: 'Is version of...',
+  hasVersion: 'Has version...',
+  browse_all_no_count: 'Browse all records...',
+  browse_all: 'Browse all %{count} records...',
+};
+
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.data?.attributes || {};
+  const uiRelationships = attributes.ui_relationships || {};
 
   // Define the fields for the Document Metadata table
   const documentMetadataFields = [
@@ -62,6 +87,17 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'gbl_provider_sm',
   ];
 
+  // Define the relationship fields for the Metadata Facets table
+  const relationshipFields = [
+    'dct_relation_sm',
+    'pcdm_memberof_sm',
+    'dct_ispartof_sm',
+    'dct_source_sm',
+    'dct_isversionof_sm',
+    'dct_replaces_sm',
+    'dct_isreplacedby_sm',
+  ];
+
   // Group fields by their prefix/category
   const groupFields = () => {
     const entries = Object.entries(attributes).filter(
@@ -74,15 +110,18 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
         shouldDisplayField(key)
     );
 
-    // Separate fields into Document Metadata and Metadata Facets
+    // Separate fields into:
+    // Document Metadata, Metadata Facets, and Relationship Facets
     const documentMetadata = entries.filter(([key]) =>
       documentMetadataFields.includes(key)
     );
     const metadataFacets = entries.filter(([key]) =>
       metadataFacetsFields.includes(key)
     );
-
-    return { documentMetadata, metadataFacets };
+    const relationshipFacets = entries.filter(([key]) =>
+      relationshipFields.includes(key)
+    );
+    return { documentMetadata, metadataFacets, relationshipFacets };
   };
 
   const renderValue = (
@@ -118,7 +157,33 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     return Array.isArray(value) ? value.join(', ') : value.toString();
   };
 
-  const { documentMetadata, metadataFacets } = groupFields();
+  const renderRelationships = (relationships: any) => {
+    return Object.entries(relationships).map(([relationshipType, directions]) => (
+      <div key={relationshipType} className="mb-4">
+        <h5 className="text-sm font-medium text-gray-500">
+          {relationshipLabels[relationshipType] || humanizeFieldName(relationshipType)}
+        </h5>
+        {Object.entries(directions).map(([direction, docs]) => (
+          docs.length > 0 && (
+            <ul className="list-none">
+              {docs.map((doc: { doc_id: string; doc_title: string; link: string }) => (
+                <li key={doc.doc_id} className="text-sm text-gray-900">
+                  <Link
+                    to={`/items/${doc.doc_id}`}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    {doc.doc_title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )
+        ))}
+      </div>
+    ));
+  };
+
+  const { documentMetadata, metadataFacets, relationshipFacets } = groupFields();
 
   return (
     <div
@@ -168,6 +233,21 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                 </ul>
               </div>
             ))}
+
+            {relationshipFacets.map(([key, value]) => (
+              <div key={key} className="mb-4">
+                <h5 className="text-sm font-medium text-gray-500">
+                  {humanizeFieldName(key)}
+                </h5>
+                <ul className="list-none">
+                  <li className="text-sm text-gray-900">
+                    {renderValue(key, value)}
+                  </li>
+                </ul>
+              </div>
+            ))}
+
+            {renderRelationships(uiRelationships)}
           </div>
         </div>
       </div>

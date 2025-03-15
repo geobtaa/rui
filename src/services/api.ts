@@ -95,78 +95,61 @@ function wktToGeoJSON(wkt: string | null): GeoJSON.FeatureCollection | null {
   }
 }
 
-function transformJsonApiResponse(
-  jsonApiResponse: JsonApiResponse
-): SearchResponse {
-  console.log('Raw API Response:', jsonApiResponse);
-
+function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
+  // Transform documents
   const docs = jsonApiResponse.data.map((item) => ({
     id: item.id,
     type: item.type,
-    // Move these fields to the top level for direct access
-    dct_title_s: item.attributes.dct_title_s,
-    dct_description_sm: item.attributes.dct_description_sm || [],
-    dct_temporal_sm: item.attributes.dct_temporal_sm || [],
-    dc_publisher_sm: item.attributes.dc_publisher_sm || [],
-    gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
-
-    // Keep the rest under attributes
     attributes: {
       id: item.id,
       dct_title_s: item.attributes.dct_title_s,
       dct_creator_sm: item.attributes.creator_sm || [],
-      dct_description_sm: item.attributes.dct_description_sm || [],
+      dct_description_sm: item.attributes.description || [],
       dc_publisher_sm: item.attributes.dc_publisher_sm || [],
       dct_spatial_sm: item.attributes.dct_spatial_sm || [],
-      gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],
-      gbl_resourcetype_sm: item.attributes.gbl_resourcetype_sm || [],
-      b1g_language_sm: item.attributes.b1g_language_sm || [],
+      gbl_resourceclass_sm: [],  // Will be populated from API
+      gbl_resourcetype_sm: [],   // Will be populated from API
+      b1g_language_sm: [],       // Will be populated from API
       dc_subject_sm: item.attributes.dc_subject_sm || [],
-      schema_provider_s: item.attributes.schema_provider_s || '',
-      dct_accessrights_s: item.attributes.dct_accessrights_s || '',
-      gbl_georeferenced_b: item.attributes.gbl_georeferenced_b || '',
-      b1g_georeferenced_allmaps_b:
-        item.attributes.b1g_georeferenced_allmaps_b || '',
+      schema_provider_s: item.attributes.dct_provenance_s || '',
+      dct_accessrights_s: '',    // Will be populated from API
+      gbl_georeferenced_b: '',   // Will be populated from API
+      b1g_georeferenced_allmaps_b: '',
       dct_temporal_sm: item.attributes.dct_temporal_sm || [],
-      dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],
-      dct_license_sm: item.attributes.dct_license_sm || [],
+      dct_rightsholder_sm: [],   // Will be populated from API
+      dct_license_sm: [],        // Will be populated from API
       dct_subject_sm: item.attributes.dc_subject_sm || [],
       dct_references_s: item.attributes.dct_references_s || '',
       locn_geometry: item.attributes.locn_geometry,
     },
     ui_thumbnail_url: item.attributes.ui_thumbnail_url || '',
-    ui_citation: '', // Required by GeoDocument type
+    ui_citation: '',  // Will be populated from API
     ui_viewer_protocol: item.attributes.ui_viewer_protocol || '',
     ui_viewer_endpoint: item.attributes.ui_viewer_endpoint || '',
-    // Try ui_viewer_geometry first, fall back to converted locn_geometry
-    ui_viewer_geometry:
-      item.attributes.ui_viewer_geometry ||
-      wktToGeoJSON(item.attributes.locn_geometry),
+    // Keep geometry at top level for map display
+    ui_viewer_geometry: item.attributes.locn_geometry ? wktToGeoJSON(item.attributes.locn_geometry) : null,
   }));
 
-  // Transform included facets into the expected format
-  const facets = jsonApiResponse.included?.reduce(
-    (acc, item) => {
-      if (item.type === 'facet' && item.attributes.items.length > 0) {
-        acc[item.id] = {
+  // Transform included facets
+  const facets = jsonApiResponse.included
+    ?.filter((item): item is Facet => item.type === 'facet')
+    .reduce((acc, facet) => {
+      acc[facet.id] = {
+        label: facet.attributes.label,
+        items: facet.attributes.items.map(item => ({
           label: item.attributes.label,
-          items: item.attributes.items.map((item) => ({
-            label: item.attributes.label,
-            value: item.attributes.value,
-            hits: item.attributes.hits,
-            url: item.links.self,
-          })),
-        };
-      }
+          value: item.attributes.value,
+          hits: item.attributes.hits,
+          url: item.links.self,
+        })),
+      };
       return acc;
-    },
-    {} as NonNullable<SearchResponse['facets']>
-  );
+    }, {} as { [key: string]: FacetGroup });
 
   // Transform sort options
   const sortOptions = jsonApiResponse.included
     ?.filter((item): item is SortOption => item.type === 'sort')
-    .map((item) => ({
+    .map(item => ({
       id: item.id,
       label: item.attributes.label,
       url: item.links.self,
@@ -177,9 +160,24 @@ function transformJsonApiResponse(
       docs,
       numFound: jsonApiResponse.meta.pages.total_count,
       start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10,
+      maxScore: 1.0,
     },
     facets: facets || {},
     sortOptions: sortOptions || [],
+    meta: {
+      pages: {
+        current_page: jsonApiResponse.meta.pages.current_page,
+        next_page: null,  // Will be calculated if needed
+        prev_page: null,  // Will be calculated if needed
+        total_pages: jsonApiResponse.meta.pages.total_pages,
+        limit_value: 10,  // Default page size
+        offset_value: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10,
+        total_count: jsonApiResponse.meta.pages.total_count,
+        first_page: jsonApiResponse.meta.pages.current_page === 1,
+        last_page: jsonApiResponse.meta.pages.current_page === jsonApiResponse.meta.pages.total_pages,
+      },
+      spelling_suggestions: jsonApiResponse.meta.spelling_suggestions || [],
+    },
   };
 }
 

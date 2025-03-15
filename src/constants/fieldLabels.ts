@@ -30,7 +30,7 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   dct_format_s: { label: 'Format', display: true, facet: 'format_agg' },
   dct_license_sm: { label: 'License', display: true },
   dct_identifier_sm: { label: 'Identifier', display: true },
-  dct_ispartof_sm: { label: 'Is Part Of', display: true },
+  dct_ispartof_sm: { label: 'Is Part Of', display: false },
   dct_references_s: { label: 'References', display: false },
   dct_rights_sm: { label: 'Rights', display: true },
   dct_source_sm: { label: 'Source', display: true },
@@ -80,7 +80,7 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   solr_year_i: { label: 'Year', hidden: true, display: true },
 
   // PCDM
-  pcdm_memberof_sm: { label: 'Member Of', display: true },
+  pcdm_memberof_sm: { label: 'Member Of', display: false },
 };
 
 export function humanizeFieldName(key: string): string {

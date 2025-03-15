@@ -11,6 +11,8 @@ import { FacetList } from '../components/FacetList';
 import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
+import { XCircle } from 'lucide-react';
+import type { SpellingSuggestion } from '../types/api';
 
 // Create a separate component for the search content
 function SearchContent() {
@@ -57,11 +59,36 @@ function SearchContent() {
     updateSearch({ sort: newSort });
   };
 
+  // Extract spelling suggestions from meta
+  const spellingSuggestions = searchResults?.meta?.spelling_suggestions || [];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 bg-gray-50 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
+
+          {/* Spelling Suggestions */}
+          {spellingSuggestions.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                Did you mean:{' '}
+                {spellingSuggestions.map((suggestion: SpellingSuggestion, index: number) => (
+                  <React.Fragment key={suggestion.text}>
+                    {index > 0 && ', '}
+                    <button
+                      onClick={() => updateSearch({ query: suggestion.text })}
+                      className="font-medium underline hover:text-blue-900"
+                    >
+                      {suggestion.text}
+                    </button>
+                  </React.Fragment>
+                ))}
+                ?
+              </p>
+            </div>
+          )}
+
           <SearchConstraints
             facets={searchFacets}
             query={query}
