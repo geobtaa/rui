@@ -158,27 +158,29 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
   };
 
   const renderRelationships = (relationships: any) => {
-    return Object.entries(relationships).map(([relationshipType, directions]) => (
+    // Check if relationships exists and has properties
+    if (!relationships || Object.keys(relationships).length === 0) {
+      return null;
+    }
+    
+    return Object.entries(relationships).map(([relationshipType, items]) => (
       <div key={relationshipType} className="mb-4">
         <h5 className="text-sm font-medium text-gray-500">
           {relationshipLabels[relationshipType] || humanizeFieldName(relationshipType)}
         </h5>
-        {Object.entries(directions).map(([direction, docs]) => (
-          docs.length > 0 && (
-            <ul className="list-none">
-              {docs.map((doc: { doc_id: string; doc_title: string; link: string }) => (
-                <li key={doc.doc_id} className="text-sm text-gray-900">
-                  <Link
-                    to={`/items/${doc.doc_id}`}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    {doc.doc_title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )
-        ))}
+        <ul className="list-none">
+          {/* Handle the case where items is an array of documents directly */}
+          {Array.isArray(items) && items.map((doc: { doc_id: string; doc_title: string; link: string }) => (
+            <li key={doc.doc_id} className="text-sm text-gray-900">
+              <Link
+                to={`/items/${doc.doc_id}`}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                {doc.doc_title}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     ));
   };
@@ -222,19 +224,6 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
           </div>
           <div className="px-6 py-4 bg-gray-100">
             {metadataFacets.map(([key, value]) => (
-              <div key={key} className="mb-4">
-                <h5 className="text-sm font-medium text-gray-500">
-                  {humanizeFieldName(key)}
-                </h5>
-                <ul className="list-none">
-                  <li className="text-sm text-gray-900">
-                    {renderValue(key, value)}
-                  </li>
-                </ul>
-              </div>
-            ))}
-
-            {relationshipFacets.map(([key, value]) => (
               <div key={key} className="mb-4">
                 <h5 className="text-sm font-medium text-gray-500">
                   {humanizeFieldName(key)}
