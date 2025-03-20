@@ -31,6 +31,9 @@ const defaultFetchOptions: FetchOptions = {
   useJsonp: import.meta.env.VITE_USE_JSONP === 'true',
 };
 
+// Add a request cache at the top of the file
+const requestCache: Record<string, Promise<any>> = {};
+
 // Helper function to ensure HTTPS URL
 function ensureHttps(url: string): string {
   // Check if the environment variable for enforcing HTTPS is set to true
@@ -180,9 +183,19 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
   };
 }
 
+// Update the jsonp function to use the cache
 function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
   console.log('Starting JSONP request:', url);
-  return new Promise((resolve, reject) => {
+  
+  // Check if this URL is already being requested
+  const cacheKey = url;
+  if (requestCache[cacheKey]) {
+    console.log('Using cached JSONP request for:', url);
+    return requestCache[cacheKey] as Promise<T>;
+  }
+  
+  // Create a new promise for this request
+  const requestPromise = new Promise<T>((resolve, reject) => {
     const uniqueCallback = `${callbackName}_${Date.now()}`;
     console.log('Using callback name:', uniqueCallback);
     let script: HTMLScriptElement | null = document.createElement('script');
@@ -191,6 +204,8 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
       console.error('JSONP request timed out:', url);
       cleanup();
       reject(new Error('JSONP request timed out'));
+      // Remove from cache on timeout
+      delete requestCache[cacheKey];
     }, 30000); // 30 second timeout
 
     // Cleanup function to remove script and callback
@@ -215,13 +230,19 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
       if (typeof data === 'object' && data !== null && 'detail' in data) {
         console.error('JSONP error response:', data);
         reject(new ApiError(`API Error: ${data.detail}`));
+        // Remove from cache on error
+        delete requestCache[cacheKey];
         return;
       }
 
       resolve(data as T);
+      // Keep successful responses in cache for 5 seconds
+      setTimeout(() => {
+        delete requestCache[cacheKey];
+      }, 5000);
     };
 
-    // Create script element
+    // Create script element with all properties set before appending to DOM
     const urlWithCallback = new URL(ensureHttps(url));
     urlWithCallback.searchParams.set('callback', uniqueCallback);
     if (!urlWithCallback.searchParams.has('format')) {
@@ -236,13 +257,20 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
         console.error('JSONP script error:', error);
         cleanup();
         reject(new Error('JSONP request failed'));
+        // Remove from cache on error
+        delete requestCache[cacheKey];
       };
-      // Add crossorigin attribute to handle CORS
       script.crossOrigin = 'anonymous';
+      
+      // Only append the script to the document once
       document.head.appendChild(script);
       console.log('JSONP script added to document');
     }
   });
+  
+  // Store the promise in the cache
+  requestCache[cacheKey] = requestPromise;
+  return requestPromise;
 }
 
 interface FetchOptions {
