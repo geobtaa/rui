@@ -23,7 +23,7 @@ interface FullDetailsTableProps {
 // Function to fetch document title by ID
 const fetchDocumentTitle = async (id: string): Promise<string> => {
   // Replace with actual API call to fetch document details
-  const response = await fetch(`/api/documents/${id}`);
+  const response = await fetch(`/api/items/${id}`);
   const data = await response.json();
   return data.dct_title_s || 'Unknown Title';
 };
@@ -128,6 +128,11 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     key: string,
     value: string | string[] | null | undefined
   ) => {
+    // Return empty string for null or undefined values
+    if (value === null || value === undefined) {
+      return '';
+    }
+
     const facetField = getFacetField(key);
 
     if (facetField) {
@@ -163,26 +168,62 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
       return null;
     }
     
-    return Object.entries(relationships).map(([relationshipType, items]) => (
-      <div key={relationshipType} className="mb-4">
-        <h5 className="text-sm font-medium text-gray-500">
-          {relationshipLabels[relationshipType] || humanizeFieldName(relationshipType)}
-        </h5>
-        <ul className="list-none">
-          {/* Handle the case where items is an array of documents directly */}
-          {Array.isArray(items) && items.map((doc: { doc_id: string; doc_title: string; link: string }) => (
-            <li key={doc.doc_id} className="text-sm text-gray-900">
-              <Link
-                to={`/items/${doc.doc_id}`}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                {doc.doc_title}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ));
+    return Object.entries(relationships).map(([relationshipType, items]) => {
+      if (!Array.isArray(items) || items.length === 0) return null;
+      
+      // Get the total count of items
+      const totalCount = items.length;
+      
+      // Only display the first 5 items
+      const displayItems = items.slice(0, 5);
+      
+      // Determine if we need to show the "Browse all" link
+      const showBrowseAll = totalCount > 5;
+      
+      // Map relationship type to its corresponding facet field if it exists
+      // This would depend on how your search system handles relationship facets
+      // For example: memberOf -> member_of_agg, source -> source_agg, etc.
+      const relationshipFacetField = `${relationshipType}_agg`;
+      
+      // Get the ID of the current item to use as a filter
+      // Ensure it's a string value for encodeURIComponent
+      const currentItemId = String(attributes.id || '');
+      
+      return (
+        <div key={relationshipType} className="mb-4">
+          <h5 className="text-sm font-medium text-gray-500">
+            {relationshipLabels[relationshipType] || humanizeFieldName(relationshipType)}
+          </h5>
+          <ul className="list-none">
+            {/* Display the first 5 items */}
+            {displayItems.map((doc: { doc_id: string; doc_title: string; link: string }) => (
+              <li key={doc.doc_id} className="text-sm text-gray-900">
+                <Link
+                  to={`/items/${doc.doc_id}`}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {doc.doc_title}
+                </Link>
+              </li>
+            ))}
+            
+            {/* Show "Browse all" link if there are more than 5 items */}
+            {showBrowseAll && (
+              <li className="text-sm text-gray-900 mt-2 pt-2 border-t border-gray-200">
+                <Link
+                  to={`/search?fq[${relationshipFacetField}][]=${encodeURIComponent(currentItemId)}`}
+                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  {relationshipLabels.browse_all
+                    ? relationshipLabels.browse_all.replace('%{count}', totalCount.toString())
+                    : `Browse all ${totalCount} records...`}
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      );
+    }).filter(Boolean);
   };
 
   const { documentMetadata, metadataFacets, relationshipFacets } = groupFields();

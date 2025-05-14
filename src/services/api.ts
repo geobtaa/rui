@@ -301,7 +301,7 @@ async function unifiedFetch<T>(
   console.log('Using regular fetch:', finalUrl.toString());
 
   // For document endpoints, request a specific response format
-  if (url.includes('/documents/')) {
+  if (url.includes('/items/')) {
     finalUrl.searchParams.set('response_format', 'json_api');
     finalUrl.searchParams.set('datetime_format', 'iso8601');
   }
@@ -391,7 +391,7 @@ export async function fetchItemDetails(
   options: FetchOptions = defaultFetchOptions
 ): Promise<GeoDocumentDetails> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/documents/`
+    ? `${import.meta.env.VITE_API_BASE_URL}/items/`
     : 'https://geo.btaa.org/';
   const url = createApiUrl(`${baseUrl}${id}`);
   onApiCall?.(url.toString());
