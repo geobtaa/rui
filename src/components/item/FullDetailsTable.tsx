@@ -196,13 +196,13 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
           </h5>
           <ul className="list-none">
             {/* Display the first 5 items */}
-            {displayItems.map((doc: { doc_id: string; doc_title: string; link: string }) => (
-              <li key={doc.doc_id} className="text-sm text-gray-900">
+            {displayItems.map((doc: { item_id: string; item_title: string; link: string }) => (
+              <li key={doc.item_id} className="text-sm text-gray-900">
                 <Link
-                  to={`/items/${doc.doc_id}`}
+                  to={`/items/${doc.item_id}`}
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  {doc.doc_title}
+                  {doc.item_title}
                 </Link>
               </li>
             ))}
