@@ -73,9 +73,9 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dct_identifier_sm',
     'dct_language_sm',
     'dct_date_added_s',
-    'locn_geometry',
-    'dcat_bbox',
-    'dcat_centroid',
+    'locn_geometry_original',
+    'dcat_bbox_original',
+    'dcat_centroid_original',
     'gbl_mdversion_s',
   ];
 
