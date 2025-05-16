@@ -23,10 +23,29 @@ interface FacetListProps {
 export function FacetList({ facets }: FacetListProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const handleFacetClick = (facetId: string, value: string | number) => {
+  // Helper function to check if a facet is active
+  const isFacetActive = (field: string, value: string | number) => {
+    const facetParams = searchParams.getAll(`fq[${field}][]`);
+    return facetParams.includes(value.toString());
+  };
+
+  // Helper function to toggle a facet
+  const handleFacetClick = (field: string, value: string | number) => {
     const newParams = new URLSearchParams(searchParams);
-    const facetKey = `fq[${facetId}][]`;
-    newParams.append(facetKey, value.toString());
+    const facetKey = `fq[${field}][]`;
+
+    if (isFacetActive(field, value)) {
+      // Remove the facet if it's active
+      const currentValues = newParams.getAll(facetKey);
+      newParams.delete(facetKey);
+      currentValues
+        .filter((v) => v !== value.toString())
+        .forEach((v) => newParams.append(facetKey, v));
+    } else {
+      // Add the facet if it's not active
+      newParams.append(facetKey, value.toString());
+    }
+
     setSearchParams(newParams);
   };
 
@@ -56,17 +75,31 @@ export function FacetList({ facets }: FacetListProps) {
             {FACET_LABELS[key] || facet.label}
           </h3>
           <ul className="space-y-1">
-            {facet.items.map((item) => (
-              <li key={`${key}-${item.value}`}>
-                <button
-                  onClick={() => handleFacetClick(key, item.value)}
-                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2"
-                >
-                  <span>{item.label}</span>
-                  <span className="text-gray-400">({item.hits})</span>
-                </button>
-              </li>
-            ))}
+            {facet.items.map((item) => {
+              const isActive = isFacetActive(key, item.value);
+              return (
+                <li key={`${key}-${item.value}`}>
+                  <button
+                    onClick={() => handleFacetClick(key, item.value)}
+                    className={`text-sm flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-gray-100 ${
+                      isActive
+                        ? 'text-blue-600 font-medium bg-blue-50 hover:bg-blue-100'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    <span
+                      className={`${isActive ? 'text-blue-400' : 'text-gray-400'}`}
+                    >
+                      ({item.hits})
+                    </span>
+                    {isActive && (
+                      <span className="text-blue-400 ml-auto">×</span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}

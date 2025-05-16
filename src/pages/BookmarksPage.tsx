@@ -48,38 +48,48 @@ export function BookmarksPage() {
       <Header />
       <MapProvider>
         <main className="flex-1 bg-gray-50">
-          <div className="max-w-[1920px] mx-auto">
-            <div className="grid grid-cols-12">
-              {/* Facets Sidebar */}
-              <aside className="col-span-2">
-                <div className="sticky top-16">
-                  <div className="p-6 overflow-y-auto max-h-[calc(100vh-4rem)]">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                      Filter Results
-                    </h2>
-                    {results?.facets && (
-                      <FacetList facets={filteredFacets} activeFacets={[]} />
-                    )}
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Title and Sort - Stack on mobile */}
+            <div className="py-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Bookmarked Items ({bookmarks.length})
+                </h1>
+                {results?.sortOptions && (
+                  <SortControl
+                    options={results.sortOptions}
+                    currentSort={sort}
+                    onSortChange={setSort}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Main grid layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Facets Sidebar - Collapsible on mobile */}
+              <aside className="lg:col-span-2">
+                <details className="lg:hidden mb-4">
+                  <summary className="text-lg font-semibold cursor-pointer py-2">
+                    Filter Results
+                  </summary>
+                  {results?.facets && <FacetList facets={filteredFacets} />}
+                </details>
+                <div className="hidden lg:block">
+                  <div className="sticky top-16">
+                    <div className="p-6 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        Filter Results
+                      </h2>
+                      {results?.facets && <FacetList facets={filteredFacets} />}
+                    </div>
                   </div>
                 </div>
               </aside>
 
-              {/* Results Column */}
-              <div className="col-span-6 min-h-screen border-r border-gray-200">
-                <div className="p-6">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Bookmarked Items ({bookmarks.length})
-                    </h1>
-                    {results?.sortOptions && (
-                      <SortControl
-                        options={results.sortOptions}
-                        currentSort={sort}
-                        onSortChange={setSort}
-                      />
-                    )}
-                  </div>
-
+              {/* Results Column - Full width on mobile */}
+              <div className="lg:col-span-6">
+                <div className="space-y-6">
                   <SearchResults
                     results={results?.response.docs || []}
                     isLoading={isLoading}
@@ -89,8 +99,8 @@ export function BookmarksPage() {
                 </div>
               </div>
 
-              {/* Map Column */}
-              <div className="col-span-4 bg-gray-100">
+              {/* Map Column - Hidden by default on mobile */}
+              <div className="hidden lg:block lg:col-span-4">
                 <div className="sticky top-16 h-[calc(100vh-4rem)]">
                   <MapView
                     results={results?.response.docs || []}

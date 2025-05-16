@@ -11,12 +11,17 @@ interface ViewerData {
 interface ItemViewerProps {
   protocol: string;
   endpoint: string;
-  geometry: string;
-  wxs_identifier: string;
+  geometry: any;
+  wxs_identifier?: string;
   available: boolean;
   layerId: string;
+  data: {
+    attributes: {
+      dct_references_s: string | Record<string, string>;
+      [key: string]: any;
+    };
+  };
   pageValue: string;
-  data: ViewerData;
   totalResults?: number;
   searchUrl?: string;
   currentPage?: number;
@@ -28,9 +33,16 @@ export function ItemViewer({
   geometry,
   wxs_identifier,
   available,
-  pageValue,
+  layerId,
   data,
+  pageValue,
 }: ItemViewerProps) {
+  // Convert dct_references_s to string if it's an object
+  const references =
+    typeof data.attributes.dct_references_s === 'string'
+      ? data.attributes.dct_references_s
+      : JSON.stringify(data.attributes.dct_references_s);
+
   // Helper function to titleize a string
   const titleize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 

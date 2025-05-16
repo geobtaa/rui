@@ -20,8 +20,33 @@ interface FullDetailsTableProps {
   };
 }
 
+// Function to fetch document title by ID
+const fetchDocumentTitle = async (id: string): Promise<string> => {
+  // Replace with actual API call to fetch document details
+  const response = await fetch(`/api/items/${id}`);
+  const data = await response.json();
+  return data.dct_title_s || 'Unknown Title';
+};
+
+const relationshipLabels: { [key: string]: string } = {
+  memberOf: 'Belongs to collection...',
+  hasMember: 'Collection records...',
+  isPartOf: 'Is part of...',
+  hasPart: 'Has part...',
+  relation: 'Related records...',
+  replaces: 'Replaces...',
+  isReplacedBy: 'Is replaced by...',
+  isSourceOf: 'Source records...',
+  source: 'Derived records...',
+  isVersionOf: 'Is version of...',
+  hasVersion: 'Has version...',
+  browse_all_no_count: 'Browse all records...',
+  browse_all: 'Browse all %{count} records...',
+};
+
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.data?.attributes || {};
+  const uiRelationships = attributes.ui_relationships || {};
 
   // Define the fields for the Document Metadata table
   const documentMetadataFields = [
@@ -48,9 +73,9 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dct_identifier_sm',
     'dct_language_sm',
     'dct_date_added_s',
-    'locn_geometry',
-    'dcat_bbox',
-    'dcat_centroid',
+    'locn_geometry_original',
+    'dcat_bbox_original',
+    'dcat_centroid_original',
     'gbl_mdversion_s',
   ];
 
@@ -60,6 +85,17 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'gbl_resourcetype_sm',
     'dct_spatial_sm',
     'gbl_provider_sm',
+  ];
+
+  // Define the relationship fields for the Metadata Facets table
+  const relationshipFields = [
+    'dct_relation_sm',
+    'pcdm_memberof_sm',
+    'dct_ispartof_sm',
+    'dct_source_sm',
+    'dct_isversionof_sm',
+    'dct_replaces_sm',
+    'dct_isreplacedby_sm',
   ];
 
   // Group fields by their prefix/category
@@ -74,21 +110,29 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
         shouldDisplayField(key)
     );
 
-    // Separate fields into Document Metadata and Metadata Facets
+    // Separate fields into:
+    // Document Metadata, Metadata Facets, and Relationship Facets
     const documentMetadata = entries.filter(([key]) =>
       documentMetadataFields.includes(key)
     );
     const metadataFacets = entries.filter(([key]) =>
       metadataFacetsFields.includes(key)
     );
-
-    return { documentMetadata, metadataFacets };
+    const relationshipFacets = entries.filter(([key]) =>
+      relationshipFields.includes(key)
+    );
+    return { documentMetadata, metadataFacets, relationshipFacets };
   };
 
   const renderValue = (
     key: string,
     value: string | string[] | null | undefined
   ) => {
+    // Return empty string for null or undefined values
+    if (value === null || value === undefined) {
+      return '';
+    }
+
     const facetField = getFacetField(key);
 
     if (facetField) {
@@ -118,7 +162,71 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     return Array.isArray(value) ? value.join(', ') : value.toString();
   };
 
-  const { documentMetadata, metadataFacets } = groupFields();
+  const renderRelationships = (relationships: any) => {
+    // Check if relationships exists and has properties
+    if (!relationships || Object.keys(relationships).length === 0) {
+      return null;
+    }
+    
+    return Object.entries(relationships).map(([relationshipType, items]) => {
+      if (!Array.isArray(items) || items.length === 0) return null;
+      
+      // Get the total count of items
+      const totalCount = items.length;
+      
+      // Only display the first 5 items
+      const displayItems = items.slice(0, 5);
+      
+      // Determine if we need to show the "Browse all" link
+      const showBrowseAll = totalCount > 5;
+      
+      // Map relationship type to its corresponding facet field if it exists
+      // This would depend on how your search system handles relationship facets
+      // For example: memberOf -> member_of_agg, source -> source_agg, etc.
+      const relationshipFacetField = `${relationshipType}_agg`;
+      
+      // Get the ID of the current item to use as a filter
+      // Ensure it's a string value for encodeURIComponent
+      const currentItemId = String(attributes.id || '');
+      
+      return (
+        <div key={relationshipType} className="mb-4">
+          <h5 className="text-sm font-medium text-gray-500">
+            {relationshipLabels[relationshipType] || humanizeFieldName(relationshipType)}
+          </h5>
+          <ul className="list-none">
+            {/* Display the first 5 items */}
+            {displayItems.map((doc: { item_id: string; item_title: string; link: string }) => (
+              <li key={doc.item_id} className="text-sm text-gray-900">
+                <Link
+                  to={`/items/${doc.item_id}`}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {doc.item_title}
+                </Link>
+              </li>
+            ))}
+            
+            {/* Show "Browse all" link if there are more than 5 items */}
+            {showBrowseAll && (
+              <li className="text-sm text-gray-900 mt-2 pt-2 border-t border-gray-200">
+                <Link
+                  to={`/search?fq[${relationshipFacetField}][]=${encodeURIComponent(currentItemId)}`}
+                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  {relationshipLabels.browse_all
+                    ? relationshipLabels.browse_all.replace('%{count}', totalCount.toString())
+                    : `Browse all ${totalCount} records...`}
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      );
+    }).filter(Boolean);
+  };
+
+  const { documentMetadata, metadataFacets, relationshipFacets } = groupFields();
 
   return (
     <div
@@ -128,8 +236,8 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
       <h2 className="text-lg font-semibold text-gray-900 px-6 py-4">
         Full Details
       </h2>
-      <div className="flex">
-        <div className="w-2/3">
+      <div className="flex flex-col sm:flex-row">
+        <div className="w-full sm:w-2/3">
           <table className="min-w-full divide-y divide-gray-200">
             <tbody className="divide-y divide-gray-200">
               {documentMetadata.map(([key, value]) => (
@@ -149,7 +257,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
             </tbody>
           </table>
         </div>
-        <div className="w-1/3">
+        <div className="w-full sm:w-1/3">
           <div className="sr-only px-6 py-4 bg-gray-100 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
               Metadata Facets
@@ -168,6 +276,8 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                 </ul>
               </div>
             ))}
+
+            {renderRelationships(uiRelationships)}
           </div>
         </div>
       </div>

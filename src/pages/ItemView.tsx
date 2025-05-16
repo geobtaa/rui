@@ -16,6 +16,8 @@ import { ItemSubtitle } from '../components/item/ItemSubtitle';
 import { CitationTable } from '../components/item/CitationTable';
 import { FullDetailsTable } from '../components/item/FullDetailsTable';
 import { LocationMap } from '../components/item/LocationMap';
+import { DownloadsTable } from '../components/item/DownloadsTable';
+import { GeoDocumentDetails } from '../types/api';
 
 // Define types for search results
 interface SearchResult {
@@ -29,6 +31,35 @@ interface SearchState {
   totalResults: number;
   searchUrl: string;
   currentPage: number;
+  absoluteIndex?: number;
+}
+
+interface FacetFilter {
+  field: string;
+  value: string;
+}
+
+// Define the ItemData type
+interface ItemData {
+  data: {
+    id: string;
+    type: string;
+    attributes: {
+      id: string;
+      dct_title_s: string;
+      dct_description_sm?: string[];
+      locn_geometry?: string;
+      ui_thumbnail_url?: string;
+      ui_viewer_protocol?: string;
+      ui_viewer_endpoint?: string;
+      gbl_wxsidentifier_s?: string;
+      dct_accessrights_s?: string;
+      ui_viewer_geometry?: any;
+      ui_downloads?: any[];
+      ui_citation?: string;
+      [key: string]: any;  // Allow other properties
+    };
+  };
 }
 
 // New component for index map
@@ -83,9 +114,20 @@ export function ItemView() {
   const isLastInCurrentSet =
     searchState?.currentIndex === searchState?.searchResults.length - 1;
   const isFirstInCurrentSet = searchState?.currentIndex === 0;
-  const hasMoreResults =
-    searchState?.currentIndex < searchState?.totalResults - 1;
-  const hasPreviousResults = searchState?.currentIndex > 0;
+  
+  // Update these calculations to use absoluteIndex when available
+  const absoluteCurrentIndex = searchState?.absoluteIndex !== undefined
+    ? searchState.absoluteIndex
+    : searchState
+      ? (searchState.currentPage - 1) * 10 + searchState.currentIndex
+      : 0;
+  
+  // Fix the hasMoreResults and hasPreviousResults calculations
+  const hasMoreResults = searchState 
+    ? absoluteCurrentIndex < searchState.totalResults - 1
+    : false;
+  
+  const hasPreviousResults = absoluteCurrentIndex > 0;
 
   // Get prev/next IDs from current result set
   const prevId = !isFirstInCurrentSet
@@ -99,28 +141,76 @@ export function ItemView() {
   const fetchNextPage = async () => {
     if (!searchState) return null;
     const nextPage = searchState.currentPage + 1;
-    const results = await fetchSearchResults(
-      new URLSearchParams(searchState.searchUrl).get('q') || '',
-      nextPage,
-      10,
-      [], // You'll need to pass the current facets here
-      setLastApiUrl
-    );
-    return results.response.docs;
+    
+    try {
+      // Extract search parameters from the URL
+      const urlParams = new URLSearchParams(searchState.searchUrl.split('?')[1] || '');
+      const query = urlParams.get('q') || '';
+      
+      // Extract facets from the URL if they exist
+      const facets: FacetFilter[] = [];
+      for (const [key, value] of urlParams.entries()) {
+        if (key.startsWith('fq[') && key.endsWith('][]')) {
+          const field = key.slice(3, -3); // Extract field name from fq[field][]
+          facets.push({ field, value });
+        }
+      }
+      
+      // Get current sort value if it exists
+      const sort = urlParams.get('sort') || undefined;
+      
+      const results = await fetchSearchResults(
+        query,
+        nextPage,
+        10,
+        facets,
+        setLastApiUrl,
+        sort
+      );
+      
+      return results.response.docs;
+    } catch (error) {
+      console.error('Error fetching next page:', error);
+      return null;
+    }
   };
 
   // Function to fetch previous page of results
   const fetchPrevPage = async () => {
     if (!searchState) return null;
     const prevPage = searchState.currentPage - 1;
-    const results = await fetchSearchResults(
-      new URLSearchParams(searchState.searchUrl).get('q') || '',
-      prevPage,
-      10,
-      [], // You'll need to pass the current facets here
-      setLastApiUrl
-    );
-    return results.response.docs;
+    
+    try {
+      // Extract search parameters from the URL
+      const urlParams = new URLSearchParams(searchState.searchUrl.split('?')[1] || '');
+      const query = urlParams.get('q') || '';
+      
+      // Extract facets from the URL if they exist
+      const facets: FacetFilter[] = [];
+      for (const [key, value] of urlParams.entries()) {
+        if (key.startsWith('fq[') && key.endsWith('][]')) {
+          const field = key.slice(3, -3); // Extract field name from fq[field][]
+          facets.push({ field, value });
+        }
+      }
+      
+      // Get current sort value if it exists
+      const sort = urlParams.get('sort') || undefined;
+      
+      const results = await fetchSearchResults(
+        query,
+        prevPage,
+        10,
+        facets,
+        setLastApiUrl,
+        sort
+      );
+      
+      return results.response.docs;
+    } catch (error) {
+      console.error('Error fetching previous page:', error);
+      return null;
+    }
   };
 
   // Handle next result click
@@ -129,16 +219,23 @@ export function ItemView() {
 
     if (isLastInCurrentSet && hasMoreResults) {
       // Need to fetch next page
-      const nextResults = await fetchNextPage();
-      if (nextResults && nextResults.length > 0) {
-        navigate(`/items/${nextResults[0].id}`, {
-          state: {
-            ...searchState,
-            searchResults: nextResults,
-            currentIndex: searchState.currentIndex + 1,
-            currentPage: searchState.currentPage + 1,
-          },
-        });
+      try {
+        const nextResults = await fetchNextPage();
+        if (nextResults && nextResults.length > 0) {
+          // The new relative index in the next page should be 0 (first item)
+          navigate(`/items/${nextResults[0].id}`, {
+            state: {
+              ...searchState,
+              searchResults: nextResults,
+              currentIndex: 0, // Start at the beginning of the new page
+              currentPage: searchState.currentPage + 1,
+              // Update absolute index to be one more than current
+              absoluteIndex: absoluteCurrentIndex + 1,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error navigating to next page:', error);
       }
     } else if (!isLastInCurrentSet && nextId) {
       // Just move to next item in current results
@@ -146,6 +243,8 @@ export function ItemView() {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex + 1,
+          // Update absolute index to be one more than current
+          absoluteIndex: absoluteCurrentIndex + 1,
         },
       });
     }
@@ -157,16 +256,23 @@ export function ItemView() {
 
     if (isFirstInCurrentSet && hasPreviousResults) {
       // Need to fetch previous page
-      const prevResults = await fetchPrevPage();
-      if (prevResults && prevResults.length > 0) {
-        navigate(`/items/${prevResults[prevResults.length - 1].id}`, {
-          state: {
-            ...searchState,
-            searchResults: prevResults,
-            currentIndex: searchState.currentIndex - 1,
-            currentPage: searchState.currentPage - 1,
-          },
-        });
+      try {
+        const prevResults = await fetchPrevPage();
+        if (prevResults && prevResults.length > 0) {
+          // The new relative index in the previous page should be the last item
+          navigate(`/items/${prevResults[prevResults.length - 1].id}`, {
+            state: {
+              ...searchState,
+              searchResults: prevResults,
+              currentIndex: prevResults.length - 1, // Point to the last item on the previous page
+              currentPage: searchState.currentPage - 1,
+              // Update absolute index to be one less than current
+              absoluteIndex: absoluteCurrentIndex - 1,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error navigating to previous page:', error);
       }
     } else if (!isFirstInCurrentSet && prevId) {
       // Just move to previous item in current results
@@ -174,35 +280,55 @@ export function ItemView() {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex - 1,
+          // Update absolute index to be one less than current
+          absoluteIndex: absoluteCurrentIndex - 1,
         },
       });
     }
   };
 
+  // Update display to use the absoluteCurrentIndex directly
+  const displayIndex = absoluteCurrentIndex + 1;
+
   useEffect(() => {
+    let isMounted = true;
+    
     const loadItem = async () => {
       if (!id) return;
 
       setIsLoading(true);
       setError(null);
       try {
-        const jsonData = await fetchItemDetails(id, (url) =>
-          setLastApiUrl(url)
-        );
-        setData(jsonData);
+        // Use a local function to avoid dependency on setLastApiUrl
+        const jsonData = await fetchItemDetails(id, (url) => {
+          if (isMounted) {
+            setLastApiUrl(url);
+          }
+        });
+        
+        if (isMounted) {
+          // Cast the response to ItemData type
+          setData(jsonData as unknown as ItemData);
+          setIsLoading(false);
+        }
       } catch (err) {
-        const message =
-          err instanceof ApiError
-            ? err.message
-            : 'An unexpected error occurred while fetching item details';
-        setError(message);
-      } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          const message =
+            err instanceof ApiError
+              ? err.message
+              : 'An unexpected error occurred while fetching item details';
+          setError(message);
+          setIsLoading(false);
+        }
       }
     };
 
     loadItem();
-  }, [id, setLastApiUrl]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [id]); // Remove setLastApiUrl from dependencies
 
   if (isLoading) {
     return (
@@ -218,22 +344,26 @@ export function ItemView() {
 
   const viewerProtocol = data?.data?.attributes?.ui_viewer_protocol;
   const viewerEndpoint = data?.data?.attributes?.ui_viewer_endpoint;
+  const wxsIdentifier = data?.data?.attributes?.gbl_wxsidentifier_s;
+  const accessRights = data?.data?.attributes?.dct_accessrights_s;
+  const layerId = data?.data?.attributes?.id;
+  const geometry = data?.data?.attributes?.ui_viewer_geometry;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 bg-gray-50 pt-4 pb-8 mb-8">
+      <main className="flex-1 bg-gray-50 pt-4 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {data?.data?.attributes && (
             <>
-              {/* Navigation bar with breadcrumbs and pagination */}
-              <div className="grid grid-cols-12 gap-4 mb-2">
-                <div className="col-span-8 text-sm">
+              {/* Navigation bar - Stack elements on mobile */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-2">
+                <div className="lg:col-span-8 text-sm">
                   <ItemBreadcrumbs item={data.data.attributes} />
                 </div>
 
-                <div className="col-span-4 flex items-center gap-4 justify-between text-sm">
+                <div className="lg:col-span-4 flex flex-wrap items-center gap-2 lg:gap-4 justify-between text-sm">
                   <Link
                     to={searchState?.searchUrl || '/'}
                     className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors px-2 py-1"
@@ -256,8 +386,7 @@ export function ItemView() {
 
                   {searchState && (
                     <span className="text-gray-500 px-2">
-                      {searchState?.currentIndex + 1} of{' '}
-                      {searchState?.totalResults}
+                      {displayIndex} of {searchState.totalResults}
                     </span>
                   )}
 
@@ -283,33 +412,29 @@ export function ItemView() {
                 </div>
               </div>
 
-              {/* Title section */}
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {data.data.attributes.dct_title_s}
-                </h1>
-                <ItemSubtitle item={data.data.attributes} />
-              </div>
+              {/* Main content - Stack on mobile */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Title section */}
+                <div className="lg:col-span-8">
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {data.data.attributes.dct_title_s}
+                  </h1>
+                  <ItemSubtitle item={data.data.attributes} />
+                </div>
 
-              {/* Rest of the content */}
-              <div className="grid grid-cols-12 gap-8">
-                {/* Viewer - spans first two columns */}
-                <div className="col-span-8 space-y-6">
+                {/* Viewer section */}
+                <div className="lg:col-span-8 space-y-6">
                   {viewerProtocol && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
                         <ItemViewer
-                          protocol={viewerProtocol}
-                          endpoint={viewerEndpoint}
-                          geometry={data?.data?.attributes?.ui_viewer_geometry}
-                          wxs_identifier={
-                            data?.data?.attributes?.gbl_wxsidentifier_s
-                          }
-                          available={
-                            data?.data?.attributes?.dct_accessrights_s ===
-                            'Public'
-                          }
-                          layerId={data?.data?.attributes?.id}
+                          protocol={viewerProtocol || ''}
+                          endpoint={viewerEndpoint || ''}
+                          geometry={geometry}
+                          wxs_identifier={wxsIdentifier || ''}
+                          available={accessRights === 'Public'}
+                          layerId={layerId || ''}
+                          data={data.data}
                           pageValue="SHOW"
                         />
                       </div>
@@ -327,19 +452,32 @@ export function ItemView() {
                   <FullDetailsTable data={data} />
                 </div>
 
-                {/* Sidebar - make it sticky */}
-                <div className="col-span-4">
-                  <div className="sticky top-[88px] space-y-6">
-                    {data?.data?.attributes?.ui_viewer_geometry && (
+                {/* Sidebar */}
+                <div className="lg:col-span-4">
+                  <div className="lg:sticky lg:top-[88px] space-y-6">
+                    {/* Location Map - using locn_geometry if ui_viewer_geometry is null */}
+                    {(data.data.attributes.ui_viewer_geometry ||
+                      data.data.attributes.locn_geometry) && (
                       <LocationMap
-                        geometry={data.data.attributes.ui_viewer_geometry}
+                        geometry={
+                          data.data.attributes.ui_viewer_geometry ||
+                          data.data.attributes.locn_geometry
+                        }
                       />
                     )}
 
-                    {data?.data?.attributes?.attributes?.ui_citation && (
+                    {/* Downloads section */}
+                    {data.data.attributes.ui_downloads && (
+                      <DownloadsTable
+                        downloads={data.data.attributes.ui_downloads}
+                      />
+                    )}
+
+                    {/* Citation - fixed path to ui_citation */}
+                    {data.data.attributes.ui_citation && (
                       <div className="mt-6">
                         <CitationTable
-                          citation={data.data.attributes.attributes.ui_citation}
+                          citation={data.data.attributes.ui_citation}
                           permalink={window.location.href}
                         />
                       </div>
@@ -352,7 +490,7 @@ export function ItemView() {
         </div>
       </main>
 
-      <Footer id={id} />
+      <Footer />
     </div>
   );
 }

@@ -72,9 +72,9 @@ export function SearchResults({
         console.log('Full result object:', result);
         console.log('Result thumbnail debug:', {
           id: result.id,
-          title: result.dct_title_s,
+          title: result.attributes.dct_title_s,
           thumbnailUrl: result.ui_thumbnail_url,
-          resourceClass: result.gbl_resourceclass_sm?.[0],
+          resourceClass: result.attributes.gbl_resourceclass_sm?.[0],
         });
 
         // Debug individual result
@@ -98,7 +98,7 @@ export function SearchResults({
                   <div className="h-48 w-48 rounded-l-lg">
                     <img
                       src={result.ui_thumbnail_url}
-                      alt={`Thumbnail for ${result.dct_title_s}`}
+                      alt={`Thumbnail for ${result.attributes.dct_title_s}`}
                       className="h-48 w-48 object-cover rounded-l-lg"
                       onError={(e) => {
                         console.error(
@@ -108,7 +108,7 @@ export function SearchResults({
                         // Instead of hiding, replace with fallback icon
                         e.currentTarget.parentElement!.innerHTML = `
                           <div class="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
-                            ${getResourceIcon(result.gbl_resourceclass_sm?.[0])}
+                            ${getResourceIcon(result.attributes.gbl_resourceclass_sm?.[0])}
                           </div>
                         `;
                       }}
@@ -116,7 +116,7 @@ export function SearchResults({
                   </div>
                 ) : (
                   <div className="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
-                    {getResourceIcon(result.gbl_resourceclass_sm?.[0])}
+                    {getResourceIcon(result.attributes.gbl_resourceclass_sm?.[0])}
                   </div>
                 )}
               </div>
@@ -149,32 +149,32 @@ export function SearchResults({
                   className="block"
                 >
                   <h2 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
-                    {result.dct_title_s}
+                    {result.attributes.dct_title_s}
                   </h2>
                 </Link>
 
                 {/* Description */}
-                {result.dct_description_sm &&
-                  result.dct_description_sm.length > 0 && (
+                {result.attributes.dct_description_sm &&
+                  result.attributes.dct_description_sm.length > 0 && (
                     <p className="text-gray-600 mb-4 line-clamp-3">
-                      {result.dct_description_sm[0]}
+                      {result.attributes.dct_description_sm[0]}
                     </p>
                   )}
 
                 {/* Temporal information */}
-                {result.dct_temporal_sm &&
-                  result.dct_temporal_sm.length > 0 && (
+                {result.attributes.dct_temporal_sm &&
+                  result.attributes.dct_temporal_sm.length > 0 && (
                     <p className="text-gray-500 text-sm mb-4">
-                      {result.dct_temporal_sm.join(', ')}
+                      {result.attributes.dct_temporal_sm.join(', ')}
                     </p>
                   )}
 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                  {result.dc_publisher_sm &&
-                    result.dc_publisher_sm.length > 0 && (
+                  {result.attributes.dc_publisher_sm &&
+                    result.attributes.dc_publisher_sm.length > 0 && (
                       <div className="flex items-center gap-1">
                         <BookOpen size={16} />
-                        <span>{result.dc_publisher_sm.join(', ')}</span>
+                        <span>{result.attributes.dc_publisher_sm.join(', ')}</span>
                       </div>
                     )}
                 </div>

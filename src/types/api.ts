@@ -103,26 +103,47 @@ export interface JsonApiResponse {
   };
 }
 
+interface SpellingSuggestion {
+  text: string;
+  highlighted: string;
+  score: number;
+}
+
+interface SearchResponseMeta {
+  pages: {
+    current_page: number;
+    next_page: number | null;
+    prev_page: number | null;
+    total_pages: number;
+    limit_value: number;
+    offset_value: number;
+    total_count: number;
+    first_page?: boolean;
+    last_page?: boolean;
+  };
+  spelling_suggestions: SpellingSuggestion[];
+}
+
 export interface SearchResponse {
   response: {
-    docs: GeoDocument[];
     numFound: number;
     start: number;
+    maxScore: number;
+    docs: GeoDocument[];
   };
-  facets?: {
-    [key: string]: {
-      label: string;
-      items: {
-        label: string;
-        value: string | number;
-        hits: number;
-        url: string;
-      }[];
-    };
+  facets: {
+    [key: string]: FacetGroup;
   };
-  sortOptions?: Array<{
-    id: string;
+  sortOptions: SortOption[];
+  meta: SearchResponseMeta;
+}
+
+export interface FacetGroup {
+  label: string;
+  items: Array<{
     label: string;
+    value: string | number;
+    hits: number;
     url: string;
   }>;
 }

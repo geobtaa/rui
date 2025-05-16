@@ -11,6 +11,8 @@ import { FacetList } from '../components/FacetList';
 import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
+import { XCircle } from 'lucide-react';
+import type { SpellingSuggestion } from '../types/api';
 
 // Create a separate component for the search content
 function SearchContent() {
@@ -57,11 +59,36 @@ function SearchContent() {
     updateSearch({ sort: newSort });
   };
 
+  // Extract spelling suggestions from meta
+  const spellingSuggestions = searchResults?.meta?.spelling_suggestions || [];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 bg-gray-50 pb-8 mb-8">
+      <main className="flex-1 bg-gray-50 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
+
+          {/* Spelling Suggestions */}
+          {spellingSuggestions.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                Did you mean:{' '}
+                {spellingSuggestions.map((suggestion: SpellingSuggestion, index: number) => (
+                  <React.Fragment key={suggestion.text}>
+                    {index > 0 && ', '}
+                    <button
+                      onClick={() => updateSearch({ query: suggestion.text })}
+                      className="font-medium underline hover:text-blue-900"
+                    >
+                      {suggestion.text}
+                    </button>
+                  </React.Fragment>
+                ))}
+                ?
+              </p>
+            </div>
+          )}
+
           <SearchConstraints
             facets={searchFacets}
             query={query}
@@ -70,18 +97,31 @@ function SearchContent() {
             onClearAll={handleClearAll}
           />
 
-          <div className="mt-8 grid grid-cols-12 gap-8">
-            {/* Facets Sidebar */}
-            <div className="col-span-2">
-              {searchResults?.facets ? (
-                <FacetList facets={searchResults.facets} />
-              ) : (
-                <div className="text-gray-500">Loading facets...</div>
-              )}
+          {/* Responsive grid layout */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Facets - Collapsible on mobile */}
+            <div className="lg:col-span-2">
+              <details className="lg:hidden mb-4">
+                <summary className="text-lg font-semibold cursor-pointer py-2">
+                  Filter Results
+                </summary>
+                {searchResults?.facets ? (
+                  <FacetList facets={searchResults.facets} />
+                ) : (
+                  <div className="text-gray-500">Loading facets...</div>
+                )}
+              </details>
+              <div className="hidden lg:block">
+                {searchResults?.facets ? (
+                  <FacetList facets={searchResults.facets} />
+                ) : (
+                  <div className="text-gray-500">Loading facets...</div>
+                )}
+              </div>
             </div>
 
-            {/* Search Results */}
-            <div className="col-span-6">
+            {/* Results - Full width on mobile */}
+            <div className="lg:col-span-6">
               {error ? (
                 <ErrorMessage message={error} />
               ) : (
@@ -131,9 +171,11 @@ function SearchContent() {
               )}
             </div>
 
-            {/* Map View */}
-            <div className="col-span-4">
-              <MapView results={searchResults?.response?.docs || []} />
+            {/* Map - Hidden by default on mobile, toggleable */}
+            <div className="lg:col-span-4">
+              <div className="lg:sticky lg:top-[88px]">
+                <MapView results={searchResults?.response?.docs || []} />
+              </div>
             </div>
           </div>
         </div>
