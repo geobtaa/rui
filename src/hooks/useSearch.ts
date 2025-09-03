@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchSearchResults } from '../services/api';
 import { parseSearchParams } from '../utils/searchParams';
 import { useApi } from '../context/ApiContext';
-import type { SearchResponse } from '../types/api';
+import type { JsonApiResponse } from '../types/api';
 import type { FacetFilter } from '../types/search';
 
 // Export the interface so it can be used in ResourceView.tsx
@@ -16,7 +16,7 @@ export interface SearchState {
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [results, setResults] = useState<JsonApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setLastApiUrl } = useApi();
@@ -116,8 +116,8 @@ export function useSearch() {
     isLoading,
     error,
     page: page || 1,
-    perPage: 10,
-    totalResults: results?.response.numFound || 0,
+    perPage: results?.meta?.perPage || 10,
+    totalResults: results?.meta?.totalCount || 0,
     facets: facets || [],
     updateSearch,
     sort,

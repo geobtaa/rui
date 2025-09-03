@@ -92,15 +92,28 @@ export interface SortOption {
 }
 
 export interface JsonApiResponse {
+  jsonapi: {
+    version: string;
+    profile: string[];
+  };
+  links: {
+    self: string;
+    next?: string;
+    first: string;
+    last: string;
+  };
+  meta: {
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+    perPage: number;
+    query: string;
+    sort?: string;
+    query_time?: any;
+    spelling_suggestions?: string[];
+  };
   data: Array<GeoDocument>;
   included?: Array<Facet | SortOption>;
-  meta: {
-    pages: {
-      total_count: number;
-      current_page: number;
-      total_pages: number;
-    };
-  };
 }
 
 interface SpellingSuggestion {

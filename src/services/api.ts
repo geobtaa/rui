@@ -342,7 +342,7 @@ export async function fetchSearchResults(
   onApiCall?: (url: string) => void,
   sort?: string,
   options: FetchOptions = defaultFetchOptions
-): Promise<SearchResponse> {
+): Promise<JsonApiResponse> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/search`
     : 'https://geo.btaa.org/api/v1/search';
@@ -370,7 +370,7 @@ export async function fetchSearchResults(
       url.toString(),
       options
     );
-    return transformJsonApiResponse(response);
+    return response; // Return the JSON:API response directly
   } catch (error) {
     console.error('Search error:', error);
     throw error;
