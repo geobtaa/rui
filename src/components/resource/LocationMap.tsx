@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { normalizeGeometry } from '../../utils/geometryUtils';
 
 interface LocationMapProps {
-  geometry: GeoJSON.Polygon | null;
+  geometry: any; // Accept any format, we'll normalize it
 }
 
 export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
@@ -12,6 +13,13 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
 
   useEffect(() => {
     if (!mapContainer.current || !geometry) return;
+
+    // Normalize the geometry to GeoJSON format
+    const normalizedGeometry = normalizeGeometry(geometry);
+    if (!normalizedGeometry) {
+      console.warn('Could not normalize geometry:', geometry);
+      return;
+    }
 
     // Initialize map if it doesn't exist
     if (!mapRef.current) {
@@ -30,10 +38,10 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
     });
 
     try {
-      // Create a feature from the geometry
+      // Create a feature from the normalized geometry
       const feature = {
         type: 'Feature' as const,
-        geometry: geometry,
+        geometry: normalizedGeometry,
         properties: {},
       };
 

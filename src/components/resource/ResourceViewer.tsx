@@ -9,16 +9,19 @@ interface ViewerData {
 }
 
 interface ResourceViewerProps {
-  protocol: string;
-  endpoint: string;
-  geometry: any;
-  wxs_identifier?: string;
-  available: boolean;
-  layerId: string;
   data: {
     attributes: {
       dct_references_s: string | Record<string, string>;
       [key: string]: any;
+    };
+    meta?: {
+      ui?: {
+        viewer?: {
+          protocol?: string;
+          endpoint?: string;
+          geometry?: any;
+        };
+      };
     };
   };
   pageValue: string;
@@ -28,15 +31,14 @@ interface ResourceViewerProps {
 }
 
 export function ResourceViewer({
-  protocol,
-  endpoint,
-  geometry,
-  wxs_identifier,
-  available,
-  layerId,
   data,
   pageValue,
 }: ResourceViewerProps) {
+  // Extract viewer information from the new data structure
+  const protocol = data.meta?.ui?.viewer?.protocol || '';
+  const endpoint = data.meta?.ui?.viewer?.endpoint || '';
+  const geometry = data.meta?.ui?.viewer?.geometry;
+  const available = !!protocol && !!endpoint;
   // Convert dct_references_s to string if it's an object
   const references =
     typeof data.attributes.dct_references_s === 'string'
@@ -62,7 +64,7 @@ export function ResourceViewer({
 
   const viewerType = getViewerType(protocol);
 
-  function formatProtocol(protocol: string): string {
+  function formatProtocol(protocol: string): string | null {
     if (protocol === 'arcgis_dynamic_map_layer') {
       return 'DynamicMapLayer';
     }
@@ -137,7 +139,7 @@ export function ResourceViewer({
             data-controller="leaflet-viewer"
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
-            data-leaflet-viewer-layer-id-value={wxs_identifier}
+            data-leaflet-viewer-layer-id-value=""
             data-leaflet-viewer-options-value={JSON.stringify(
               leafletViewerOptions
             )}
@@ -169,7 +171,7 @@ export function ResourceViewer({
   return (
     <div className="bg-white shadow-sm rounded-lg">
       <div className="p-6">
-        <MetadataTable data={data} />
+        <MetadataTable data={{ data: { attributes: data.attributes } }} />
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ const defaultHeaders = {
 };
 
 const defaultFetchOptions: FetchOptions = {
-  useJsonp: import.meta.env.VITE_USE_JSONP === 'true',
+  useJsonp: false, // Disable JSONP for modern JSON:API endpoints
 };
 
 // Add a request cache at the top of the file
@@ -99,37 +99,28 @@ function wktToGeoJSON(wkt: string | null): GeoJSON.FeatureCollection | null {
 }
 
 function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
-  // Transform documents
+  // Transform documents - now the data structure matches our GeoDocument interface
   const docs = jsonApiResponse.data.map((item) => ({
-    id: item.id,
-    type: item.type,
+    ...item,
+    // Ensure the item has the correct structure
     attributes: {
-      id: item.id,
-      dct_title_s: item.attributes.dct_title_s,
-      dct_creator_sm: item.attributes.dct_creator_sm || [],
-      dct_description_sm: item.attributes.dct_description_sm || [],
-      dct_publisher_sm: item.attributes.dct_publisher_sm || [],
-      dct_spatial_sm: item.attributes.dct_spatial_sm || [],
-      gbl_resourceclass_sm: item.attributes.gbl_resourceclass_sm || [],  // Will be populated from API
-      gbl_resourcetype_sm: item.attributes.gbl_resourcetype_sm || [],   // Will be populated from API
-      b1g_language_sm: item.attributes.b1g_language_sm || [],       // Will be populated from API
-      dct_subject_sm: item.attributes.dct_subject_sm || [],
-      schema_provider_s: item.attributes.dct_provenance_s || '',
-      dct_accessrights_s: item.attributes.dct_accessrights_s || '',    // Will be populated from API
-      gbl_georeferenced_b: item.attributes.gbl_georeferenced_b || '',   // Will be populated from API
-      b1g_georeferenced_allmaps_b: item.attributes.b1g_georeferenced_allmaps_b || '',
-      dct_temporal_sm: item.attributes.dct_temporal_sm || [],
-      dct_rightsholder_sm: item.attributes.dct_rightsholder_sm || [],   // Will be populated from API
-      dct_license_sm: item.attributes.dct_license_sm || [],        // Will be populated from API
-      dct_subject_sm: item.attributes.dc_subject_sm || [],
-      dct_references_s: item.attributes.dct_references_s || '',
-      locn_geometry: item.attributes.locn_geometry,
+      ...item.attributes,
+      // Handle any missing required fields
+      dct_title_s: item.attributes.dct_title_s || '',
     },
-    ui_thumbnail_url: item.attributes.ui_thumbnail_url || '',
-    ui_citation: '',  // Will be populated from API
-    ui_viewer_protocol: item.attributes.ui_viewer_protocol || '',
-    ui_viewer_endpoint: item.attributes.ui_viewer_endpoint || '',
-    ui_viewer_geometry: item.attributes.ui_viewer_geometry || wktToGeoJSON(item.attributes.locn_geometry),
+    // Ensure meta.ui structure exists
+    meta: {
+      ui: {
+        thumbnail_url: item.meta?.ui?.thumbnail_url || '',
+        citation: item.meta?.ui?.citation || '',
+        downloads: item.meta?.ui?.downloads || [],
+        relationships: item.meta?.ui?.relationships || {},
+        summaries: item.meta?.ui?.summaries || [],
+        ai_summaries: item.meta?.ui?.ai_summaries || [],
+        suggest: item.meta?.ui?.suggest || { input: [] },
+        viewer: item.meta?.ui?.viewer || {},
+      },
+    },
   }));
 
   // Transform included facets
@@ -178,7 +169,7 @@ function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchRespo
         first_page: jsonApiResponse.meta.pages.current_page === 1,
         last_page: jsonApiResponse.meta.pages.current_page === jsonApiResponse.meta.pages.total_pages,
       },
-      spelling_suggestions: jsonApiResponse.meta.spelling_suggestions || [],
+      spelling_suggestions: [],
     },
   };
 }
@@ -300,17 +291,18 @@ async function unifiedFetch<T>(
 
   console.log('Using regular fetch:', finalUrl.toString());
 
-  // For document endpoints, request a specific response format
+  // For modern JSON:API endpoints, ensure proper Accept header
   if (url.includes('/resources/')) {
-    finalUrl.searchParams.set('response_format', 'json_api');
-    finalUrl.searchParams.set('datetime_format', 'iso8601');
+    // Remove any legacy parameters that might interfere with JSON:API
+    finalUrl.searchParams.delete('response_format');
+    finalUrl.searchParams.delete('datetime_format');
   }
 
   try {
     const response = await fetch(finalUrl.toString(), {
       headers: {
         ...defaultHeaders,
-        Accept: 'application/javascript, application/json',
+        Accept: 'application/vnd.api+json, application/json',
       },
       mode: 'cors',
       credentials: 'include',
@@ -385,10 +377,10 @@ export async function fetchSearchResults(
   }
 }
 
-export async function fetchItemDetails(
+export async function fetchResourceDetails(
   id: string,
   onApiCall?: (url: string) => void,
-  options: FetchOptions = defaultFetchOptions
+  options: FetchOptions = { useJsonp: false } // Always use regular fetch for modern JSON:API
 ): Promise<GeoDocumentDetails> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/resources/`
@@ -397,19 +389,19 @@ export async function fetchItemDetails(
   onApiCall?.(url.toString());
 
   try {
-    const response = await unifiedFetch<GeoDocumentDetails>(
+    const response = await unifiedFetch<{ data: GeoDocumentDetails }>(
       url.toString(),
       options
     );
-    console.log('Item details response:', response); // Add debugging
-    return response;
+    console.log('Resource details response:', response); // Add debugging
+    return response.data;
   } catch (error) {
-    console.error('Error fetching item details:', error); // Add debugging
+    console.error('Error fetching resource details:', error); // Add debugging
     if (error instanceof ApiError) {
       throw error;
     }
     throw new ApiError(
-      `Failed to fetch item details: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to fetch resource details: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
   }
 }

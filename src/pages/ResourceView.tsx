@@ -3,7 +3,7 @@ import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import {
   fetchSearchResults,
-  fetchItemDetails,
+  fetchResourceDetails,
   ApiError,
 } from '../services/api';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -13,6 +13,8 @@ import { useApi } from '../context/ApiContext';
 import { ResourceViewer } from '../components/resource/ResourceViewer';
 import { ResourceBreadcrumbs } from '../components/resource/ResourceBreadcrumbs';
 import { ResourceSubtitle } from '../components/resource/ResourceSubtitle';
+import { ResourceDescription } from '../components/resource/ResourceDescription';
+import { ResourceMetadata } from '../components/resource/ResourceMetadata';
 import { CitationTable } from '../components/resource/CitationTable';
 import { FullDetailsTable } from '../components/resource/FullDetailsTable';
 import { LocationMap } from '../components/resource/LocationMap';
@@ -39,25 +41,36 @@ interface FacetFilter {
   value: string;
 }
 
-// Define the ItemData type
-interface ItemData {
-  data: {
+// Define the ResourceData type to match the actual API response
+interface ResourceData {
+  id: string;
+  type: string;
+  attributes: {
     id: string;
-    type: string;
-    attributes: {
-      id: string;
-      dct_title_s: string;
-      dct_description_sm?: string[];
-      locn_geometry?: string;
-      ui_thumbnail_url?: string;
-      ui_viewer_protocol?: string;
-      ui_viewer_endpoint?: string;
-      gbl_wxsidentifier_s?: string;
-      dct_accessrights_s?: string;
-      ui_viewer_geometry?: any;
-      ui_downloads?: any[];
-      ui_citation?: string;
-      [key: string]: any;  // Allow other properties
+    dct_title_s: string;
+    dct_description_sm?: string[];
+    locn_geometry?: string;
+    locn_geometry_original?: string;
+    ui_thumbnail_url?: string;
+    ui_viewer_protocol?: string;
+    ui_viewer_endpoint?: string;
+    gbl_wxsidentifier_s?: string;
+    dct_accessrights_s?: string;
+    ui_viewer_geometry?: any;
+    ui_downloads?: any[];
+    ui_citation?: string;
+    [key: string]: any;  // Allow other properties
+  };
+  meta?: {
+    ui?: {
+      viewer?: {
+        protocol?: string;
+        endpoint?: string;
+        geometry?: any;
+      };
+      downloads?: any[];
+      citation?: string;
+      thumbnail_url?: string;
     };
   };
 }
@@ -105,7 +118,7 @@ export function ResourceView() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchState = location.state as SearchState;
-  const [data, setData] = useState<ItemData | null>(null);
+  const [data, setData] = useState<ResourceData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setLastApiUrl } = useApi();
@@ -300,15 +313,15 @@ export function ResourceView() {
       setError(null);
       try {
         // Use a local function to avoid dependency on setLastApiUrl
-        const jsonData = await fetchItemDetails(id, (url) => {
+        const jsonData = await fetchResourceDetails(id, (url) => {
           if (isMounted) {
             setLastApiUrl(url);
           }
         });
         
         if (isMounted) {
-          // Cast the response to ItemData type
-          setData(jsonData as unknown as ItemData);
+          // Cast the response to ResourceData type
+          setData(jsonData as unknown as ResourceData);
           setIsLoading(false);
         }
       } catch (err) {
@@ -342,12 +355,42 @@ export function ResourceView() {
     return <ErrorMessage message={error} />;
   }
 
-  const viewerProtocol = data?.data?.attributes?.ui_viewer_protocol;
-  const viewerEndpoint = data?.data?.attributes?.ui_viewer_endpoint;
-  const wxsIdentifier = data?.data?.attributes?.gbl_wxsidentifier_s;
-  const accessRights = data?.data?.attributes?.dct_accessrights_s;
-  const layerId = data?.data?.attributes?.id;
-  const geometry = data?.data?.attributes?.ui_viewer_geometry;
+  // Debug: Show loading state and data status
+  if (!data) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 bg-gray-50 pt-4 pb-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              <strong>Debug:</strong> No data loaded yet. Loading: {isLoading.toString()}, Error: {error || 'none'}
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+
+
+  // Temporarily comment out to debug data structure
+  // const viewerProtocol = data?.data?.meta?.ui?.viewer?.protocol;
+  // const viewerEndpoint = data?.data?.meta?.ui?.viewer?.endpoint;
+  // const wxsIdentifier = data?.data?.attributes?.gbl_wxsidentifier_s;
+  // const accessRights = data?.data?.attributes?.dct_accessrights_s;
+  // const layerId = data?.data?.attributes?.id;
+  // const geometry = data?.data?.meta?.ui?.viewer?.geometry;
+  
+  // Extract data from the new structure
+  const viewerProtocol = data?.meta?.ui?.viewer?.protocol;
+  const viewerEndpoint = data?.meta?.ui?.viewer?.endpoint;
+  const wxsIdentifier = data?.attributes?.gbl_wxsidentifier_s;
+  const accessRights = data?.attributes?.dct_accessrights_s;
+  const layerId = data?.attributes?.id;
+  const geometry = data?.meta?.ui?.viewer?.geometry;
+
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -355,12 +398,12 @@ export function ResourceView() {
 
       <main className="flex-1 bg-gray-50 pt-4 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          {data?.data?.attributes && (
+          {data?.attributes && (
             <>
               {/* Navigation bar - Stack elements on mobile */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-2">
                 <div className="lg:col-span-8 text-sm">
-                  <ResourceBreadcrumbs item={data.data.attributes} />
+                  <ResourceBreadcrumbs item={data} />
                 </div>
 
                 <div className="lg:col-span-4 flex flex-wrap items-center gap-2 lg:gap-4 justify-between text-sm">
@@ -417,9 +460,16 @@ export function ResourceView() {
                 {/* Title section */}
                 <div className="lg:col-span-8">
                   <h1 className="text-3xl font-bold text-gray-900">
-                    {data.data.attributes.dct_title_s}
+                    {data.attributes.dct_title_s}
                   </h1>
-                  <ResourceSubtitle item={data.data.attributes} />
+                  <ResourceSubtitle item={data.attributes} />
+                  
+                  {/* Description */}
+                  {data.attributes.dct_description_sm && (
+                    <div className="mt-4">
+                      <ResourceDescription item={data.attributes} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Viewer section */}
@@ -428,13 +478,7 @@ export function ResourceView() {
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
                         <ResourceViewer
-                          protocol={viewerProtocol || ''}
-                          endpoint={viewerEndpoint || ''}
-                          geometry={geometry}
-                          wxs_identifier={wxsIdentifier || ''}
-                          available={accessRights === 'Public'}
-                          layerId={layerId || ''}
-                          data={data.data}
+                          data={data}
                           pageValue="SHOW"
                         />
                       </div>
@@ -449,39 +493,41 @@ export function ResourceView() {
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
-                  <FullDetailsTable data={data} />
+                  <FullDetailsTable data={{ data: { attributes: data.attributes } }} />
                 </div>
 
                 {/* Sidebar */}
                 <div className="lg:col-span-4">
                   <div className="lg:sticky lg:top-[88px] space-y-6">
-                    {/* Location Map - using locn_geometry if ui_viewer_geometry is null */}
-                    {(data.data.attributes.ui_viewer_geometry ||
-                      data.data.attributes.locn_geometry) && (
+                    {/* Location Map - using geometry from viewer or original geometry */}
+                    {(data?.meta?.ui?.viewer?.geometry ||
+                      data?.attributes?.locn_geometry_original) && (
                       <LocationMap
                         geometry={
-                          data.data.attributes.ui_viewer_geometry ||
-                          data.data.attributes.locn_geometry
+                          data?.meta?.ui?.viewer?.geometry ||
+                          data?.attributes?.locn_geometry_original
                         }
                       />
                     )}
 
                     {/* Downloads section */}
-                    {data.data.attributes.ui_downloads && (
+                    {data?.meta?.ui?.downloads && data.meta.ui.downloads.length > 0 && (
                       <DownloadsTable
-                        downloads={data.data.attributes.ui_downloads}
+                        downloads={data.meta.ui.downloads}
                       />
                     )}
 
-                    {/* Citation - fixed path to ui_citation */}
-                    {data.data.attributes.ui_citation && (
+                    {/* Citation */}
+                    {data?.meta?.ui?.citation && (
                       <div className="mt-6">
                         <CitationTable
-                          citation={data.data.attributes.ui_citation}
+                          citation={data.meta.ui.citation}
                           permalink={window.location.href}
                         />
                       </div>
                     )}
+
+
                   </div>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import {
   fetchSearchResults,
-  fetchItemDetails,
+  fetchResourceDetails,
   ApiError,
 } from '../services/api';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -199,7 +199,7 @@ export function ResourceView() {
       setIsLoading(true);
       setError(null);
       try {
-        const jsonData = await fetchItemDetails(id, (url) =>
+        const jsonData = await fetchResourceDetails(id, (url) =>
           setLastApiUrl(url)
         );
         setData(jsonData);
@@ -308,17 +308,7 @@ export function ResourceView() {
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
                         <ResourceViewer
-                          protocol={viewerProtocol}
-                          endpoint={viewerEndpoint}
-                          geometry={data?.data?.attributes?.ui_viewer_geometry}
-                          wxs_identifier={
-                            data?.data?.attributes?.gbl_wxsidentifier_s
-                          }
-                          available={
-                            data?.data?.attributes?.dct_accessrights_s ===
-                            'Public'
-                          }
-                          layerId={data?.data?.attributes?.id}
+                          data={data.data}
                           pageValue="SHOW"
                         />
                       </div>
