@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { ItemView } from '../../pages/ItemView';
+import { ResourceView } from '../../pages/ResourceView';
 import { ApiProvider } from '../../context/ApiContext';
 
 jest.mock('react-router-dom', () => ({
@@ -8,26 +8,26 @@ jest.mock('react-router-dom', () => ({
   useParams: () => ({ id: 'test-id' }),
 }));
 
-describe('Item View Page', () => {
-  const renderItemView = () => {
+describe('Resource View Page', () => {
+  const renderResourceView = () => {
     render(
       <BrowserRouter>
         <ApiProvider>
-          <ItemView />
+          <ResourceView />
         </ApiProvider>
       </BrowserRouter>
     );
   };
 
-  it('displays item details', async () => {
-    renderItemView();
+  it('displays resource details', async () => {
+    renderResourceView();
     await waitFor(() => {
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
   });
 
   it('shows the location map when geometry is available', async () => {
-    renderItemView();
+    renderResourceView();
     await waitFor(() => {
       expect(screen.getByText(/location/i)).toBeInTheDocument();
     });

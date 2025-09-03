@@ -138,7 +138,7 @@ export function SearchResults({
                 )}
 
                 <Link
-                  to={`/items/${result.id}`}
+                  to={`/resources/${result.id}`}
                   state={{
                     searchResults: results,
                     currentIndex: getAbsoluteIndex(index) - 1,

@@ -9,13 +9,13 @@ import {
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
-import { MetadataTable } from '../components/item/MetadataTable';
+import { MetadataTable } from './MetadataTable';
 import { useApi } from '../context/ApiContext';
-import { ItemViewer } from '../components/item/ItemViewer';
-import { ItemBreadcrumbs } from '../components/item/ItemBreadcrumbs';
-import { ItemSubtitle } from '../components/item/ItemSubtitle';
-import { CitationTable } from '../components/item/CitationTable';
-import { FullDetailsTable } from '../components/item/FullDetailsTable';
+import { ResourceViewer } from './ResourceViewer';
+import { ResourceBreadcrumbs } from './ResourceBreadcrumbs';
+import { ResourceSubtitle } from './ResourceSubtitle';
+import { CitationTable } from './CitationTable';
+import { FullDetailsTable } from './FullDetailsTable';
 
 interface SearchState {
   searchResults: Array<{ id: string }>;
@@ -81,7 +81,7 @@ function AttributeTable() {
   );
 }
 
-export function ItemView() {
+export function ResourceView() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -144,7 +144,7 @@ export function ItemView() {
       // Need to fetch next page
       const nextResults = await fetchNextPage();
       if (nextResults && nextResults.length > 0) {
-        navigate(`/items/${nextResults[0].id}`, {
+        navigate(`/resources/${nextResults[0].id}`, {
           state: {
             ...searchState,
             searchResults: nextResults,
@@ -155,7 +155,7 @@ export function ItemView() {
       }
     } else if (!isLastInCurrentSet && nextId) {
       // Just move to next item in current results
-      navigate(`/items/${nextId}`, {
+              navigate(`/resources/${nextId}`, {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex + 1,
@@ -172,7 +172,7 @@ export function ItemView() {
       // Need to fetch previous page
       const prevResults = await fetchPrevPage();
       if (prevResults && prevResults.length > 0) {
-        navigate(`/items/${prevResults[prevResults.length - 1].id}`, {
+        navigate(`/resources/${prevResults[prevResults.length - 1].id}`, {
           state: {
             ...searchState,
             searchResults: prevResults,
@@ -183,7 +183,7 @@ export function ItemView() {
       }
     } else if (!isFirstInCurrentSet && prevId) {
       // Just move to previous item in current results
-      navigate(`/items/${prevId}`, {
+              navigate(`/resources/${prevId}`, {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex - 1,
@@ -242,7 +242,7 @@ export function ItemView() {
             <>
               {/* Navigation bar with breadcrumbs and pagination */}
               <div className="flex justify-between items-center mb-2">
-                <ItemBreadcrumbs item={data.data.attributes} />
+                <ResourceBreadcrumbs item={data.data.attributes} />
 
                 <div className="flex items-center gap-4">
                   <Link
@@ -297,7 +297,7 @@ export function ItemView() {
                 <h1 className="text-3xl font-bold text-gray-900">
                   {data.data.attributes.dct_title_s}
                 </h1>
-                <ItemSubtitle item={data.data.attributes} />
+                <ResourceSubtitle item={data.data.attributes} />
               </div>
 
               {/* Rest of the content */}
@@ -307,7 +307,7 @@ export function ItemView() {
                   {viewerProtocol && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
-                        <ItemViewer
+                        <ResourceViewer
                           protocol={viewerProtocol}
                           endpoint={viewerEndpoint}
                           geometry={data?.data?.attributes?.ui_viewer_geometry}

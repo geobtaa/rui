@@ -100,7 +100,7 @@ function AttributeTable() {
   );
 }
 
-export function ItemView() {
+export function ResourceView() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();

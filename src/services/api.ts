@@ -301,7 +301,7 @@ async function unifiedFetch<T>(
   console.log('Using regular fetch:', finalUrl.toString());
 
   // For document endpoints, request a specific response format
-  if (url.includes('/items/')) {
+  if (url.includes('/resources/')) {
     finalUrl.searchParams.set('response_format', 'json_api');
     finalUrl.searchParams.set('datetime_format', 'iso8601');
   }
@@ -391,7 +391,7 @@ export async function fetchItemDetails(
   options: FetchOptions = defaultFetchOptions
 ): Promise<GeoDocumentDetails> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/items/`
+    ? `${import.meta.env.VITE_API_BASE_URL}/resources/`
     : 'https://geo.btaa.org/';
   const url = createApiUrl(`${baseUrl}${id}`);
   onApiCall?.(url.toString());
@@ -458,7 +458,7 @@ export async function fetchSuggestions(
   }
 }
 
-export async function fetchBookmarkedItems(
+export async function fetchBookmarkedResources(
   ids: string[],
   onApiCall?: (url: string) => void,
   options: FetchOptions = defaultFetchOptions
@@ -495,8 +495,8 @@ export async function fetchBookmarkedItems(
     return transformJsonApiResponse(data);
   } catch (error) {
     if (error instanceof Error) {
-      throw new ApiError(`Failed to fetch bookmarked items: ${error.message}`);
+      throw new ApiError(`Failed to fetch bookmarked resources: ${error.message}`);
     }
-    throw new ApiError('Failed to fetch bookmarked items');
+    throw new ApiError('Failed to fetch bookmarked resources');
   }
 }

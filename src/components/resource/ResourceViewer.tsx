@@ -8,7 +8,7 @@ interface ViewerData {
   attributes: Record<string, unknown>;
 }
 
-interface ItemViewerProps {
+interface ResourceViewerProps {
   protocol: string;
   endpoint: string;
   geometry: any;
@@ -27,7 +27,7 @@ interface ItemViewerProps {
   currentPage?: number;
 }
 
-export function ItemViewer({
+export function ResourceViewer({
   protocol,
   endpoint,
   geometry,
@@ -36,7 +36,7 @@ export function ItemViewer({
   layerId,
   data,
   pageValue,
-}: ItemViewerProps) {
+}: ResourceViewerProps) {
   // Convert dct_references_s to string if it's an object
   const references =
     typeof data.attributes.dct_references_s === 'string'

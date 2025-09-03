@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import type { GeoDocument } from '../../types/api';
 
-interface ItemBreadcrumbsProps {
+interface ResourceBreadcrumbsProps {
   item: GeoDocument;
 }
 
-export function ItemBreadcrumbs({ item }: ItemBreadcrumbsProps) {
+export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
   // Helper to build search URL with accumulated facets
   const buildSearchUrl = (facets: Array<{ field: string; value: string }>) => {
     const params = new URLSearchParams();

@@ -1,10 +1,10 @@
 import React from 'react';
 
-interface ItemDescriptionProps {
+interface ResourceDescriptionProps {
   description: string[];
 }
 
-export function ItemDescription({ description }: ItemDescriptionProps) {
+export function ResourceDescription({ description }: ResourceDescriptionProps) {
   if (!description || description.length === 0) return null;
 
   return (

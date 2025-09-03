@@ -23,7 +23,7 @@ interface FullDetailsTableProps {
 // Function to fetch document title by ID
 const fetchDocumentTitle = async (id: string): Promise<string> => {
   // Replace with actual API call to fetch document details
-  const response = await fetch(`/api/items/${id}`);
+      const response = await fetch(`/api/resources/${id}`);
   const data = await response.json();
   return data.dct_title_s || 'Unknown Title';
 };
@@ -199,7 +199,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
             {displayItems.map((doc: { item_id: string; item_title: string; link: string }) => (
               <li key={doc.item_id} className="text-sm text-gray-900">
                 <Link
-                  to={`/items/${doc.item_id}`}
+                  to={`/resources/${doc.item_id}`}
                   className="text-blue-600 hover:text-blue-800"
                 >
                   {doc.item_title}

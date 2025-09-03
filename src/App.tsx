@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Application } from '@hotwired/stimulus';
 import { SearchPage } from './pages/SearchPage';
-import { ItemView } from './pages/ItemView';
+import { ResourceView } from './pages/ResourceView';
 import { DebugProvider } from './context/DebugContext';
 import { HomePage } from './pages/HomePage';
 import { useSearchParams } from 'react-router-dom';
@@ -47,7 +47,7 @@ function App() {
           />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
-          <Route path="/items/:id" element={<ItemView />} />
+          <Route path="/resources/:id" element={<ResourceView />} />
         </Routes>
       </DebugProvider>
     </BookmarkProvider>

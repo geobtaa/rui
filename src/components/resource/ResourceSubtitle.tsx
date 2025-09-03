@@ -1,11 +1,11 @@
 import React from 'react';
 import type { GeoDocument } from '../../types/api';
 
-interface ItemSubtitleProps {
+interface ResourceSubtitleProps {
   item: GeoDocument;
 }
 
-export function ItemSubtitle({ item }: ItemSubtitleProps) {
+export function ResourceSubtitle({ item }: ResourceSubtitleProps) {
   // Get publisher or creator
   const mainCredit = item.dc_publisher_sm?.length
     ? item.dc_publisher_sm.join(', ')

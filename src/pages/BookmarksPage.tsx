@@ -3,7 +3,7 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { SearchResults } from '../components/SearchResults';
 import { useBookmarks } from '../context/BookmarkContext';
-import { fetchBookmarkedItems } from '../services/api';
+import { fetchBookmarkedResources } from '../services/api';
 import { useApi } from '../context/ApiContext';
 import type { SearchResponse } from '../types/api';
 import { MapProvider } from '../context/MapContext';
@@ -23,7 +23,7 @@ export function BookmarksPage() {
     const fetchResults = async () => {
       setIsLoading(true);
       try {
-        const response = await fetchBookmarkedItems(bookmarks, setLastApiUrl);
+        const response = await fetchBookmarkedResources(bookmarks, setLastApiUrl);
         setResults(response);
       } catch (error) {
         console.error('Error fetching bookmarks:', error);
@@ -53,7 +53,7 @@ export function BookmarksPage() {
             <div className="py-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Bookmarked Items ({bookmarks.length})
+                  Bookmarked Resources ({bookmarks.length})
                 </h1>
                 {results?.sortOptions && (
                   <SortControl
