@@ -43,9 +43,7 @@ const relationshipLabels: { [key: string]: string } = {
 };
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
-  console.log('FullDetailsTable received data:', data);
   const attributes = data?.attributes || {};
-  console.log('FullDetailsTable attributes:', attributes);
   const uiRelationships = attributes.ui_relationships || {};
 
   // Define the fields for the Document Metadata table - comprehensive Aardvark schema support
@@ -143,15 +141,26 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dcat_centroid_original',
   ];
 
-  // Define the fields for the Metadata Facets table
+  // Define the fields for the Metadata Facets table - comprehensive Aardvark schema
   const metadataFacetsFields = [
     'gbl_resourceclass_sm',
     'gbl_resourcetype_sm',
     'dct_spatial_sm',
-    'gbl_provider_sm',
+    'schema_provider_s',
+    'dcat_theme_sm',
+    'dct_subject_sm',
+    'dcat_keyword_sm',
+    'dct_language_sm',
+    'dct_format_s',
+    'dct_temporal_sm',
+    'dct_issued_s',
+    'gbl_indexyear_im',
+    'gbl_georeferenced_b',
+    'dct_rights_s',
+    'dct_accessrights_s',
   ];
 
-  // Define the relationship fields for the Metadata Facets table
+  // Define the relationship fields for the Metadata Facets table - comprehensive Aardvark schema
   const relationshipFields = [
     'dct_relation_sm',
     'pcdm_memberof_sm',
@@ -160,21 +169,108 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dct_isversionof_sm',
     'dct_replaces_sm',
     'dct_isreplacedby_sm',
+    'dct_identifier_sm',
+    'gbl_wxsIdentifier_s',
+    'dct_references_s',
+    'dct_license_sm',
+    'dct_rightsHolder_sm',
+    'dcat_contactPoint_sm',
+    'dcat_distributor_sm',
+    'dcat_landingPage_s',
   ];
 
-  // Custom field labels for better display
+  // Custom field labels for better display - comprehensive Aardvark schema
   const customFieldLabels: { [key: string]: string } = {
+    // Descriptive fields
     'dct_title_s': 'Title',
+    'dct_alternative_sm': 'Alternative Title',
     'dct_description_sm': 'Description',
+    'dct_language_sm': 'Language',
+    'gbl_displayNote_sm': 'Display Note',
+    
+    // Credits fields
     'dct_creator_sm': 'Creator',
     'dct_publisher_sm': 'Publisher',
+    'schema_provider_s': 'Provider',
+    
+    // Temporal fields
     'dct_temporal_sm': 'Temporal Coverage',
     'dct_issued_s': 'Date Issued',
+    'gbl_indexyear_im': 'Index Year',
+    'gbl_daterange_drsim': 'Date Range',
+    'gbl_mdModified_dt': 'Metadata Modified',
+    
+    // Spatial fields
+    'dct_spatial_sm': 'Spatial Coverage',
+    'dcat_bbox': 'Bounding Box',
+    'dcat_centroid': 'Centroid',
+    'locn_geometry': 'Geometry',
+    'gbl_georeferenced_b': 'Georeferenced',
+    
+    // Categories fields
+    'gbl_resourceclass_sm': 'Resource Class',
+    'gbl_resourcetype_sm': 'Resource Type',
+    'dcat_theme_sm': 'Theme',
+    'dct_subject_sm': 'Subject',
+    'dcat_keyword_sm': 'Keywords',
+    
+    // Rights fields
     'dct_rights_s': 'Rights',
+    'dct_rightsHolder_sm': 'Rights Holder',
+    'dct_license_sm': 'License',
     'dct_accessrights_s': 'Access Rights',
+    
+    // Object fields
     'dct_format_s': 'Format',
-    'dct_language_sm': 'Language',
+    'gbl_fileSize_s': 'File Size',
+    
+    // Identifiers fields
+    'id': 'ID',
+    'dct_identifier_sm': 'Identifier',
+    'gbl_wxsIdentifier_s': 'WxS Identifier',
+    
+    // Links fields
+    'dct_references_s': 'References',
+    
+    // Relations fields
+    'dct_relation_sm': 'Relation',
+    'pcdm_memberof_sm': 'Member Of',
+    'dct_ispartof_sm': 'Is Part Of',
+    'dct_source_sm': 'Source',
+    'dct_isversionof_sm': 'Is Version Of',
+    'dct_replaces_sm': 'Replaces',
+    'dct_isreplacedby_sm': 'Is Replaced By',
+    
+    // Admin fields
+    'gbl_mdversion_s': 'Metadata Version',
+    'gbl_suppressed_b': 'Suppressed',
+    
+    // Additional fields
     'dct_date_added_s': 'Date Added',
+    'dct_date_modified_s': 'Date Modified',
+    'dct_created_s': 'Date Created',
+    'dct_valid_s': 'Valid Date',
+    'dct_available_s': 'Available Date',
+    'dct_audience_sm': 'Audience',
+    'dct_contributor_sm': 'Contributor',
+    'dct_coverage_sm': 'Coverage',
+    'dct_educationLevel_sm': 'Education Level',
+    'dct_extent_sm': 'Extent',
+    'dct_instructionalMethod_sm': 'Instructional Method',
+    'dct_medium_sm': 'Medium',
+    'dct_provenance_sm': 'Provenance',
+    'dct_type_sm': 'Type',
+    'dcat_contactPoint_sm': 'Contact Point',
+    'dcat_distributor_sm': 'Distributor',
+    'dcat_landingPage_s': 'Landing Page',
+    'dcat_themeCategory_sm': 'Theme Category',
+    'gbl_dateRange_drsim': 'Date Range',
+    'gbl_indexYear_im': 'Index Year',
+    'gbl_resourceClass_sm': 'Resource Class',
+    'gbl_resourceType_sm': 'Resource Type',
+    'locn_geometry_original': 'Original Geometry',
+    'dcat_bbox_original': 'Original Bounding Box',
+    'dcat_centroid_original': 'Original Centroid',
   };
 
   // Group fields by their prefix/category
@@ -217,6 +313,26 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
       const languageMap: { [key: string]: string } = {
         'eng': 'English',
         'English': 'English',
+        'spa': 'Spanish',
+        'Spanish': 'Spanish',
+        'fra': 'French',
+        'French': 'French',
+        'deu': 'German',
+        'German': 'German',
+        'ita': 'Italian',
+        'Italian': 'Italian',
+        'por': 'Portuguese',
+        'Portuguese': 'Portuguese',
+        'rus': 'Russian',
+        'Russian': 'Russian',
+        'jpn': 'Japanese',
+        'Japanese': 'Japanese',
+        'kor': 'Korean',
+        'Korean': 'Korean',
+        'zho': 'Chinese',
+        'Chinese': 'Chinese',
+        'ara': 'Arabic',
+        'Arabic': 'Arabic',
       };
       if (Array.isArray(value)) {
         return value.map(v => languageMap[v] || v).join(', ');
@@ -224,15 +340,22 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
       return languageMap[value.toString()] || value.toString();
     }
 
-    // Format date fields to be more readable
-    if (key === 'dct_date_added_s' && value) {
+    // Format boolean fields
+    if ((key === 'gbl_georeferenced_b' || key === 'gbl_suppressed_b') && value !== null && value !== undefined) {
+      return value.toString() === 'true' ? 'Yes' : 'No';
+    }
+
+        // Format date fields to be more readable
+    if ((key === 'dct_date_added_s' || key === 'dct_date_modified_s' || key === 'dct_created_s' || 
+         key === 'dct_valid_s' || key === 'dct_available_s' || key === 'gbl_mdModified_dt' || 
+         key === 'dct_issued_s') && value) {
       try {
         const date = new Date(value.toString());
         if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           });
         }
       } catch (e) {
@@ -334,7 +457,6 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
   };
 
   const { documentMetadata, metadataFacets, relationshipFacets } = groupFields();
-  console.log('Grouped fields:', { documentMetadata, metadataFacets, relationshipFacets });
 
   return (
     <div
