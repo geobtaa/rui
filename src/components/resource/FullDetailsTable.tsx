@@ -14,9 +14,7 @@ interface Attributes {
 
 interface FullDetailsTableProps {
   data: {
-    data: {
-      attributes: Attributes;
-    };
+    attributes: Attributes;
   };
 }
 
@@ -45,38 +43,104 @@ const relationshipLabels: { [key: string]: string } = {
 };
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
-  const attributes = data?.data?.attributes || {};
+  console.log('FullDetailsTable received data:', data);
+  const attributes = data?.attributes || {};
+  console.log('FullDetailsTable attributes:', attributes);
   const uiRelationships = attributes.ui_relationships || {};
 
-  // Define the fields for the Document Metadata table
+  // Define the fields for the Document Metadata table - comprehensive Aardvark schema support
   const documentMetadataFields = [
+    // Descriptive fields (Mandatory: Title, Description, Language)
     'dct_title_s',
     'dct_alternative_sm',
     'dct_description_sm',
+    'dct_language_sm',
+    'gbl_displayNote_sm',
+    
+    // Credits fields (Mandatory: Creator, Provider)
     'dct_creator_sm',
     'dct_publisher_sm',
-    'dct_subject_sm',
-    'dcat_theme_sm',
-    'dcat_keyword_sm',
+    'schema_provider_s',
+    
+    // Temporal fields (Mandatory: Date Issued, Index Year)
     'dct_temporal_sm',
     'dct_issued_s',
     'gbl_indexyear_im',
     'gbl_daterange_drsim',
-    'dct_rights_sm',
-    'dc_rightsholder_sm',
+    'gbl_mdModified_dt',
+    
+    // Spatial fields (Mandatory: Bounding Box, Geometry, Spatial Coverage)
+    'dct_spatial_sm',
+    'dcat_bbox',
+    'dcat_centroid',
+    'locn_geometry',
+    'gbl_georeferenced_b',
+    
+    // Categories fields (Mandatory: Resource Class, Resource Type, Theme)
+    'gbl_resourceclass_sm',
+    'gbl_resourcetype_sm',
+    'dcat_theme_sm',
+    'dct_subject_sm',
+    'dcat_keyword_sm',
+    
+    // Rights fields (Mandatory: Access Rights)
+    'dct_rights_s',
+    'dct_rightsHolder_sm',
     'dct_license_sm',
-    'dc_accessrights_s',
+    'dct_accessrights_s',
+    
+    // Object fields (Mandatory: Format)
     'dct_format_s',
-    'gbl_filesize_s',
-    'gbl_wxsidentifier_s',
-    'dct_references_s',
+    'gbl_fileSize_s',
+    
+    // Identifiers fields (Mandatory: ID)
+    'id',
     'dct_identifier_sm',
-    'dct_language_sm',
+    'gbl_wxsIdentifier_s',
+    
+    // Links fields (Mandatory: References)
+    'dct_references_s',
+    
+    // Relations fields
+    'dct_relation_sm',
+    'pcdm_memberof_sm',
+    'dct_ispartof_sm',
+    'dct_source_sm',
+    'dct_isversionof_sm',
+    'dct_replaces_sm',
+    'dct_isreplacedby_sm',
+    
+    // Admin fields (Mandatory: Metadata Version)
+    'gbl_mdversion_s',
+    'gbl_suppressed_b',
+    
+    // Additional fields that might be present
     'dct_date_added_s',
+    'dct_date_modified_s',
+    'dct_created_s',
+    'dct_valid_s',
+    'dct_available_s',
+    'dct_audience_sm',
+    'dct_contributor_sm',
+    'dct_coverage_sm',
+    'dct_educationLevel_sm',
+    'dct_extent_sm',
+    'dct_instructionalMethod_sm',
+    'dct_medium_sm',
+    'dct_provenance_sm',
+    'dct_type_sm',
+    'dcat_contactPoint_sm',
+    'dcat_distributor_sm',
+    'dcat_landingPage_s',
+    'dcat_themeCategory_sm',
+    'gbl_dateRange_drsim',
+    'gbl_indexYear_im',
+    'gbl_resourceClass_sm',
+    'gbl_resourceType_sm',
+    'gbl_suppressed_b',
     'locn_geometry_original',
     'dcat_bbox_original',
     'dcat_centroid_original',
-    'gbl_mdversion_s',
   ];
 
   // Define the fields for the Metadata Facets table
@@ -97,6 +161,21 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dct_replaces_sm',
     'dct_isreplacedby_sm',
   ];
+
+  // Custom field labels for better display
+  const customFieldLabels: { [key: string]: string } = {
+    'dct_title_s': 'Title',
+    'dct_description_sm': 'Description',
+    'dct_creator_sm': 'Creator',
+    'dct_publisher_sm': 'Publisher',
+    'dct_temporal_sm': 'Temporal Coverage',
+    'dct_issued_s': 'Date Issued',
+    'dct_rights_s': 'Rights',
+    'dct_accessrights_s': 'Access Rights',
+    'dct_format_s': 'Format',
+    'dct_language_sm': 'Language',
+    'dct_date_added_s': 'Date Added',
+  };
 
   // Group fields by their prefix/category
   const groupFields = () => {
@@ -131,6 +210,34 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     // Return empty string for null or undefined values
     if (value === null || value === undefined) {
       return '';
+    }
+
+    // Special formatting for specific fields
+    if (key === 'dct_language_sm') {
+      const languageMap: { [key: string]: string } = {
+        'eng': 'English',
+        'English': 'English',
+      };
+      if (Array.isArray(value)) {
+        return value.map(v => languageMap[v] || v).join(', ');
+      }
+      return languageMap[value.toString()] || value.toString();
+    }
+
+    // Format date fields to be more readable
+    if (key === 'dct_date_added_s' && value) {
+      try {
+        const date = new Date(value.toString());
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+        }
+      } catch (e) {
+        // Fall back to original value if date parsing fails
+      }
     }
 
     const facetField = getFacetField(key);
@@ -227,6 +334,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
   };
 
   const { documentMetadata, metadataFacets, relationshipFacets } = groupFields();
+  console.log('Grouped fields:', { documentMetadata, metadataFacets, relationshipFacets });
 
   return (
     <div
@@ -244,7 +352,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                 <tr key={key} className="hover:bg-gray-50">
                   <td className="px-6 py-4 w-1/3">
                     <div className="text-sm font-medium text-gray-500">
-                      {humanizeFieldName(key)}
+                      {customFieldLabels[key] || humanizeFieldName(key)}
                     </div>
                   </td>
                   <td className="px-6 py-4">

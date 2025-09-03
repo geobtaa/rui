@@ -454,11 +454,14 @@ export async function fetchBookmarkedResources(
   ids: string[],
   onApiCall?: (url: string) => void,
   options: FetchOptions = defaultFetchOptions
-): Promise<SearchResponse> {
+): Promise<JsonApiResponse> {
   if (ids.length === 0) {
     return {
-      response: { docs: [], numFound: 0, start: 0 },
-      facets: {},
+      jsonapi: { version: '1.0', profile: [] },
+      links: { self: '', first: '', last: '' },
+      meta: { totalCount: 0, totalPages: 0, currentPage: 1, perPage: 10, query: '' },
+      data: [],
+      included: []
     };
   }
 
@@ -484,7 +487,7 @@ export async function fetchBookmarkedResources(
       throw new ApiError('Invalid response format from API');
     }
 
-    return transformJsonApiResponse(data);
+    return data; // Return the JSON:API response directly
   } catch (error) {
     if (error instanceof Error) {
       throw new ApiError(`Failed to fetch bookmarked resources: ${error.message}`);

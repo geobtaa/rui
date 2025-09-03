@@ -5,7 +5,7 @@ import { SearchResults } from '../components/SearchResults';
 import { useBookmarks } from '../context/BookmarkContext';
 import { fetchBookmarkedResources } from '../services/api';
 import { useApi } from '../context/ApiContext';
-import type { SearchResponse } from '../types/api';
+import type { JsonApiResponse } from '../types/api';
 import { MapProvider } from '../context/MapContext';
 import { FacetList } from '../components/FacetList';
 import { MapView } from '../components/search/MapView';
@@ -14,7 +14,7 @@ import { CONFIGURED_FACETS } from '../constants/facets';
 
 export function BookmarksPage() {
   const { bookmarks } = useBookmarks();
-  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [results, setResults] = useState<JsonApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { setLastApiUrl } = useApi();
   const [sort, setSort] = useState('relevance');
@@ -35,13 +35,12 @@ export function BookmarksPage() {
     fetchResults();
   }, [bookmarks, setLastApiUrl]);
 
-  const filteredFacets = results?.facets
-    ? Object.fromEntries(
-        Object.entries(results.facets).filter(([key]) =>
-          CONFIGURED_FACETS.includes(key as (typeof CONFIGURED_FACETS)[number])
+  const filteredFacets = results?.included
+    ? results.included
+        .filter((item): item is { type: 'facet'; id: string; attributes: any } => 
+          item.type === 'facet' && CONFIGURED_FACETS.includes(item.id as (typeof CONFIGURED_FACETS)[number])
         )
-      )
-    : {};
+    : [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,9 +54,13 @@ export function BookmarksPage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   Bookmarked Resources ({bookmarks.length})
                 </h1>
-                {results?.sortOptions && (
+                {results?.included?.filter(item => item.type === 'sort').length > 0 && (
                   <SortControl
-                    options={results.sortOptions}
+                    options={results.included.filter(item => item.type === 'sort').map(sortOption => ({
+                      id: sortOption.id,
+                      label: sortOption.attributes.label,
+                      url: sortOption.links?.self || ''
+                    }))}
                     currentSort={sort}
                     onSortChange={setSort}
                   />
@@ -73,7 +76,7 @@ export function BookmarksPage() {
                   <summary className="text-lg font-semibold cursor-pointer py-2">
                     Filter Results
                   </summary>
-                  {results?.facets && <FacetList facets={filteredFacets} />}
+                  {results?.included?.filter(item => item.type === 'facet').length > 0 && <FacetList facets={filteredFacets} />}
                 </details>
                 <div className="hidden lg:block">
                   <div className="sticky top-16">
@@ -81,7 +84,7 @@ export function BookmarksPage() {
                       <h2 className="text-lg font-semibold text-gray-900 mb-4">
                         Filter Results
                       </h2>
-                      {results?.facets && <FacetList facets={filteredFacets} />}
+                      {results?.included?.filter(item => item.type === 'facet').length > 0 && <FacetList facets={filteredFacets} />}
                     </div>
                   </div>
                 </div>
@@ -91,9 +94,9 @@ export function BookmarksPage() {
               <div className="lg:col-span-6">
                 <div className="space-y-6">
                   <SearchResults
-                    results={results?.response.docs || []}
+                    results={results?.data || []}
                     isLoading={isLoading}
-                    totalResults={results?.response.numFound || 0}
+                    totalResults={results?.meta.totalCount || 0}
                     currentPage={1}
                   />
                 </div>
@@ -103,8 +106,7 @@ export function BookmarksPage() {
               <div className="hidden lg:block lg:col-span-4">
                 <div className="sticky top-16 h-[calc(100vh-4rem)]">
                   <MapView
-                    results={results?.response.docs || []}
-                    isLoading={isLoading}
+                    results={results?.data || []}
                   />
                 </div>
               </div>

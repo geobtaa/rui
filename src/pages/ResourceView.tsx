@@ -181,7 +181,7 @@ export function ResourceView() {
         sort
       );
       
-      return results.response.docs;
+      return results.data;
     } catch (error) {
       console.error('Error fetching next page:', error);
       return null;
@@ -219,7 +219,7 @@ export function ResourceView() {
         sort
       );
       
-      return results.response.docs;
+      return results.data;
     } catch (error) {
       console.error('Error fetching previous page:', error);
       return null;
@@ -493,7 +493,7 @@ export function ResourceView() {
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
-                  <FullDetailsTable data={{ data: { attributes: data.attributes } }} />
+                  <FullDetailsTable data={{ attributes: data.attributes }} />
                 </div>
 
                 {/* Sidebar */}
