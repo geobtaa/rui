@@ -1,8 +1,6 @@
 import {
   JsonApiResponse,
-  SearchResponse,
   GeoDocumentDetails,
-  SortOption,
 } from '../types/api';
 import { FacetFilter } from '../types/search';
 
@@ -32,7 +30,7 @@ const defaultFetchOptions: FetchOptions = {
 };
 
 // Add a request cache at the top of the file
-const requestCache: Record<string, Promise<any>> = {};
+const requestCache: Record<string, Promise<unknown>> = {};
 
 // Helper function to ensure HTTPS URL
 function ensureHttps(url: string): string {
@@ -51,140 +49,21 @@ function createApiUrl(baseUrl: string): URL {
   return url;
 }
 
-// Add this helper function to convert WKT to GeoJSON object
-function wktToGeoJSON(wkt: string | null): GeoJSON.FeatureCollection | null {
-  if (!wkt) return null;
 
-  try {
-    // Match the polygon coordinates
-    const match = wkt.match(/POLYGON\(\((.*?)\)\)/);
-    if (!match) return null;
 
-    // Split into coordinate pairs and convert to numbers
-    const coordinates = match[1]
-      .split(',')
-      .map((pair) => {
-        try {
-          const [lon, lat] = pair.trim().split(' ').map(Number);
-          if (isNaN(lon) || isNaN(lat)) return null;
-          return [lon, lat];
-        } catch (e) {
-          console.error('Error converting WKT to GeoJSON:', e);
-          return null;
-        }
-      })
-      .filter((coord): coord is [number, number] => coord !== null);
 
-    // Ensure we have valid coordinates
-    if (coordinates.length < 3) return null;
-
-    // Create GeoJSON FeatureCollection structure
-    return {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'Polygon',
-            coordinates: [coordinates],
-          },
-        },
-      ],
-    };
-  } catch (error) {
-    console.error('Error converting WKT to GeoJSON:', error);
-    return null;
-  }
-}
-
-function transformJsonApiResponse(jsonApiResponse: JsonApiResponse): SearchResponse {
-  // Transform documents - now the data structure matches our GeoDocument interface
-  const docs = jsonApiResponse.data.map((item) => ({
-    ...item,
-    // Ensure the item has the correct structure
-    attributes: {
-      ...item.attributes,
-      // Handle any missing required fields
-      dct_title_s: item.attributes.dct_title_s || '',
-    },
-    // Ensure meta.ui structure exists
-    meta: {
-      ui: {
-        thumbnail_url: item.meta?.ui?.thumbnail_url || '',
-        citation: item.meta?.ui?.citation || '',
-        downloads: item.meta?.ui?.downloads || [],
-        relationships: item.meta?.ui?.relationships || {},
-        summaries: item.meta?.ui?.summaries || [],
-        ai_summaries: item.meta?.ui?.ai_summaries || [],
-        suggest: item.meta?.ui?.suggest || { input: [] },
-        viewer: item.meta?.ui?.viewer || {},
-      },
-    },
-  }));
-
-  // Transform included facets
-  const facets = jsonApiResponse.included
-    ?.filter((item): item is Facet => item.type === 'facet')
-    .reduce((acc, facet) => {
-      acc[facet.id] = {
-        label: facet.attributes.label,
-        items: facet.attributes.items.map(item => ({
-          label: item.attributes.label,
-          value: item.attributes.value,
-          hits: item.attributes.hits,
-          url: item.links.self,
-        })),
-      };
-      return acc;
-    }, {} as { [key: string]: FacetGroup });
-
-  // Transform sort options
-  const sortOptions = jsonApiResponse.included
-    ?.filter((item): item is SortOption => item.type === 'sort')
-    .map(item => ({
-      id: item.id,
-      label: item.attributes.label,
-      url: item.links.self,
-    }));
-
-  return {
-    response: {
-      docs,
-      numFound: jsonApiResponse.meta.pages.total_count,
-      start: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10,
-      maxScore: 1.0,
-    },
-    facets: facets || {},
-    sortOptions: sortOptions || [],
-    meta: {
-      pages: {
-        current_page: jsonApiResponse.meta.pages.current_page,
-        next_page: null,  // Will be calculated if needed
-        prev_page: null,  // Will be calculated if needed
-        total_pages: jsonApiResponse.meta.pages.total_pages,
-        limit_value: 10,  // Default page size
-        offset_value: ((jsonApiResponse.meta.pages.current_page || 1) - 1) * 10,
-        total_count: jsonApiResponse.meta.pages.total_count,
-        first_page: jsonApiResponse.meta.pages.current_page === 1,
-        last_page: jsonApiResponse.meta.pages.current_page === jsonApiResponse.meta.pages.total_pages,
-      },
-      spelling_suggestions: [],
-    },
-  };
-}
 
 // Update the jsonp function to use the cache
 function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
   console.log('Starting JSONP request:', url);
-  
+
   // Check if this URL is already being requested
   const cacheKey = url;
   if (requestCache[cacheKey]) {
     console.log('Using cached JSONP request for:', url);
     return requestCache[cacheKey] as Promise<T>;
   }
-  
+
   // Create a new promise for this request
   const requestPromise = new Promise<T>((resolve, reject) => {
     const uniqueCallback = `${callbackName}_${Date.now()}`;
@@ -205,13 +84,13 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
       if (script && script.parentNode) {
         script.parentNode.removeChild(script);
       }
-      delete (window as any)[uniqueCallback];
+      delete (window as unknown as Record<string, unknown>)[uniqueCallback];
       window.clearTimeout(timeoutId);
       script = null;
     };
 
     // Add the callback to window
-    (window as any)[uniqueCallback] = (
+    (window as unknown as Record<string, unknown>)[uniqueCallback] = (
       data: T | { detail: string; path: string; method: string }
     ) => {
       console.log('JSONP callback received data:', data);
@@ -252,13 +131,13 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
         delete requestCache[cacheKey];
       };
       script.crossOrigin = 'anonymous';
-      
+
       // Only append the script to the document once
       document.head.appendChild(script);
       console.log('JSONP script added to document');
     }
   });
-  
+
   // Store the promise in the cache
   requestCache[cacheKey] = requestPromise;
   return requestPromise;
@@ -459,9 +338,15 @@ export async function fetchBookmarkedResources(
     return {
       jsonapi: { version: '1.0', profile: [] },
       links: { self: '', first: '', last: '' },
-      meta: { totalCount: 0, totalPages: 0, currentPage: 1, perPage: 10, query: '' },
+      meta: {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        perPage: 10,
+        query: '',
+      },
       data: [],
-      included: []
+      included: [],
     };
   }
 
@@ -490,7 +375,9 @@ export async function fetchBookmarkedResources(
     return data; // Return the JSON:API response directly
   } catch (error) {
     if (error instanceof Error) {
-      throw new ApiError(`Failed to fetch bookmarked resources: ${error.message}`);
+      throw new ApiError(
+        `Failed to fetch bookmarked resources: ${error.message}`
+      );
     }
     throw new ApiError('Failed to fetch bookmarked resources');
   }

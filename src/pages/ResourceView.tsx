@@ -14,12 +14,10 @@ import { ResourceViewer } from '../components/resource/ResourceViewer';
 import { ResourceBreadcrumbs } from '../components/resource/ResourceBreadcrumbs';
 import { ResourceSubtitle } from '../components/resource/ResourceSubtitle';
 import { ResourceDescription } from '../components/resource/ResourceDescription';
-import { ResourceMetadata } from '../components/resource/ResourceMetadata';
 import { CitationTable } from '../components/resource/CitationTable';
 import { FullDetailsTable } from '../components/resource/FullDetailsTable';
 import { LocationMap } from '../components/resource/LocationMap';
 import { DownloadsTable } from '../components/resource/DownloadsTable';
-import { GeoDocumentDetails } from '../types/api';
 
 // Define types for search results
 interface SearchResult {
@@ -56,19 +54,19 @@ interface ResourceData {
     ui_viewer_endpoint?: string;
     gbl_wxsidentifier_s?: string;
     dct_accessRights_s?: string;
-    ui_viewer_geometry?: any;
-    ui_downloads?: any[];
+    ui_viewer_geometry?: string;
+    ui_downloads?: unknown[];
     ui_citation?: string;
-    [key: string]: any;  // Allow other properties
+    [key: string]: unknown; // Allow other properties
   };
   meta?: {
     ui?: {
       viewer?: {
         protocol?: string;
         endpoint?: string;
-        geometry?: any;
+        geometry?: string;
       };
-      downloads?: any[];
+              downloads?: unknown[];
       citation?: string;
       thumbnail_url?: string;
     };
@@ -127,19 +125,20 @@ export function ResourceView() {
   const isLastInCurrentSet =
     searchState?.currentIndex === searchState?.searchResults.length - 1;
   const isFirstInCurrentSet = searchState?.currentIndex === 0;
-  
+
   // Update these calculations to use absoluteIndex when available
-  const absoluteCurrentIndex = searchState?.absoluteIndex !== undefined
-    ? searchState.absoluteIndex
-    : searchState
-      ? (searchState.currentPage - 1) * 10 + searchState.currentIndex
-      : 0;
-  
+  const absoluteCurrentIndex =
+    searchState?.absoluteIndex !== undefined
+      ? searchState.absoluteIndex
+      : searchState
+        ? (searchState.currentPage - 1) * 10 + searchState.currentIndex
+        : 0;
+
   // Fix the hasMoreResults and hasPreviousResults calculations
-  const hasMoreResults = searchState 
+  const hasMoreResults = searchState
     ? absoluteCurrentIndex < searchState.totalResults - 1
     : false;
-  
+
   const hasPreviousResults = absoluteCurrentIndex > 0;
 
   // Get prev/next IDs from current result set
@@ -154,12 +153,14 @@ export function ResourceView() {
   const fetchNextPage = async () => {
     if (!searchState) return null;
     const nextPage = searchState.currentPage + 1;
-    
+
     try {
       // Extract search parameters from the URL
-      const urlParams = new URLSearchParams(searchState.searchUrl.split('?')[1] || '');
+      const urlParams = new URLSearchParams(
+        searchState.searchUrl.split('?')[1] || ''
+      );
       const query = urlParams.get('q') || '';
-      
+
       // Extract facets from the URL if they exist
       const facets: FacetFilter[] = [];
       for (const [key, value] of urlParams.entries()) {
@@ -168,10 +169,10 @@ export function ResourceView() {
           facets.push({ field, value });
         }
       }
-      
+
       // Get current sort value if it exists
       const sort = urlParams.get('sort') || undefined;
-      
+
       const results = await fetchSearchResults(
         query,
         nextPage,
@@ -180,7 +181,7 @@ export function ResourceView() {
         setLastApiUrl,
         sort
       );
-      
+
       return results.data;
     } catch (error) {
       console.error('Error fetching next page:', error);
@@ -192,12 +193,14 @@ export function ResourceView() {
   const fetchPrevPage = async () => {
     if (!searchState) return null;
     const prevPage = searchState.currentPage - 1;
-    
+
     try {
       // Extract search parameters from the URL
-      const urlParams = new URLSearchParams(searchState.searchUrl.split('?')[1] || '');
+      const urlParams = new URLSearchParams(
+        searchState.searchUrl.split('?')[1] || ''
+      );
       const query = urlParams.get('q') || '';
-      
+
       // Extract facets from the URL if they exist
       const facets: FacetFilter[] = [];
       for (const [key, value] of urlParams.entries()) {
@@ -206,10 +209,10 @@ export function ResourceView() {
           facets.push({ field, value });
         }
       }
-      
+
       // Get current sort value if it exists
       const sort = urlParams.get('sort') || undefined;
-      
+
       const results = await fetchSearchResults(
         query,
         prevPage,
@@ -218,7 +221,7 @@ export function ResourceView() {
         setLastApiUrl,
         sort
       );
-      
+
       return results.data;
     } catch (error) {
       console.error('Error fetching previous page:', error);
@@ -252,7 +255,7 @@ export function ResourceView() {
       }
     } else if (!isLastInCurrentSet && nextId) {
       // Just move to next item in current results
-              navigate(`/resources/${nextId}`, {
+      navigate(`/resources/${nextId}`, {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex + 1,
@@ -289,7 +292,7 @@ export function ResourceView() {
       }
     } else if (!isFirstInCurrentSet && prevId) {
       // Just move to previous item in current results
-              navigate(`/resources/${prevId}`, {
+      navigate(`/resources/${prevId}`, {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex - 1,
@@ -305,7 +308,7 @@ export function ResourceView() {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadItem = async () => {
       if (!id) return;
 
@@ -318,7 +321,7 @@ export function ResourceView() {
             setLastApiUrl(url);
           }
         });
-        
+
         if (isMounted) {
           // Cast the response to ResourceData type
           setData(jsonData as unknown as ResourceData);
@@ -337,7 +340,7 @@ export function ResourceView() {
     };
 
     loadItem();
-    
+
     return () => {
       isMounted = false;
     };
@@ -363,7 +366,8 @@ export function ResourceView() {
         <main className="flex-1 bg-gray-50 pt-4 pb-8">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-              <strong>Debug:</strong> No data loaded yet. Loading: {isLoading.toString()}, Error: {error || 'none'}
+              <strong>Debug:</strong> No data loaded yet. Loading:{' '}
+              {isLoading.toString()}, Error: {error || 'none'}
             </div>
           </div>
         </main>
@@ -372,8 +376,6 @@ export function ResourceView() {
     );
   }
 
-
-
   // Temporarily comment out to debug data structure
   // const viewerProtocol = data?.data?.meta?.ui?.viewer?.protocol;
   // const viewerEndpoint = data?.data?.meta?.ui?.viewer?.endpoint;
@@ -381,15 +383,9 @@ export function ResourceView() {
   // const accessRights = data?.data?.attributes?.dct_accessrights_s;
   // const layerId = data?.data?.attributes?.id;
   // const geometry = data?.data?.meta?.ui?.viewer?.geometry;
-  
+
   // Extract data from the new structure
   const viewerProtocol = data?.meta?.ui?.viewer?.protocol;
-  const viewerEndpoint = data?.meta?.ui?.viewer?.endpoint;
-  const wxsIdentifier = data?.attributes?.gbl_wxsidentifier_s;
-  const accessRights = data?.attributes?.dct_accessrights_s;
-  const layerId = data?.attributes?.id;
-  const geometry = data?.meta?.ui?.viewer?.geometry;
-
 
 
   return (
@@ -463,7 +459,7 @@ export function ResourceView() {
                     {data.attributes.dct_title_s}
                   </h1>
                   <ResourceSubtitle item={data.attributes} />
-                  
+
                   {/* Description */}
                   {data.attributes.dct_description_sm && (
                     <div className="mt-4">
@@ -477,10 +473,7 @@ export function ResourceView() {
                   {viewerProtocol && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
-                        <ResourceViewer
-                          data={data}
-                          pageValue="SHOW"
-                        />
+                        <ResourceViewer data={data} pageValue="SHOW" />
                       </div>
                     </div>
                   )}
@@ -511,11 +504,10 @@ export function ResourceView() {
                     )}
 
                     {/* Downloads section */}
-                    {data?.meta?.ui?.downloads && data.meta.ui.downloads.length > 0 && (
-                      <DownloadsTable
-                        downloads={data.meta.ui.downloads}
-                      />
-                    )}
+                    {data?.meta?.ui?.downloads &&
+                      data.meta.ui.downloads.length > 0 && (
+                        <DownloadsTable downloads={data.meta.ui.downloads} />
+                      )}
 
                     {/* Citation */}
                     {data?.meta?.ui?.citation && (
@@ -526,8 +518,6 @@ export function ResourceView() {
                         />
                       </div>
                     )}
-
-
                   </div>
                 </div>
               </div>

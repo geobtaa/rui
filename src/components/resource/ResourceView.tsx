@@ -155,7 +155,7 @@ export function ResourceView() {
       }
     } else if (!isLastInCurrentSet && nextId) {
       // Just move to next item in current results
-              navigate(`/resources/${nextId}`, {
+      navigate(`/resources/${nextId}`, {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex + 1,
@@ -183,7 +183,7 @@ export function ResourceView() {
       }
     } else if (!isFirstInCurrentSet && prevId) {
       // Just move to previous item in current results
-              navigate(`/resources/${prevId}`, {
+      navigate(`/resources/${prevId}`, {
         state: {
           ...searchState,
           currentIndex: searchState.currentIndex - 1,
@@ -230,7 +230,6 @@ export function ResourceView() {
   }
 
   const viewerProtocol = data?.data?.attributes?.ui_viewer_protocol;
-  const viewerEndpoint = data?.data?.attributes?.ui_viewer_endpoint;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -307,10 +306,7 @@ export function ResourceView() {
                   {viewerProtocol && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
-                        <ResourceViewer
-                          data={data.data}
-                          pageValue="SHOW"
-                        />
+                        <ResourceViewer data={data.data} pageValue="SHOW" />
                       </div>
                     </div>
                   )}

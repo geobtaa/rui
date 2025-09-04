@@ -2,24 +2,20 @@ import React from 'react';
 import { leafletViewerOptions } from '../../config/leafletConfig';
 import { MetadataTable } from './MetadataTable';
 
-// Define proper types for the data prop
-interface ViewerData {
-  // Add specific data structure here based on your needs
-  attributes: Record<string, unknown>;
-}
+
 
 interface ResourceViewerProps {
   data: {
     attributes: {
       dct_references_s: string | Record<string, string>;
-      [key: string]: any;
+      [key: string]: unknown;
     };
     meta?: {
       ui?: {
         viewer?: {
           protocol?: string;
           endpoint?: string;
-          geometry?: any;
+          geometry?: string;
         };
       };
     };
@@ -30,20 +26,13 @@ interface ResourceViewerProps {
   currentPage?: number;
 }
 
-export function ResourceViewer({
-  data,
-  pageValue,
-}: ResourceViewerProps) {
+export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
   // Extract viewer information from the new data structure
   const protocol = data.meta?.ui?.viewer?.protocol || '';
   const endpoint = data.meta?.ui?.viewer?.endpoint || '';
   const geometry = data.meta?.ui?.viewer?.geometry;
   const available = !!protocol && !!endpoint;
-  // Convert dct_references_s to string if it's an object
-  const references =
-    typeof data.attributes.dct_references_s === 'string'
-      ? data.attributes.dct_references_s
-      : JSON.stringify(data.attributes.dct_references_s);
+
 
   // Helper function to titleize a string
   const titleize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);

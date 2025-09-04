@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { normalizeGeometry } from '../../utils/geometryUtils';
 
 interface LocationMapProps {
-  geometry: any; // Accept any format, we'll normalize it
+  geometry: string | GeoJSON.Polygon | { wkt: string } | null; // Accept any format, we'll normalize it
 }
 
 export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
@@ -74,9 +74,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Location
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-900">Location</h2>
       </div>
       <div ref={mapContainer} className="h-[300px] w-full" />
     </div>

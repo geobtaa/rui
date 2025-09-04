@@ -27,7 +27,7 @@ export function HomePage() {
       try {
         const results = await fetchSearchResults('', 1, 0);
         const resourceClassFacet = results.included?.find(
-          item => item.type === 'facet' && item.id === 'resource_class_agg'
+          (item) => item.type === 'facet' && item.id === 'resource_class_agg'
         );
         const facetCounts =
           resourceClassFacet?.attributes?.items?.reduce(

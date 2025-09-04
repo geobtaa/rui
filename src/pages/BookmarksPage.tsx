@@ -23,7 +23,10 @@ export function BookmarksPage() {
     const fetchResults = async () => {
       setIsLoading(true);
       try {
-        const response = await fetchBookmarkedResources(bookmarks, setLastApiUrl);
+        const response = await fetchBookmarkedResources(
+          bookmarks,
+          setLastApiUrl
+        );
         setResults(response);
       } catch (error) {
         console.error('Error fetching bookmarks:', error);
@@ -36,10 +39,13 @@ export function BookmarksPage() {
   }, [bookmarks, setLastApiUrl]);
 
   const filteredFacets = results?.included
-    ? results.included
-        .filter((item): item is { type: 'facet'; id: string; attributes: any } => 
-          item.type === 'facet' && CONFIGURED_FACETS.includes(item.id as (typeof CONFIGURED_FACETS)[number])
-        )
+    ? results.included.filter(
+        (item): item is { type: 'facet'; id: string; attributes: Record<string, unknown> } =>
+          item.type === 'facet' &&
+          CONFIGURED_FACETS.includes(
+            item.id as (typeof CONFIGURED_FACETS)[number]
+          )
+      )
     : [];
 
   return (
@@ -54,13 +60,16 @@ export function BookmarksPage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   Bookmarked Resources ({bookmarks.length})
                 </h1>
-                {results?.included?.filter(item => item.type === 'sort').length > 0 && (
+                {results?.included?.filter((item) => item.type === 'sort')
+                  .length > 0 && (
                   <SortControl
-                    options={results.included.filter(item => item.type === 'sort').map(sortOption => ({
-                      id: sortOption.id,
-                      label: sortOption.attributes.label,
-                      url: sortOption.links?.self || ''
-                    }))}
+                    options={results.included
+                      .filter((item) => item.type === 'sort')
+                      .map((sortOption) => ({
+                        id: sortOption.id,
+                        label: sortOption.attributes.label,
+                        url: sortOption.links?.self || '',
+                      }))}
                     currentSort={sort}
                     onSortChange={setSort}
                   />
@@ -76,7 +85,8 @@ export function BookmarksPage() {
                   <summary className="text-lg font-semibold cursor-pointer py-2">
                     Filter Results
                   </summary>
-                  {results?.included?.filter(item => item.type === 'facet').length > 0 && <FacetList facets={filteredFacets} />}
+                  {results?.included?.filter((item) => item.type === 'facet')
+                    .length > 0 && <FacetList facets={filteredFacets} />}
                 </details>
                 <div className="hidden lg:block">
                   <div className="sticky top-16">
@@ -84,7 +94,9 @@ export function BookmarksPage() {
                       <h2 className="text-lg font-semibold text-gray-900 mb-4">
                         Filter Results
                       </h2>
-                      {results?.included?.filter(item => item.type === 'facet').length > 0 && <FacetList facets={filteredFacets} />}
+                      {results?.included?.filter(
+                        (item) => item.type === 'facet'
+                      ).length > 0 && <FacetList facets={filteredFacets} />}
                     </div>
                   </div>
                 </div>
@@ -105,9 +117,7 @@ export function BookmarksPage() {
               {/* Map Column - Hidden by default on mobile */}
               <div className="hidden lg:block lg:col-span-4">
                 <div className="sticky top-16 h-[calc(100vh-4rem)]">
-                  <MapView
-                    results={results?.data || []}
-                  />
+                  <MapView results={results?.data || []} />
                 </div>
               </div>
             </div>

@@ -2,17 +2,9 @@ import { useSearchParams } from 'react-router-dom';
 import { FACET_LABELS } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
 
-interface FacetItem {
-  label: string;
-  value: string | number;
-  hits: number;
-  url: string;
-}
 
-interface FacetGroup {
-  label: string;
-  items: FacetItem[];
-}
+
+
 
 // New JSON:API facet structure
 interface JsonApiFacet {
@@ -72,25 +64,25 @@ export function FacetList({ facets }: FacetListProps) {
 
   // Filter facets to only show those with items and convert to the expected format
   const availableFacets = facets
-    .filter(facet => facet.attributes.items && facet.attributes.items.length > 0)
-    .map(facet => ({
+    .filter(
+      (facet) => facet.attributes.items && facet.attributes.items.length > 0
+    )
+    .map((facet) => ({
       id: facet.id,
       label: facet.attributes.label,
-      items: facet.attributes.items.map(item => ({
+      items: facet.attributes.items.map((item) => ({
         label: item.attributes.label,
         value: item.attributes.value,
         hits: item.attributes.hits,
-        url: item.links.self
-      }))
+        url: item.links.self,
+      })),
     }));
 
   // Order facets according to CONFIGURED_FACETS and filter to only show configured ones
-  const orderedFacets = CONFIGURED_FACETS
-    .map(facetId => {
-      const facet = availableFacets.find(f => f.id === facetId);
-      return facet;
-    })
-    .filter((facet): facet is NonNullable<typeof facet> => facet !== undefined);
+  const orderedFacets = CONFIGURED_FACETS.map((facetId) => {
+    const facet = availableFacets.find((f) => f.id === facetId);
+    return facet;
+  }).filter((facet): facet is NonNullable<typeof facet> => facet !== undefined);
 
   if (orderedFacets.length === 0) {
     return (

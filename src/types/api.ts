@@ -20,11 +20,11 @@ export interface GeoDocument {
     gbl_indexyear_im?: number[];
     dct_references_s?: Record<string, string>;
     locn_geometry_original?: string;
-    dcat_bbox?: any;
+    dcat_bbox?: string;
     dcat_centroid_original?: string;
     dct_identifier_sm?: string[];
     gbl_mdversion_s?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   meta?: {
     ui?: {
@@ -35,16 +35,16 @@ export interface GeoDocument {
         url: string;
         type: string;
       }>;
-      relationships?: Record<string, any>;
-      summaries?: any[];
-      ai_summaries?: any[];
+      relationships?: Record<string, unknown>;
+      summaries?: unknown[];
+      ai_summaries?: unknown[];
       suggest?: {
         input: string[];
       };
       viewer?: {
         protocol?: string;
         endpoint?: string;
-        geometry?: any;
+        geometry?: string;
       };
     };
   };
@@ -52,7 +52,7 @@ export interface GeoDocument {
 
 export interface GeoDocumentDetails extends GeoDocument {
   // Additional fields specific to detailed view
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ParsedFacet {
@@ -109,7 +109,7 @@ export interface JsonApiResponse {
     perPage: number;
     query: string;
     sort?: string;
-    query_time?: any;
+    query_time?: unknown;
     spelling_suggestions?: string[];
   };
   data: Array<GeoDocument>;
