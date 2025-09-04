@@ -22,15 +22,15 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
   let accumulatedFacets: Array<{ field: string; value: string }> = [];
 
   // Resource Class (e.g., "Maps")
-  if (item.attributes.gbl_resourceclass_sm?.[0]) {
+      if (item.attributes.gbl_resourceClass_sm?.[0]) {
     accumulatedFacets = [
       {
         field: 'resource_class_agg',
-        value: item.attributes.gbl_resourceclass_sm[0],
+        value: item.attributes.gbl_resourceClass_sm[0],
       },
     ];
     breadcrumbs.push({
-      label: item.attributes.gbl_resourceclass_sm[0],
+      label: item.attributes.gbl_resourceClass_sm[0],
       facets: [...accumulatedFacets],
     });
   }

@@ -55,7 +55,7 @@ interface ResourceData {
     ui_viewer_protocol?: string;
     ui_viewer_endpoint?: string;
     gbl_wxsidentifier_s?: string;
-    dct_accessrights_s?: string;
+    dct_accessRights_s?: string;
     ui_viewer_geometry?: any;
     ui_downloads?: any[];
     ui_citation?: string;

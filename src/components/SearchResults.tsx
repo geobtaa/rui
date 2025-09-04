@@ -74,7 +74,7 @@ export function SearchResults({
           id: result.id,
           title: result.attributes.dct_title_s,
           thumbnailUrl: result.meta?.ui?.thumbnail_url,
-          resourceClass: result.attributes.gbl_resourceclass_sm?.[0],
+          resourceClass: result.attributes.gbl_resourceClass_sm?.[0],
         });
 
         // Debug individual result
@@ -108,7 +108,7 @@ export function SearchResults({
                         // Instead of hiding, replace with fallback icon
                         e.currentTarget.parentElement!.innerHTML = `
                           <div class="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
-                            ${getResourceIcon(result.attributes.gbl_resourceclass_sm?.[0])}
+                            ${getResourceIcon(result.attributes.gbl_resourceClass_sm?.[0])}
                           </div>
                         `;
                       }}
@@ -116,7 +116,7 @@ export function SearchResults({
                   </div>
                 ) : (
                   <div className="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
-                    {getResourceIcon(result.attributes.gbl_resourceclass_sm?.[0])}
+                    {getResourceIcon(result.attributes.gbl_resourceClass_sm?.[0])}
                   </div>
                 )}
               </div>

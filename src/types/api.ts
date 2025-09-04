@@ -8,12 +8,12 @@ export interface GeoDocument {
     dct_description_sm?: string[];
     dct_publisher_sm?: string[];
     dct_spatial_sm?: string[];
-    gbl_resourceclass_sm?: string[];
-    gbl_resourcetype_sm?: string[];
+    gbl_resourceClass_sm?: string[];
+    gbl_resourceType_sm?: string[];
     dct_language_sm?: string[];
     dcat_keyword_sm?: string[];
     schema_provider_s?: string;
-    dct_accessrights_s?: string;
+    dct_accessRights_s?: string;
     dct_format_s?: string;
     dct_temporal_sm?: string[];
     dct_issued_s?: string;

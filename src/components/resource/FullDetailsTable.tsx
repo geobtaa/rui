@@ -46,231 +46,161 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.attributes || {};
   const uiRelationships = attributes.ui_relationships || {};
 
-  // Define the fields for the Document Metadata table - comprehensive Aardvark schema support
+  // Define the fields for the Document Metadata table - BTAA schema only
   const documentMetadataFields = [
-    // Descriptive fields (Mandatory: Title, Description, Language)
+    // Core fields (Required by BTAA)
+    'id',
+    'gbl_mdVersion_s',
+    'schema_provider_s',
     'dct_title_s',
-    'dct_alternative_sm',
     'dct_description_sm',
     'dct_language_sm',
-    'gbl_displayNote_sm',
+    'dct_accessRights_s',
+    'dct_license_sm',
+    'b1g_code_s',
+    'b1g_dct_accrualMethod_s',
+    'b1g_dateAccessioned_s',
+    'b1g_publication_state_s',
+    'b1g_language_sm',
     
-    // Credits fields (Mandatory: Creator, Provider)
+    // Additional BTAA fields
+    'gbl_mdModified_dt',
+    'dct_alternative_sm',
+    'dct_subject_sm',
     'dct_creator_sm',
     'dct_publisher_sm',
-    'schema_provider_s',
-    
-    // Temporal fields (Mandatory: Date Issued, Index Year)
-    'dct_temporal_sm',
+    'gbl_resourceClass_sm',
+    'gbl_resourceType_sm',
+    'dct_source_sm',
+    'dct_isPartOf_sm',
+    'pcdm_memberOf_sm',
+    'dct_replaces_sm',
+    'dct_isReplacedBy_sm',
+    'dct_isVersionOf_sm',
+    'dct_relation_sm',
     'dct_issued_s',
-    'gbl_indexyear_im',
-    'gbl_daterange_drsim',
-    'gbl_mdModified_dt',
-    
-    // Spatial fields (Mandatory: Bounding Box, Geometry, Spatial Coverage)
+    'dct_temporal_sm',
     'dct_spatial_sm',
     'dcat_bbox',
     'dcat_centroid',
     'locn_geometry',
-    'gbl_georeferenced_b',
-    
-    // Categories fields (Mandatory: Resource Class, Resource Type, Theme)
-    'gbl_resourceclass_sm',
-    'gbl_resourcetype_sm',
-    'dcat_theme_sm',
-    'dct_subject_sm',
-    'dcat_keyword_sm',
-    
-    // Rights fields (Mandatory: Access Rights)
-    'dct_rights_s',
-    'dct_rightsHolder_sm',
-    'dct_license_sm',
-    'dct_accessrights_s',
-    
-    // Object fields (Mandatory: Format)
-    'dct_format_s',
-    'gbl_fileSize_s',
-    
-    // Identifiers fields (Mandatory: ID)
-    'id',
-    'dct_identifier_sm',
-    'gbl_wxsIdentifier_s',
-    
-    // Links fields (Mandatory: References)
+    'layer_geom_type_s',
+    'solr_year_i',
+    'layer_id_s',
+    'suppressed_b',
     'dct_references_s',
     
-    // Relations fields
-    'dct_relation_sm',
-    'pcdm_memberof_sm',
-    'dct_ispartof_sm',
-    'dct_source_sm',
-    'dct_isversionof_sm',
-    'dct_replaces_sm',
-    'dct_isreplacedby_sm',
-    
-    // Admin fields (Mandatory: Metadata Version)
-    'gbl_mdversion_s',
-    'gbl_suppressed_b',
-    
-    // Additional fields that might be present
-    'dct_date_added_s',
-    'dct_date_modified_s',
-    'dct_created_s',
-    'dct_valid_s',
-    'dct_available_s',
-    'dct_audience_sm',
-    'dct_contributor_sm',
-    'dct_coverage_sm',
-    'dct_educationLevel_sm',
-    'dct_extent_sm',
-    'dct_instructionalMethod_sm',
-    'dct_medium_sm',
-    'dct_provenance_sm',
-    'dct_type_sm',
-    'dcat_contactPoint_sm',
-    'dcat_distributor_sm',
-    'dcat_landingPage_s',
-    'dcat_themeCategory_sm',
-    'gbl_dateRange_drsim',
-    'gbl_indexYear_im',
+    // BTAA custom fields
+    'b1g_status_s',
+    'b1g_dct_accrualPeriodicity_s',
+    'b1g_dateRetired_s',
+    'b1g_child_record_b',
+    'b1g_dct_mediator_sm',
+    'b1g_access_s',
+    'b1g_image_ss',
+    'b1g_geonames_sm',
+    'b1g_creatorID_sm',
+    'b1g_dct_conformsTo_sm',
+    'b1g_dcat_spatialResolutionInMeters_sm',
+    'b1g_geodcat_spatialResolutionAsText_sm',
+    'b1g_dct_provenanceStatement_sm',
+    'b1g_adminTags_sm',
+  ];
+
+  // Define the fields for the Metadata Facets table - BTAA schema only
+  const metadataFacetsFields = [
     'gbl_resourceClass_sm',
     'gbl_resourceType_sm',
-    'gbl_suppressed_b',
-    'locn_geometry_original',
-    'dcat_bbox_original',
-    'dcat_centroid_original',
-  ];
-
-  // Define the fields for the Metadata Facets table - comprehensive Aardvark schema
-  const metadataFacetsFields = [
-    'gbl_resourceclass_sm',
-    'gbl_resourcetype_sm',
     'dct_spatial_sm',
     'schema_provider_s',
-    'dcat_theme_sm',
     'dct_subject_sm',
-    'dcat_keyword_sm',
     'dct_language_sm',
-    'dct_format_s',
     'dct_temporal_sm',
     'dct_issued_s',
-    'gbl_indexyear_im',
-    'gbl_georeferenced_b',
-    'dct_rights_s',
-    'dct_accessrights_s',
+    'dct_creator_sm',
+    'dct_publisher_sm',
+    'b1g_language_sm',
+    'b1g_publication_state_s',
+    'b1g_status_s',
+    'suppressed_b',
   ];
 
-  // Define the relationship fields for the Metadata Facets table - comprehensive Aardvark schema
+  // Define the relationship fields for the Metadata Facets table - BTAA schema only
   const relationshipFields = [
     'dct_relation_sm',
-    'pcdm_memberof_sm',
-    'dct_ispartof_sm',
+    'pcdm_memberOf_sm',
+    'dct_isPartOf_sm',
     'dct_source_sm',
-    'dct_isversionof_sm',
+    'dct_isVersionOf_sm',
     'dct_replaces_sm',
-    'dct_isreplacedby_sm',
-    'dct_identifier_sm',
-    'gbl_wxsIdentifier_s',
+    'dct_isReplacedBy_sm',
     'dct_references_s',
     'dct_license_sm',
     'dct_rightsHolder_sm',
-    'dcat_contactPoint_sm',
-    'dcat_distributor_sm',
-    'dcat_landingPage_s',
+    'b1g_dct_mediator_sm',
+    'b1g_creatorID_sm',
+    'b1g_dct_conformsTo_sm',
   ];
 
-  // Custom field labels for better display - comprehensive Aardvark schema
+  // Custom field labels for better display - BTAA schema only
   const customFieldLabels: { [key: string]: string } = {
-    // Descriptive fields
+    // Core fields (Required by BTAA)
+    'id': 'ID',
+    'gbl_mdVersion_s': 'Metadata Version',
+    'schema_provider_s': 'Provider',
     'dct_title_s': 'Title',
-    'dct_alternative_sm': 'Alternative Title',
     'dct_description_sm': 'Description',
     'dct_language_sm': 'Language',
-    'gbl_displayNote_sm': 'Display Note',
+    'dct_accessRights_s': 'Access Rights',
+    'dct_license_sm': 'License',
+    'b1g_code_s': 'BTAA Code',
+    'b1g_dct_accrualMethod_s': 'Accrual Method',
+    'b1g_dateAccessioned_s': 'Date Accessioned',
+    'b1g_publication_state_s': 'Publication State',
+    'b1g_language_sm': 'BTAA Language',
     
-    // Credits fields
+    // Additional BTAA fields
+    'gbl_mdModified_dt': 'Metadata Modified',
+    'dct_alternative_sm': 'Alternative Title',
+    'dct_subject_sm': 'Subject',
     'dct_creator_sm': 'Creator',
     'dct_publisher_sm': 'Publisher',
-    'schema_provider_s': 'Provider',
-    
-    // Temporal fields
-    'dct_temporal_sm': 'Temporal Coverage',
+    'gbl_resourceClass_sm': 'Resource Class',
+    'gbl_resourceType_sm': 'Resource Type',
+    'dct_source_sm': 'Source',
+    'dct_isPartOf_sm': 'Is Part Of',
+    'pcdm_memberOf_sm': 'Member Of',
+    'dct_replaces_sm': 'Replaces',
+    'dct_isReplacedBy_sm': 'Is Replaced By',
+    'dct_isVersionOf_sm': 'Is Version Of',
+    'dct_relation_sm': 'Relation',
     'dct_issued_s': 'Date Issued',
-    'gbl_indexyear_im': 'Index Year',
-    'gbl_daterange_drsim': 'Date Range',
-    'gbl_mdModified_dt': 'Metadata Modified',
-    
-    // Spatial fields
+    'dct_temporal_sm': 'Temporal Coverage',
     'dct_spatial_sm': 'Spatial Coverage',
     'dcat_bbox': 'Bounding Box',
     'dcat_centroid': 'Centroid',
     'locn_geometry': 'Geometry',
-    'gbl_georeferenced_b': 'Georeferenced',
-    
-    // Categories fields
-    'gbl_resourceclass_sm': 'Resource Class',
-    'gbl_resourcetype_sm': 'Resource Type',
-    'dcat_theme_sm': 'Theme',
-    'dct_subject_sm': 'Subject',
-    'dcat_keyword_sm': 'Keywords',
-    
-    // Rights fields
-    'dct_rights_s': 'Rights',
-    'dct_rightsHolder_sm': 'Rights Holder',
-    'dct_license_sm': 'License',
-    'dct_accessrights_s': 'Access Rights',
-    
-    // Object fields
-    'dct_format_s': 'Format',
-    'gbl_fileSize_s': 'File Size',
-    
-    // Identifiers fields
-    'id': 'ID',
-    'dct_identifier_sm': 'Identifier',
-    'gbl_wxsIdentifier_s': 'WxS Identifier',
-    
-    // Links fields
+    'layer_geom_type_s': 'Layer Geometry Type',
+    'solr_year_i': 'Year',
+    'layer_id_s': 'Layer ID',
+    'suppressed_b': 'Suppressed',
     'dct_references_s': 'References',
     
-    // Relations fields
-    'dct_relation_sm': 'Relation',
-    'pcdm_memberof_sm': 'Member Of',
-    'dct_ispartof_sm': 'Is Part Of',
-    'dct_source_sm': 'Source',
-    'dct_isversionof_sm': 'Is Version Of',
-    'dct_replaces_sm': 'Replaces',
-    'dct_isreplacedby_sm': 'Is Replaced By',
-    
-    // Admin fields
-    'gbl_mdversion_s': 'Metadata Version',
-    'gbl_suppressed_b': 'Suppressed',
-    
-    // Additional fields
-    'dct_date_added_s': 'Date Added',
-    'dct_date_modified_s': 'Date Modified',
-    'dct_created_s': 'Date Created',
-    'dct_valid_s': 'Valid Date',
-    'dct_available_s': 'Available Date',
-    'dct_audience_sm': 'Audience',
-    'dct_contributor_sm': 'Contributor',
-    'dct_coverage_sm': 'Coverage',
-    'dct_educationLevel_sm': 'Education Level',
-    'dct_extent_sm': 'Extent',
-    'dct_instructionalMethod_sm': 'Instructional Method',
-    'dct_medium_sm': 'Medium',
-    'dct_provenance_sm': 'Provenance',
-    'dct_type_sm': 'Type',
-    'dcat_contactPoint_sm': 'Contact Point',
-    'dcat_distributor_sm': 'Distributor',
-    'dcat_landingPage_s': 'Landing Page',
-    'dcat_themeCategory_sm': 'Theme Category',
-    'gbl_dateRange_drsim': 'Date Range',
-    'gbl_indexYear_im': 'Index Year',
-    'gbl_resourceClass_sm': 'Resource Class',
-    'gbl_resourceType_sm': 'Resource Type',
-    'locn_geometry_original': 'Original Geometry',
-    'dcat_bbox_original': 'Original Bounding Box',
-    'dcat_centroid_original': 'Original Centroid',
+    // BTAA custom fields
+    'b1g_status_s': 'Status',
+    'b1g_dct_accrualPeriodicity_s': 'Accrual Periodicity',
+    'b1g_dateRetired_s': 'Date Retired',
+    'b1g_child_record_b': 'Child Record',
+    'b1g_dct_mediator_sm': 'Mediator',
+    'b1g_access_s': 'Access',
+    'b1g_image_ss': 'Image',
+    'b1g_geonames_sm': 'Geonames',
+    'b1g_creatorID_sm': 'Creator ID',
+    'b1g_dct_conformsTo_sm': 'Conforms To',
+    'b1g_dcat_spatialResolutionInMeters_sm': 'Spatial Resolution (Meters)',
+    'b1g_geodcat_spatialResolutionAsText_sm': 'Spatial Resolution (Text)',
+    'b1g_dct_provenanceStatement_sm': 'Provenance Statement',
+    'b1g_adminTags_sm': 'Admin Tags',
   };
 
   // Group fields by their prefix/category
@@ -341,13 +271,12 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     }
 
     // Format boolean fields
-    if ((key === 'gbl_georeferenced_b' || key === 'gbl_suppressed_b') && value !== null && value !== undefined) {
+    if ((key === 'suppressed_b' || key === 'b1g_child_record_b') && value !== null && value !== undefined) {
       return value.toString() === 'true' ? 'Yes' : 'No';
     }
 
         // Format date fields to be more readable
-    if ((key === 'dct_date_added_s' || key === 'dct_date_modified_s' || key === 'dct_created_s' || 
-         key === 'dct_valid_s' || key === 'dct_available_s' || key === 'gbl_mdModified_dt' || 
+    if ((key === 'b1g_dateAccessioned_s' || key === 'b1g_dateRetired_s' || key === 'gbl_mdModified_dt' || 
          key === 'dct_issued_s') && value) {
       try {
         const date = new Date(value.toString());

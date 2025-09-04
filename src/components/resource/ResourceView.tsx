@@ -33,7 +33,7 @@ interface ItemData {
       ui_viewer_endpoint?: string;
       ui_viewer_geometry?: string;
       gbl_wxsidentifier_s?: string;
-      dct_accessrights_s?: string;
+      dct_accessRights_s?: string;
       id?: string;
       dct_title_s: string;
       attributes?: {

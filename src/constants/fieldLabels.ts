@@ -30,13 +30,12 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   dct_format_s: { label: 'Format', display: true, facet: 'format_agg' },
   dct_license_sm: { label: 'License', display: true },
   dct_identifier_sm: { label: 'Identifier', display: true },
-  dct_ispartof_sm: { label: 'Is Part Of', display: false },
+  dct_isPartOf_sm: { label: 'Is Part Of', display: false },
   dct_references_s: { label: 'References', display: false },
   dct_rights_sm: { label: 'Rights', display: true },
   dct_source_sm: { label: 'Source', display: true },
   dct_subject_sm: { label: 'Subject', display: true, facet: 'subject_agg' },
   dct_type_sm: { label: 'Type', display: true },
-  dct_accessrights_s: { label: 'Access Rights', display: true },
 
   // DCAT
   dcat_theme_sm: { label: 'Theme', display: true },
@@ -56,12 +55,12 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   gbl_daterange_drsim: { label: 'Date Range', display: true },
   gbl_indexyear_im: { label: 'Index Year', display: true },
   gbl_mdversion_s: { label: 'Metadata Version', display: true },
-  gbl_resourceclass_sm: {
+  gbl_resourceClass_sm: {
     label: 'Resource Class',
     display: true,
     facet: 'resource_class_agg',
   },
-  gbl_resourcetype_sm: {
+  gbl_resourceType_sm: {
     label: 'Resource Type',
     display: true,
     facet: 'resource_type_agg',
@@ -83,7 +82,7 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   solr_year_i: { label: 'Year', hidden: true, display: true },
 
   // PCDM
-  pcdm_memberof_sm: { label: 'Member Of', display: false },
+  pcdm_memberOf_sm: { label: 'Member Of', display: false },
 };
 
 export function humanizeFieldName(key: string): string {
