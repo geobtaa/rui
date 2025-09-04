@@ -2,22 +2,31 @@ import { useSearchParams } from 'react-router-dom';
 import { FACET_LABELS } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
 
-interface FacetItem {
-  label: string;
-  value: string | number;
-  hits: number;
-  url: string;
-}
 
-interface FacetGroup {
-  label: string;
-  items: FacetItem[];
+
+
+
+// New JSON:API facet structure
+interface JsonApiFacet {
+  type: 'facet';
+  id: string;
+  attributes: {
+    label: string;
+    items: Array<{
+      attributes: {
+        label: string;
+        value: string | number;
+        hits: number;
+      };
+      links: {
+        self: string;
+      };
+    }>;
+  };
 }
 
 interface FacetListProps {
-  facets: {
-    [key: string]: FacetGroup;
-  };
+  facets: JsonApiFacet[];
 }
 
 export function FacetList({ facets }: FacetListProps) {
@@ -49,17 +58,31 @@ export function FacetList({ facets }: FacetListProps) {
     setSearchParams(newParams);
   };
 
-  if (!facets || Object.keys(facets).length === 0) {
+  if (!facets || facets.length === 0) {
     return <div className="text-gray-500">No facets available</div>;
   }
 
-  // Ensure orderedFacets is correctly typed and filtered
-  const orderedFacets: [string, FacetGroup][] = CONFIGURED_FACETS.map(
-    (facetId) => {
-      const facet = facets[facetId];
-      return facet && facet.items.length > 0 ? [facetId, facet] : null;
-    }
-  ).filter((item): item is [string, FacetGroup] => item !== null);
+  // Filter facets to only show those with items and convert to the expected format
+  const availableFacets = facets
+    .filter(
+      (facet) => facet.attributes.items && facet.attributes.items.length > 0
+    )
+    .map((facet) => ({
+      id: facet.id,
+      label: facet.attributes.label,
+      items: facet.attributes.items.map((item) => ({
+        label: item.attributes.label,
+        value: item.attributes.value,
+        hits: item.attributes.hits,
+        url: item.links.self,
+      })),
+    }));
+
+  // Order facets according to CONFIGURED_FACETS and filter to only show configured ones
+  const orderedFacets = CONFIGURED_FACETS.map((facetId) => {
+    const facet = availableFacets.find((f) => f.id === facetId);
+    return facet;
+  }).filter((facet): facet is NonNullable<typeof facet> => facet !== undefined);
 
   if (orderedFacets.length === 0) {
     return (
@@ -69,18 +92,18 @@ export function FacetList({ facets }: FacetListProps) {
 
   return (
     <div className="space-y-6">
-      {orderedFacets.map(([key, facet]) => (
-        <div key={key} className="border-b pb-4">
+      {orderedFacets.map((facet) => (
+        <div key={facet.id} className="border-b pb-4">
           <h3 className="font-semibold text-gray-900 mb-2">
-            {FACET_LABELS[key] || facet.label}
+            {FACET_LABELS[facet.id] || facet.label}
           </h3>
           <ul className="space-y-1">
             {facet.items.map((item) => {
-              const isActive = isFacetActive(key, item.value);
+              const isActive = isFacetActive(facet.id, item.value);
               return (
-                <li key={`${key}-${item.value}`}>
+                <li key={`${facet.id}-${item.value}`}>
                   <button
-                    onClick={() => handleFacetClick(key, item.value)}
+                    onClick={() => handleFacetClick(facet.id, item.value)}
                     className={`text-sm flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-gray-100 ${
                       isActive
                         ? 'text-blue-600 font-medium bg-blue-50 hover:bg-blue-100'

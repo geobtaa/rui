@@ -35,7 +35,7 @@ export function SearchResults({
     firstResult: results[0],
     thumbnailUrls: results.map((r) => ({
       id: r.id,
-      thumbnail: r.ui_thumbnail_url,
+      thumbnail: r.meta?.ui?.thumbnail_url,
     })),
   });
 
@@ -63,7 +63,7 @@ export function SearchResults({
           id: result.id,
           type: result.type,
           attributes: result.attributes,
-          thumbnail: result.ui_thumbnail_url,
+          thumbnail: result.meta?.ui?.thumbnail_url,
           // Log the full object to see its structure
           fullResult: result,
         });
@@ -73,31 +73,33 @@ export function SearchResults({
         console.log('Result thumbnail debug:', {
           id: result.id,
           title: result.attributes.dct_title_s,
-          thumbnailUrl: result.ui_thumbnail_url,
-          resourceClass: result.attributes.gbl_resourceclass_sm?.[0],
+          thumbnailUrl: result.meta?.ui?.thumbnail_url,
+          resourceClass: result.attributes.gbl_resourceClass_sm?.[0],
         });
 
         // Debug individual result
         console.log(`Rendering result ${result.id}:`, {
-          title: result.dct_title_s,
-          thumbnail: result.ui_thumbnail_url,
+          title: result.attributes.dct_title_s,
+          thumbnail: result.meta?.ui?.thumbnail_url,
         });
 
         return (
           <article
             key={result.id}
             className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow relative"
-            data-geom={JSON.stringify(result.ui_viewer_geometry)}
-            onMouseEnter={() => setHoveredGeometry(result.ui_viewer_geometry)}
+            data-geom={JSON.stringify(result.meta?.ui?.viewer?.geometry)}
+            onMouseEnter={() =>
+              setHoveredGeometry(result.meta?.ui?.viewer?.geometry)
+            }
             onMouseLeave={() => setHoveredGeometry(null)}
           >
             <div className="flex">
               {/* Thumbnail */}
               <div className="w-48 flex-shrink-0">
-                {result.ui_thumbnail_url ? (
+                {result.meta?.ui?.thumbnail_url ? (
                   <div className="h-48 w-48 rounded-l-lg">
                     <img
-                      src={result.ui_thumbnail_url}
+                      src={result.meta.ui.thumbnail_url}
                       alt={`Thumbnail for ${result.attributes.dct_title_s}`}
                       className="h-48 w-48 object-cover rounded-l-lg"
                       onError={(e) => {
@@ -108,7 +110,7 @@ export function SearchResults({
                         // Instead of hiding, replace with fallback icon
                         e.currentTarget.parentElement!.innerHTML = `
                           <div class="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
-                            ${getResourceIcon(result.attributes.gbl_resourceclass_sm?.[0])}
+                            ${getResourceIcon(result.attributes.gbl_resourceClass_sm?.[0])}
                           </div>
                         `;
                       }}
@@ -116,7 +118,9 @@ export function SearchResults({
                   </div>
                 ) : (
                   <div className="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-l-lg">
-                    {getResourceIcon(result.attributes.gbl_resourceclass_sm?.[0])}
+                    {getResourceIcon(
+                      result.attributes.gbl_resourceClass_sm?.[0]
+                    )}
                   </div>
                 )}
               </div>
@@ -174,7 +178,9 @@ export function SearchResults({
                     result.attributes.dc_publisher_sm.length > 0 && (
                       <div className="flex items-center gap-1">
                         <BookOpen size={16} />
-                        <span>{result.attributes.dc_publisher_sm.join(', ')}</span>
+                        <span>
+                          {result.attributes.dc_publisher_sm.join(', ')}
+                        </span>
                       </div>
                     )}
                 </div>

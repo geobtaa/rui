@@ -26,10 +26,13 @@ export function HomePage() {
     const fetchCounts = async () => {
       try {
         const results = await fetchSearchResults('', 1, 0);
+        const resourceClassFacet = results.included?.find(
+          (item) => item.type === 'facet' && item.id === 'resource_class_agg'
+        );
         const facetCounts =
-          results.facets?.['resource_class_agg']?.items.reduce(
+          resourceClassFacet?.attributes?.items?.reduce(
             (acc, item) => {
-              acc[item.value as string] = item.hits;
+              acc[item.attributes.value as string] = item.attributes.hits;
               return acc;
             },
             {} as Record<string, number>

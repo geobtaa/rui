@@ -14,19 +14,11 @@ interface Attributes {
 
 interface FullDetailsTableProps {
   data: {
-    data: {
-      attributes: Attributes;
-    };
+    attributes: Attributes;
   };
 }
 
-// Function to fetch document title by ID
-const fetchDocumentTitle = async (id: string): Promise<string> => {
-  // Replace with actual API call to fetch document details
-      const response = await fetch(`/api/resources/${id}`);
-  const data = await response.json();
-  return data.dct_title_s || 'Unknown Title';
-};
+
 
 const relationshipLabels: { [key: string]: string } = {
   memberOf: 'Belongs to collection...',
@@ -45,58 +37,165 @@ const relationshipLabels: { [key: string]: string } = {
 };
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
-  const attributes = data?.data?.attributes || {};
+  const attributes = data?.attributes || {};
   const uiRelationships = attributes.ui_relationships || {};
 
-  // Define the fields for the Document Metadata table
+  // Define the fields for the Document Metadata table - BTAA schema only
   const documentMetadataFields = [
+    // Core fields (Required by BTAA)
+    'id',
+    'gbl_mdVersion_s',
+    'schema_provider_s',
     'dct_title_s',
-    'dct_alternative_sm',
     'dct_description_sm',
+    'dct_language_sm',
+    'dct_accessRights_s',
+    'dct_license_sm',
+    'b1g_code_s',
+    'b1g_dct_accrualMethod_s',
+    'b1g_dateAccessioned_s',
+    'b1g_publication_state_s',
+    'b1g_language_sm',
+
+    // Additional BTAA fields
+    'gbl_mdModified_dt',
+    'dct_alternative_sm',
+    'dct_subject_sm',
     'dct_creator_sm',
     'dct_publisher_sm',
+    'gbl_resourceClass_sm',
+    'gbl_resourceType_sm',
+    'dct_source_sm',
+    'dct_isPartOf_sm',
+    'pcdm_memberOf_sm',
+    'dct_replaces_sm',
+    'dct_isReplacedBy_sm',
+    'dct_isVersionOf_sm',
+    'dct_relation_sm',
+    'dct_issued_s',
+    'dct_temporal_sm',
+    'dct_spatial_sm',
+    'dcat_bbox',
+    'dcat_centroid',
+    'locn_geometry',
+    'layer_geom_type_s',
+    'solr_year_i',
+    'layer_id_s',
+    'suppressed_b',
+    'dct_references_s',
+
+    // BTAA custom fields
+    'b1g_status_s',
+    'b1g_dct_accrualPeriodicity_s',
+    'b1g_dateRetired_s',
+    'b1g_child_record_b',
+    'b1g_dct_mediator_sm',
+    'b1g_access_s',
+    'b1g_image_ss',
+    'b1g_geonames_sm',
+    'b1g_creatorID_sm',
+    'b1g_dct_conformsTo_sm',
+    'b1g_dcat_spatialResolutionInMeters_sm',
+    'b1g_geodcat_spatialResolutionAsText_sm',
+    'b1g_dct_provenanceStatement_sm',
+    'b1g_adminTags_sm',
+  ];
+
+  // Define the fields for the Metadata Facets table - BTAA schema only
+  const metadataFacetsFields = [
+    'gbl_resourceClass_sm',
+    'gbl_resourceType_sm',
+    'dct_spatial_sm',
+    'schema_provider_s',
     'dct_subject_sm',
-    'dcat_theme_sm',
-    'dcat_keyword_sm',
+    'dct_language_sm',
     'dct_temporal_sm',
     'dct_issued_s',
-    'gbl_indexyear_im',
-    'gbl_daterange_drsim',
-    'dct_rights_sm',
-    'dc_rightsholder_sm',
-    'dct_license_sm',
-    'dc_accessrights_s',
-    'dct_format_s',
-    'gbl_filesize_s',
-    'gbl_wxsidentifier_s',
-    'dct_references_s',
-    'dct_identifier_sm',
-    'dct_language_sm',
-    'dct_date_added_s',
-    'locn_geometry_original',
-    'dcat_bbox_original',
-    'dcat_centroid_original',
-    'gbl_mdversion_s',
+    'dct_creator_sm',
+    'dct_publisher_sm',
+    'b1g_language_sm',
+    'b1g_publication_state_s',
+    'b1g_status_s',
+    'suppressed_b',
   ];
 
-  // Define the fields for the Metadata Facets table
-  const metadataFacetsFields = [
-    'gbl_resourceclass_sm',
-    'gbl_resourcetype_sm',
-    'dct_spatial_sm',
-    'gbl_provider_sm',
-  ];
-
-  // Define the relationship fields for the Metadata Facets table
+  // Define the relationship fields for the Metadata Facets table - BTAA schema only
   const relationshipFields = [
     'dct_relation_sm',
-    'pcdm_memberof_sm',
-    'dct_ispartof_sm',
+    'pcdm_memberOf_sm',
+    'dct_isPartOf_sm',
     'dct_source_sm',
-    'dct_isversionof_sm',
+    'dct_isVersionOf_sm',
     'dct_replaces_sm',
-    'dct_isreplacedby_sm',
+    'dct_isReplacedBy_sm',
+    'dct_references_s',
+    'dct_license_sm',
+    'dct_rightsHolder_sm',
+    'b1g_dct_mediator_sm',
+    'b1g_creatorID_sm',
+    'b1g_dct_conformsTo_sm',
   ];
+
+  // Custom field labels for better display - BTAA schema only
+  const customFieldLabels: { [key: string]: string } = {
+    // Core fields (Required by BTAA)
+    id: 'ID',
+    gbl_mdVersion_s: 'Metadata Version',
+    schema_provider_s: 'Provider',
+    dct_title_s: 'Title',
+    dct_description_sm: 'Description',
+    dct_language_sm: 'Language',
+    dct_accessRights_s: 'Access Rights',
+    dct_license_sm: 'License',
+    b1g_code_s: 'BTAA Code',
+    b1g_dct_accrualMethod_s: 'Accrual Method',
+    b1g_dateAccessioned_s: 'Date Accessioned',
+    b1g_publication_state_s: 'Publication State',
+    b1g_language_sm: 'BTAA Language',
+
+    // Additional BTAA fields
+    gbl_mdModified_dt: 'Metadata Modified',
+    dct_alternative_sm: 'Alternative Title',
+    dct_subject_sm: 'Subject',
+    dct_creator_sm: 'Creator',
+    dct_publisher_sm: 'Publisher',
+    gbl_resourceClass_sm: 'Resource Class',
+    gbl_resourceType_sm: 'Resource Type',
+    dct_source_sm: 'Source',
+    dct_isPartOf_sm: 'Is Part Of',
+    pcdm_memberOf_sm: 'Member Of',
+    dct_replaces_sm: 'Replaces',
+    dct_isReplacedBy_sm: 'Is Replaced By',
+    dct_isVersionOf_sm: 'Is Version Of',
+    dct_relation_sm: 'Relation',
+    dct_issued_s: 'Date Issued',
+    dct_temporal_sm: 'Temporal Coverage',
+    dct_spatial_sm: 'Spatial Coverage',
+    dcat_bbox: 'Bounding Box',
+    dcat_centroid: 'Centroid',
+    locn_geometry: 'Geometry',
+    layer_geom_type_s: 'Layer Geometry Type',
+    solr_year_i: 'Year',
+    layer_id_s: 'Layer ID',
+    suppressed_b: 'Suppressed',
+    dct_references_s: 'References',
+
+    // BTAA custom fields
+    b1g_status_s: 'Status',
+    b1g_dct_accrualPeriodicity_s: 'Accrual Periodicity',
+    b1g_dateRetired_s: 'Date Retired',
+    b1g_child_record_b: 'Child Record',
+    b1g_dct_mediator_sm: 'Mediator',
+    b1g_access_s: 'Access',
+    b1g_image_ss: 'Image',
+    b1g_geonames_sm: 'Geonames',
+    b1g_creatorID_sm: 'Creator ID',
+    b1g_dct_conformsTo_sm: 'Conforms To',
+    b1g_dcat_spatialResolutionInMeters_sm: 'Spatial Resolution (Meters)',
+    b1g_geodcat_spatialResolutionAsText_sm: 'Spatial Resolution (Text)',
+    b1g_dct_provenanceStatement_sm: 'Provenance Statement',
+    b1g_adminTags_sm: 'Admin Tags',
+  };
 
   // Group fields by their prefix/category
   const groupFields = () => {
@@ -133,6 +232,69 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
       return '';
     }
 
+    // Special formatting for specific fields
+    if (key === 'dct_language_sm') {
+      const languageMap: { [key: string]: string } = {
+        eng: 'English',
+        English: 'English',
+        spa: 'Spanish',
+        Spanish: 'Spanish',
+        fra: 'French',
+        French: 'French',
+        deu: 'German',
+        German: 'German',
+        ita: 'Italian',
+        Italian: 'Italian',
+        por: 'Portuguese',
+        Portuguese: 'Portuguese',
+        rus: 'Russian',
+        Russian: 'Russian',
+        jpn: 'Japanese',
+        Japanese: 'Japanese',
+        kor: 'Korean',
+        Korean: 'Korean',
+        zho: 'Chinese',
+        Chinese: 'Chinese',
+        ara: 'Arabic',
+        Arabic: 'Arabic',
+      };
+      if (Array.isArray(value)) {
+        return value.map((v) => languageMap[v] || v).join(', ');
+      }
+      return languageMap[value.toString()] || value.toString();
+    }
+
+    // Format boolean fields
+    if (
+      (key === 'suppressed_b' || key === 'b1g_child_record_b') &&
+      value !== null &&
+      value !== undefined
+    ) {
+      return value.toString() === 'true' ? 'Yes' : 'No';
+    }
+
+    // Format date fields to be more readable
+    if (
+      (key === 'b1g_dateAccessioned_s' ||
+        key === 'b1g_dateRetired_s' ||
+        key === 'gbl_mdModified_dt' ||
+        key === 'dct_issued_s') &&
+      value
+    ) {
+      try {
+        const date = new Date(value.toString());
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        }
+              } catch {
+          // Fall back to original value if date parsing fails
+        }
+    }
+
     const facetField = getFacetField(key);
 
     if (facetField) {
@@ -162,71 +324,83 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     return Array.isArray(value) ? value.join(', ') : value.toString();
   };
 
-  const renderRelationships = (relationships: any) => {
+  const renderRelationships = (relationships: Record<string, unknown>) => {
     // Check if relationships exists and has properties
     if (!relationships || Object.keys(relationships).length === 0) {
       return null;
     }
-    
-    return Object.entries(relationships).map(([relationshipType, items]) => {
-      if (!Array.isArray(items) || items.length === 0) return null;
-      
-      // Get the total count of items
-      const totalCount = items.length;
-      
-      // Only display the first 5 items
-      const displayItems = items.slice(0, 5);
-      
-      // Determine if we need to show the "Browse all" link
-      const showBrowseAll = totalCount > 5;
-      
-      // Map relationship type to its corresponding facet field if it exists
-      // This would depend on how your search system handles relationship facets
-      // For example: memberOf -> member_of_agg, source -> source_agg, etc.
-      const relationshipFacetField = `${relationshipType}_agg`;
-      
-      // Get the ID of the current item to use as a filter
-      // Ensure it's a string value for encodeURIComponent
-      const currentItemId = String(attributes.id || '');
-      
-      return (
-        <div key={relationshipType} className="mb-4">
-          <h5 className="text-sm font-medium text-gray-500">
-            {relationshipLabels[relationshipType] || humanizeFieldName(relationshipType)}
-          </h5>
-          <ul className="list-none">
-            {/* Display the first 5 items */}
-            {displayItems.map((doc: { item_id: string; item_title: string; link: string }) => (
-              <li key={doc.item_id} className="text-sm text-gray-900">
-                <Link
-                  to={`/resources/${doc.item_id}`}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  {doc.item_title}
-                </Link>
-              </li>
-            ))}
-            
-            {/* Show "Browse all" link if there are more than 5 items */}
-            {showBrowseAll && (
-              <li className="text-sm text-gray-900 mt-2 pt-2 border-t border-gray-200">
-                <Link
-                  to={`/search?fq[${relationshipFacetField}][]=${encodeURIComponent(currentItemId)}`}
-                  className="text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  {relationshipLabels.browse_all
-                    ? relationshipLabels.browse_all.replace('%{count}', totalCount.toString())
-                    : `Browse all ${totalCount} records...`}
-                </Link>
-              </li>
-            )}
-          </ul>
-        </div>
-      );
-    }).filter(Boolean);
+
+    return Object.entries(relationships)
+      .map(([relationshipType, items]) => {
+        if (!Array.isArray(items) || items.length === 0) return null;
+
+        // Get the total count of items
+        const totalCount = items.length;
+
+        // Only display the first 5 items
+        const displayItems = items.slice(0, 5);
+
+        // Determine if we need to show the "Browse all" link
+        const showBrowseAll = totalCount > 5;
+
+        // Map relationship type to its corresponding facet field if it exists
+        // This would depend on how your search system handles relationship facets
+        // For example: memberOf -> member_of_agg, source -> source_agg, etc.
+        const relationshipFacetField = `${relationshipType}_agg`;
+
+        // Get the ID of the current item to use as a filter
+        // Ensure it's a string value for encodeURIComponent
+        const currentItemId = String(attributes.id || '');
+
+        return (
+          <div key={relationshipType} className="mb-4">
+            <h5 className="text-sm font-medium text-gray-500">
+              {relationshipLabels[relationshipType] ||
+                humanizeFieldName(relationshipType)}
+            </h5>
+            <ul className="list-none">
+              {/* Display the first 5 items */}
+              {displayItems.map(
+                (doc: {
+                  item_id: string;
+                  item_title: string;
+                  link: string;
+                }) => (
+                  <li key={doc.item_id} className="text-sm text-gray-900">
+                    <Link
+                      to={`/resources/${doc.item_id}`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {doc.item_title}
+                    </Link>
+                  </li>
+                )
+              )}
+
+              {/* Show "Browse all" link if there are more than 5 items */}
+              {showBrowseAll && (
+                <li className="text-sm text-gray-900 mt-2 pt-2 border-t border-gray-200">
+                  <Link
+                    to={`/search?fq[${relationshipFacetField}][]=${encodeURIComponent(currentItemId)}`}
+                    className="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    {relationshipLabels.browse_all
+                      ? relationshipLabels.browse_all.replace(
+                          '%{count}',
+                          totalCount.toString()
+                        )
+                      : `Browse all ${totalCount} records...`}
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+        );
+      })
+      .filter(Boolean);
   };
 
-  const { documentMetadata, metadataFacets, relationshipFacets } = groupFields();
+  const { documentMetadata, metadataFacets } = groupFields();
 
   return (
     <div
@@ -244,7 +418,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                 <tr key={key} className="hover:bg-gray-50">
                   <td className="px-6 py-4 w-1/3">
                     <div className="text-sm font-medium text-gray-500">
-                      {humanizeFieldName(key)}
+                      {customFieldLabels[key] || humanizeFieldName(key)}
                     </div>
                   </td>
                   <td className="px-6 py-4">

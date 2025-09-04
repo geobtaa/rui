@@ -38,13 +38,13 @@ export function MapView({ results }: MapViewProps) {
 
     // Add GeoJSON features for each result
     const features = results
-      .filter((result) => result.ui_viewer_geometry)
+      .filter((result) => result.meta?.ui?.viewer?.geometry)
       .map((result) => ({
         type: 'Feature',
-        geometry: result.ui_viewer_geometry,
+        geometry: result.meta.ui.viewer.geometry,
         properties: {
           id: result.id,
-          title: result.dct_title_s,
+          title: result.attributes.dct_title_s,
         },
       }));
 

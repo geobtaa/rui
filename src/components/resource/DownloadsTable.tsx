@@ -15,19 +15,14 @@ interface DownloadsTableProps {
 export function DownloadsTable({ downloads }: DownloadsTableProps) {
   if (!downloads || downloads.length === 0) return null;
 
-  // Helper function to get format from type or extract from URL
-  const getFormat = (item: DownloadItem): string => {
-    if (item.format) return item.format;
-    if (item.type) return item.type.split('/')[1] || item.type;
-    return item.url.split('.').pop()?.toUpperCase() || 'Unknown';
-  };
+
 
   // Separate IIIF image downloads from other downloads
-  const iiifDownloads = downloads.filter(d => 
-    d.type === 'image/jpeg' && d.label.includes('Image')
+  const iiifDownloads = downloads.filter(
+    (d) => d.type === 'image/jpeg' && d.label.includes('Image')
   );
-  const otherDownloads = downloads.filter(d => 
-    !(d.type === 'image/jpeg' && d.label.includes('Image'))
+  const otherDownloads = downloads.filter(
+    (d) => !(d.type === 'image/jpeg' && d.label.includes('Image'))
   );
 
   return (

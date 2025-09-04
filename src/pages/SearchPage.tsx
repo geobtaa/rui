@@ -11,8 +11,7 @@ import { FacetList } from '../components/FacetList';
 import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
-import { XCircle } from 'lucide-react';
-import type { SpellingSuggestion } from '../types/api';
+
 
 // Create a separate component for the search content
 function SearchContent() {
@@ -67,23 +66,24 @@ function SearchContent() {
       <Header />
       <main className="flex-1 bg-gray-50 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
-
           {/* Spelling Suggestions */}
           {spellingSuggestions.length > 0 && (
             <div className="mb-4 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
                 Did you mean:{' '}
-                {spellingSuggestions.map((suggestion: SpellingSuggestion, index: number) => (
-                  <React.Fragment key={suggestion.text}>
-                    {index > 0 && ', '}
-                    <button
-                      onClick={() => updateSearch({ query: suggestion.text })}
-                      className="font-medium underline hover:text-blue-900"
-                    >
-                      {suggestion.text}
-                    </button>
-                  </React.Fragment>
-                ))}
+                {spellingSuggestions.map(
+                  (suggestion: string, index: number) => (
+                    <React.Fragment key={suggestion}>
+                      {index > 0 && ', '}
+                      <button
+                        onClick={() => updateSearch({ query: suggestion })}
+                        className="font-medium underline hover:text-blue-900"
+                      >
+                        {suggestion}
+                      </button>
+                    </React.Fragment>
+                  )
+                )}
                 ?
               </p>
             </div>
@@ -105,15 +105,23 @@ function SearchContent() {
                 <summary className="text-lg font-semibold cursor-pointer py-2">
                   Filter Results
                 </summary>
-                {searchResults?.facets ? (
-                  <FacetList facets={searchResults.facets} />
+                {searchResults?.included ? (
+                  <FacetList
+                    facets={searchResults.included.filter(
+                      (item) => item.type === 'facet'
+                    )}
+                  />
                 ) : (
                   <div className="text-gray-500">Loading facets...</div>
                 )}
               </details>
               <div className="hidden lg:block">
-                {searchResults?.facets ? (
-                  <FacetList facets={searchResults.facets} />
+                {searchResults?.included ? (
+                  <FacetList
+                    facets={searchResults.included.filter(
+                      (item) => item.type === 'facet'
+                    )}
+                  />
                 ) : (
                   <div className="text-gray-500">Loading facets...</div>
                 )}
@@ -145,14 +153,22 @@ function SearchContent() {
                           {searchTotalResults}
                         </h2>
                         <SortControl
-                          options={searchResults?.sortOptions || []}
+                          options={
+                            searchResults?.included
+                              ?.filter((item) => item.type === 'sort')
+                              .map((sortOption) => ({
+                                id: sortOption.id,
+                                label: sortOption.attributes.label,
+                                url: sortOption.links?.self || '',
+                              })) || []
+                          }
                           currentSort={sort || 'relevance'}
                           onSortChange={handleSortChange}
                         />
                       </div>
 
                       <SearchResults
-                        results={searchResults?.response?.docs || []}
+                        results={searchResults?.data || []}
                         isLoading={searchIsLoading}
                         totalResults={searchTotalResults}
                         currentPage={page}
@@ -174,7 +190,7 @@ function SearchContent() {
             {/* Map - Hidden by default on mobile, toggleable */}
             <div className="lg:col-span-4">
               <div className="lg:sticky lg:top-[88px]">
-                <MapView results={searchResults?.response?.docs || []} />
+                <MapView results={searchResults?.data || []} />
               </div>
             </div>
           </div>
