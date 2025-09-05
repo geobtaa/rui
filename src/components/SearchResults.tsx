@@ -87,9 +87,9 @@ export function SearchResults({
           <article
             key={result.id}
             className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow relative"
-            data-geom={JSON.stringify(result.meta?.ui?.viewer?.geometry)}
+            data-geom={result.meta?.ui?.viewer?.geometry ? JSON.stringify(result.meta.ui.viewer.geometry) : ''}
             onMouseEnter={() =>
-              setHoveredGeometry(result.meta?.ui?.viewer?.geometry)
+              setHoveredGeometry(result.meta?.ui?.viewer?.geometry || null)
             }
             onMouseLeave={() => setHoveredGeometry(null)}
           >
@@ -153,33 +153,44 @@ export function SearchResults({
                   className="block"
                 >
                   <h2 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
-                    {result.attributes.dct_title_s}
+                    {typeof result.attributes.dct_title_s === 'string' 
+                      ? result.attributes.dct_title_s 
+                      : String(result.attributes.dct_title_s)}
                   </h2>
                 </Link>
 
                 {/* Description */}
                 {result.attributes.dct_description_sm &&
+                  Array.isArray(result.attributes.dct_description_sm) &&
                   result.attributes.dct_description_sm.length > 0 && (
                     <p className="text-gray-600 mb-4 line-clamp-3">
-                      {result.attributes.dct_description_sm[0]}
+                      {typeof result.attributes.dct_description_sm[0] === 'string'
+                        ? result.attributes.dct_description_sm[0]
+                        : String(result.attributes.dct_description_sm[0])}
                     </p>
                   )}
 
                 {/* Temporal information */}
                 {result.attributes.dct_temporal_sm &&
+                  Array.isArray(result.attributes.dct_temporal_sm) &&
                   result.attributes.dct_temporal_sm.length > 0 && (
                     <p className="text-gray-500 text-sm mb-4">
-                      {result.attributes.dct_temporal_sm.join(', ')}
+                      {result.attributes.dct_temporal_sm
+                        .map(item => typeof item === 'string' ? item : String(item))
+                        .join(', ')}
                     </p>
                   )}
 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                   {result.attributes.dc_publisher_sm &&
+                    Array.isArray(result.attributes.dc_publisher_sm) &&
                     result.attributes.dc_publisher_sm.length > 0 && (
                       <div className="flex items-center gap-1">
                         <BookOpen size={16} />
                         <span>
-                          {result.attributes.dc_publisher_sm.join(', ')}
+                          {result.attributes.dc_publisher_sm
+                            .map(item => typeof item === 'string' ? item : String(item))
+                            .join(', ')}
                         </span>
                       </div>
                     )}

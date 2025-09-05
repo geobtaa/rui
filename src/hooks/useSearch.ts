@@ -26,11 +26,23 @@ export function useSearch() {
   const { query, page, facets } = parseSearchParams(searchParams);
 
   useEffect(() => {
+    console.log('🔍 useSearch useEffect triggered with:', {
+      query,
+      page,
+      facetsLength: facets?.length,
+      sort,
+      setLastApiUrl: typeof setLastApiUrl
+    });
+
     // Only fetch if we have a query parameter (even if empty) or facets
     if (query === undefined && (!facets || facets.length === 0)) {
+      console.log('⏭️ Skipping search - no query or facets');
       setResults(null);
       return;
     }
+
+    console.log('🚀 Starting search API call...');
+    const startTime = performance.now();
 
     const fetchResults = async () => {
       setIsLoading(true);
@@ -45,8 +57,15 @@ export function useSearch() {
           setLastApiUrl,
           sort
         );
+        
+        const endTime = performance.now();
+        console.log(`✅ Search completed in ${(endTime - startTime).toFixed(2)}ms`);
+        console.log(`📊 Results: ${searchResults?.data?.length || 0} items`);
+        
         setResults(searchResults);
       } catch (err) {
+        const endTime = performance.now();
+        console.error(`❌ Search failed after ${(endTime - startTime).toFixed(2)}ms:`, err);
         setError(err instanceof Error ? err.message : 'An error occurred');
         setResults(null);
       } finally {

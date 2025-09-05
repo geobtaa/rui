@@ -13,6 +13,11 @@ export function parseSearchParams(searchParams: URLSearchParams) {
       return { field, value };
     });
 
+  console.log('🔗 parseSearchParams called with:', {
+    rawParams: Object.fromEntries(searchParams.entries()),
+    parsed: { query, page, facets: facets.length }
+  });
+
   return { query, page, facets };
 }
 

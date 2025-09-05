@@ -222,6 +222,9 @@ export async function fetchSearchResults(
   sort?: string,
   options: FetchOptions = defaultFetchOptions
 ): Promise<JsonApiResponse> {
+  const startTime = performance.now();
+  console.log('🌐 fetchSearchResults called with:', { query, page, perPage, facets: facets.length, sort });
+  
   const baseUrl = import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/search`
     : 'https://geo.btaa.org/api/v1/search';
@@ -240,18 +243,32 @@ export async function fetchSearchResults(
     url.searchParams.append(`fq[${field}][]`, value);
   });
 
+  console.log('🔗 API URL:', url.toString());
+
   if (onApiCall) {
     onApiCall(url.toString());
   }
 
   try {
+    const apiStartTime = performance.now();
+    console.log('📡 Making API request...');
+    
     const response = await unifiedFetch<JsonApiResponse>(
       url.toString(),
       options
     );
+    
+    const apiEndTime = performance.now();
+    const totalTime = performance.now() - startTime;
+    
+    console.log(`⚡ API response received in ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
+    console.log(`⏱️ Total fetchSearchResults time: ${totalTime.toFixed(2)}ms`);
+    console.log(`📦 Response data: ${response?.data?.length || 0} items`);
+    
     return response; // Return the JSON:API response directly
   } catch (error) {
-    console.error('Search error:', error);
+    const totalTime = performance.now() - startTime;
+    console.error(`💥 API request failed after ${totalTime.toFixed(2)}ms:`, error);
     throw error;
   }
 }

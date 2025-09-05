@@ -15,10 +15,17 @@ export function MapView({ results }: MapViewProps) {
   const { hoveredGeometry } = useMap();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    const startTime = performance.now();
+    console.log('🗺️ MapView useEffect triggered with', results?.length || 0, 'results');
+    
+    if (!mapContainer.current) {
+      console.log('⏭️ No map container, skipping');
+      return;
+    }
 
     // Initialize map if it doesn't exist
     if (!mapRef.current) {
+      console.log('🏗️ Initializing new map...');
       mapRef.current = L.map(mapContainer.current).setView(
         [39.8283, -98.5795],
         3
@@ -27,48 +34,60 @@ export function MapView({ results }: MapViewProps) {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
       }).addTo(mapRef.current);
+      console.log('✅ Map initialized');
     }
 
-    // Clear existing layers
-    mapRef.current.eachLayer((layer) => {
-      if (layer instanceof L.GeoJSON) {
-        mapRef.current?.removeLayer(layer);
-      }
-    });
-
-    // Add GeoJSON features for each result
-    const features = results
-      .filter((result) => result.meta?.ui?.viewer?.geometry)
-      .map((result) => ({
-        type: 'Feature',
-        geometry: result.meta.ui.viewer.geometry,
-        properties: {
-          id: result.id,
-          title: result.attributes.dct_title_s,
-        },
-      }));
-
-    if (features.length > 0) {
-      const geoJsonLayer = L.geoJSON(
-        {
-          type: 'FeatureCollection',
-          features: features,
-        },
-        {
-          style: {
-            color: '#2563eb',
-            weight: 2,
-            opacity: 0.6,
-            fillOpacity: 0.1,
-          },
-          onEachFeature: (feature, layer) => {
-            layer.bindPopup(feature.properties.title);
-          },
+    // Always render if we have results
+    if (results && results.length > 0) {
+      console.log('🎯 Rendering map with', results.length, 'results');
+      
+      // Clear existing layers
+      mapRef.current.eachLayer((layer) => {
+        if (layer instanceof L.GeoJSON) {
+          mapRef.current?.removeLayer(layer);
         }
-      ).addTo(mapRef.current);
+      });
 
-      // Fit bounds to show all features
-      mapRef.current.fitBounds(geoJsonLayer.getBounds());
+      // Add GeoJSON features for each result
+      const features = results
+        .filter((result) => result.meta?.ui?.viewer?.geometry)
+        .map((result) => ({
+          type: 'Feature' as const,
+          geometry: result.meta!.ui!.viewer!.geometry,
+          properties: {
+            id: result.id,
+            title: result.attributes.dct_title_s,
+          },
+        }));
+
+      if (features.length > 0) {
+        console.log('📍 Adding', features.length, 'features to map...');
+        const geoJsonLayer = L.geoJSON(
+          {
+            type: 'FeatureCollection' as const,
+            features: features,
+          } as any, // Leaflet's GeoJSON typing is complex, using any for compatibility
+          {
+            style: {
+              color: '#2563eb',
+              weight: 2,
+              opacity: 0.6,
+              fillOpacity: 0.1,
+            },
+            onEachFeature: (feature, layer) => {
+              layer.bindPopup(feature.properties.title);
+            },
+          }
+        ).addTo(mapRef.current);
+
+        // Fit bounds to show all features
+        mapRef.current.fitBounds(geoJsonLayer.getBounds());
+        
+        const endTime = performance.now();
+        console.log(`✅ Map rendered in ${(endTime - startTime).toFixed(2)}ms with ${features.length} features`);
+      }
+    } else {
+      console.log('⏭️ No results to render');
     }
 
     return () => {
