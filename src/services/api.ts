@@ -289,7 +289,6 @@ export async function fetchResourceDetails(
       url.toString(),
       options
     );
-    console.log('Resource details response:', response); // Add debugging
     return response.data;
   } catch (error) {
     console.error('Error fetching resource details:', error); // Add debugging

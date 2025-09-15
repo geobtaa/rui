@@ -486,7 +486,7 @@ export function ResourceView() {
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
-                  <FullDetailsTable data={{ attributes: data.attributes }} />
+                  <FullDetailsTable data={{ attributes: data.attributes, meta: data.meta }} />
                 </div>
 
                 {/* Sidebar */}

@@ -40,6 +40,13 @@ interface ItemData {
         ui_citation?: string;
       };
     };
+    meta?: {
+      ui?: {
+        relationships?: Record<string, unknown>;
+        [key: string]: unknown;
+      };
+      [key: string]: unknown;
+    };
   };
 }
 

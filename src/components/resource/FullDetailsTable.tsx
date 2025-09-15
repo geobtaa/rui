@@ -15,6 +15,11 @@ interface Attributes {
 interface FullDetailsTableProps {
   data: {
     attributes: Attributes;
+    meta?: {
+      ui?: {
+        relationships?: Record<string, unknown>;
+      };
+    };
   };
 }
 
@@ -24,6 +29,7 @@ const relationshipLabels: { [key: string]: string } = {
   memberOf: 'Belongs to collection...',
   hasMember: 'Collection records...',
   isPartOf: 'Is part of...',
+  'dct:isPartOf': 'Is part of...',
   hasPart: 'Has part...',
   relation: 'Related records...',
   replaces: 'Replaces...',
@@ -38,7 +44,8 @@ const relationshipLabels: { [key: string]: string } = {
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.attributes || {};
-  const uiRelationships = attributes.ui_relationships || {};
+  const uiRelationships = data?.meta?.ui?.relationships || {};
+  
 
   // Define the fields for the Document Metadata table - BTAA schema only
   const documentMetadataFields = [
@@ -352,19 +359,25 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
               {/* Display the first 5 items */}
               {displayItems.map(
                 (doc: {
-                  item_id: string;
-                  item_title: string;
-                  link: string;
-                }) => (
-                  <li key={doc.item_id} className="text-sm text-gray-900">
-                    <Link
-                      to={`/resources/${doc.item_id}`}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      {doc.item_title}
-                    </Link>
-                  </li>
-                )
+                  resource_id?: string;
+                  item_id?: string;
+                  resource_title?: string;
+                  item_title?: string;
+                  link?: string;
+                }) => {
+                  const id = doc.resource_id || doc.item_id;
+                  const title = doc.resource_title || doc.item_title;
+                  return (
+                    <li key={id} className="text-sm text-gray-900">
+                      <Link
+                        to={`/resources/${id}`}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        {title}
+                      </Link>
+                    </li>
+                  );
+                }
               )}
 
               {/* Show "Browse all" link if there are more than 5 items */}
