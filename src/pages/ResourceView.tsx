@@ -18,6 +18,7 @@ import { CitationTable } from '../components/resource/CitationTable';
 import { FullDetailsTable } from '../components/resource/FullDetailsTable';
 import { LocationMap } from '../components/resource/LocationMap';
 import { DownloadsTable } from '../components/resource/DownloadsTable';
+import { LinksTable } from '../components/resource/LinksTable';
 
 // Define types for search results
 interface SearchResult {
@@ -66,9 +67,10 @@ interface ResourceData {
         endpoint?: string;
         geometry?: string;
       };
-              downloads?: unknown[];
+      downloads?: unknown[];
       citation?: string;
       thumbnail_url?: string;
+      links?: Record<string, Array<{ label: string; url: string }>>;
     };
   };
 }
@@ -507,6 +509,12 @@ export function ResourceView() {
                     {data?.meta?.ui?.downloads &&
                       data.meta.ui.downloads.length > 0 && (
                         <DownloadsTable downloads={data.meta.ui.downloads} />
+                      )}
+
+                    {/* Links section */}
+                    {data?.meta?.ui?.links &&
+                      Object.keys(data.meta.ui.links).length > 0 && (
+                        <LinksTable links={data.meta.ui.links} />
                       )}
 
                     {/* Citation */}

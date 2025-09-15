@@ -25,8 +25,10 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
     if (!mapRef.current) {
       mapRef.current = L.map(mapContainer.current).setView([0, 0], 2);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors, © CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
       }).addTo(mapRef.current);
     }
 
