@@ -35,6 +35,21 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
     });
   }
 
+  // Resource Type (e.g., "Aerial Photography")
+  if (item.attributes.gbl_resourceType_sm?.[0]) {
+    accumulatedFacets = [
+      ...accumulatedFacets,
+      {
+        field: 'resource_type_agg',
+        value: item.attributes.gbl_resourceType_sm[0],
+      },
+    ];
+    breadcrumbs.push({
+      label: item.attributes.gbl_resourceType_sm[0],
+      facets: [...accumulatedFacets],
+    });
+  }
+
   // Geographic Coverage (e.g., "Minnesota")
   if (item.attributes.dct_spatial_sm?.[0]) {
     accumulatedFacets = [
