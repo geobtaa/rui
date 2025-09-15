@@ -68,7 +68,7 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   gbl_wxsidentifier_s: { label: 'WXS Identifier', display: true },
 
   // Schema.org
-  schema_provider_s: { label: 'Provider', display: true },
+  schema_provider_s: { label: 'Provider', display: true, facet: 'provider_agg' },
 
   // System Fields
   layer_slug_s: { label: 'Layer ID', hidden: true, display: true },

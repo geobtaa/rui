@@ -43,9 +43,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
   // Define the fields for the Document Metadata table - BTAA schema only
   const documentMetadataFields = [
     // Core fields (Required by BTAA)
-    'id',
     'gbl_mdVersion_s',
-    'schema_provider_s',
     'dct_title_s',
     'dct_description_sm',
     'dct_language_sm',
@@ -63,7 +61,6 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dct_subject_sm',
     'dct_creator_sm',
     'dct_publisher_sm',
-    'gbl_resourceClass_sm',
     'gbl_resourceType_sm',
     'dct_source_sm',
     'dct_isPartOf_sm',
@@ -75,10 +72,6 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dct_issued_s',
     'dct_temporal_sm',
     'dct_spatial_sm',
-    'dcat_bbox',
-    'dcat_centroid',
-    'locn_geometry',
-    'layer_geom_type_s',
     'solr_year_i',
     'layer_id_s',
     'suppressed_b',
@@ -105,18 +98,10 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const metadataFacetsFields = [
     'gbl_resourceClass_sm',
     'gbl_resourceType_sm',
+    'dcat_theme_sm',
     'dct_spatial_sm',
     'schema_provider_s',
-    'dct_subject_sm',
-    'dct_language_sm',
-    'dct_temporal_sm',
-    'dct_issued_s',
-    'dct_creator_sm',
-    'dct_publisher_sm',
-    'b1g_language_sm',
-    'b1g_publication_state_s',
-    'b1g_status_s',
-    'suppressed_b',
+    'b1g_localCollectionLabel_sm'
   ];
 
   // Define the relationship fields for the Metadata Facets table - BTAA schema only
@@ -214,9 +199,13 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     const documentMetadata = entries.filter(([key]) =>
       documentMetadataFields.includes(key)
     );
-    const metadataFacets = entries.filter(([key]) =>
-      metadataFacetsFields.includes(key)
-    );
+    const metadataFacets = entries
+      .filter(([key]) => metadataFacetsFields.includes(key))
+      .sort(([a], [b]) => {
+        const indexA = metadataFacetsFields.indexOf(a);
+        const indexB = metadataFacetsFields.indexOf(b);
+        return indexA - indexB;
+      });
     const relationshipFacets = entries.filter(([key]) =>
       relationshipFields.includes(key)
     );
@@ -225,7 +214,8 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
 
   const renderValue = (
     key: string,
-    value: string | string[] | null | undefined
+    value: string | string[] | null | undefined,
+    shouldLink: boolean = false
   ) => {
     // Return empty string for null or undefined values
     if (value === null || value === undefined) {
@@ -297,7 +287,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
 
     const facetField = getFacetField(key);
 
-    if (facetField) {
+    if (facetField && shouldLink) {
       if (Array.isArray(value)) {
         return value.map((v, i) => (
           <React.Fragment key={v}>
@@ -423,7 +413,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
-                      {renderValue(key, value)}
+                      {renderValue(key, value, false)}
                     </div>
                   </td>
                 </tr>
@@ -445,7 +435,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                 </h5>
                 <ul className="list-none">
                   <li className="text-sm text-gray-900">
-                    {renderValue(key, value)}
+                    {renderValue(key, value, true)}
                   </li>
                 </ul>
               </div>
