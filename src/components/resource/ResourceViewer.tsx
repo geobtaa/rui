@@ -31,7 +31,7 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
   const protocol = data.meta?.ui?.viewer?.protocol || '';
   const endpoint = data.meta?.ui?.viewer?.endpoint || '';
   const geometry = data.meta?.ui?.viewer?.geometry;
-  const available = !!protocol && !!endpoint;
+  const available = !!protocol && !!endpoint && !!geometry;
   
 
 
@@ -121,6 +121,11 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
       );
     case 'leaflet':
     default:
+      // Don't render anything if no geometry is available
+      if (!available) {
+        return null;
+      }
+      
       return (
         <div className="sticky top-[88px]">
           <div
