@@ -318,19 +318,55 @@ export function FixturesTestPage() {
           </div>
         </div>
 
-        {/* Fixtures Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {selectedCategory ? `${selectedCategory} Fixtures` : 'All Test Fixtures'}
-            </h2>
-            <p className="text-base text-gray-600 mt-1">
-              {selectedCategory 
-                ? `Showing ${filteredFixtures.length} fixture${filteredFixtures.length !== 1 ? 's' : ''} in ${selectedCategory} category. Click any resource link to test page rendering in a new tab.`
-                : 'Click any resource link to test page rendering in a new tab'
-              }
-            </p>
-          </div>
+               {/* Fixtures Table */}
+               <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h2 className="text-xl font-semibold text-gray-900">
+                         {selectedCategory ? `${selectedCategory} Fixtures` : 'All Test Fixtures'}
+                       </h2>
+                       <p className="text-base text-gray-600 mt-1">
+                         {selectedCategory
+                           ? `Showing ${filteredFixtures.length} fixture${filteredFixtures.length !== 1 ? 's' : ''} in ${selectedCategory} category. Click any resource link to test page rendering in a new tab.`
+                           : 'Click any resource link to test page rendering in a new tab'
+                         }
+                       </p>
+                     </div>
+                     <button
+                       onClick={() => {
+                         const availableFixtures = filteredFixtures.filter(fixture => 
+                           fixtureStatuses[fixture.id] === 'available'
+                         );
+                         
+                         if (availableFixtures.length === 0) {
+                           alert('No available fixtures to open. Please wait for status checks to complete.');
+                           return;
+                         }
+                         
+                         if (availableFixtures.length > 20) {
+                           const confirmed = confirm(
+                             `This will open ${availableFixtures.length} tabs. Are you sure you want to continue?`
+                           );
+                           if (!confirmed) return;
+                         }
+                         
+                         availableFixtures.forEach((fixture, index) => {
+                           setTimeout(() => {
+                             window.open(`/resources/${fixture.id}`, '_blank');
+                           }, index * 100); // Stagger opening to avoid browser blocking
+                         });
+                         
+                         console.log(`Opening ${availableFixtures.length} fixture tabs...`);
+                       }}
+                       className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                       title="Open all available fixtures in new tabs"
+                     >
+                       <ExternalLink className="w-4 h-4" />
+                       Open All Available ({filteredFixtures.filter(f => fixtureStatuses[f.id] === 'available').length})
+                     </button>
+                   </div>
+                 </div>
           
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
