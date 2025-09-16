@@ -6,6 +6,7 @@ import {
   fetchResourceDetails,
   ApiError,
 } from '../services/api';
+import type { GeoDocument } from '../types/api';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -41,25 +42,7 @@ interface FacetFilter {
 }
 
 // Define the ResourceData type to match the actual API response
-interface ResourceData {
-  id: string;
-  type: string;
-  attributes: {
-    id: string;
-    dct_title_s: string;
-    dct_description_sm?: string[];
-    locn_geometry?: string;
-    locn_geometry_original?: string;
-    ui_thumbnail_url?: string;
-    ui_viewer_protocol?: string;
-    ui_viewer_endpoint?: string;
-    gbl_wxsidentifier_s?: string;
-    dct_accessRights_s?: string;
-    ui_viewer_geometry?: string;
-    ui_downloads?: unknown[];
-    ui_citation?: string;
-    [key: string]: unknown; // Allow other properties
-  };
+interface ResourceData extends GeoDocument {
   meta?: {
     ui?: {
       viewer?: {
@@ -67,10 +50,15 @@ interface ResourceData {
         endpoint?: string;
         geometry?: string;
       };
-      downloads?: unknown[];
+      downloads?: Array<{
+        label: string;
+        url: string;
+        type: string;
+      }>;
       citation?: string;
       thumbnail_url?: string;
       links?: Record<string, Array<{ label: string; url: string }>>;
+      relationships?: Record<string, unknown>;
     };
   };
 }
@@ -460,14 +448,7 @@ export function ResourceView() {
                   <h1 className="text-3xl font-bold text-gray-900">
                     {data.attributes.dct_title_s}
                   </h1>
-                  <ResourceSubtitle item={data.attributes} />
-
-                  {/* Description */}
-                  {data.attributes.dct_description_sm && (
-                    <div className="mt-4">
-                      <ResourceDescription item={data.attributes} />
-                    </div>
-                  )}
+                  <ResourceSubtitle item={data} />
                 </div>
 
                 {/* Viewer section */}

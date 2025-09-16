@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import { Home } from '../../pages/Home';
+import { HomePage } from '../../pages/HomePage';
 import { ApiProvider } from '../../context/ApiContext';
 
 describe('Home Page', () => {
@@ -9,7 +9,7 @@ describe('Home Page', () => {
     render(
       <BrowserRouter>
         <ApiProvider>
-          <Home />
+          <HomePage />
         </ApiProvider>
       </BrowserRouter>
     );

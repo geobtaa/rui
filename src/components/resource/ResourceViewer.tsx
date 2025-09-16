@@ -7,7 +7,7 @@ import { MetadataTable } from './MetadataTable';
 interface ResourceViewerProps {
   data: {
     attributes: {
-      dct_references_s: string | Record<string, string>;
+      dct_references_s?: string | Record<string, string>;
       [key: string]: unknown;
     };
     meta?: {

@@ -9,7 +9,7 @@ import {
 
 // Define a type for the attributes
 interface Attributes {
-  [key: string]: string | string[] | null | undefined;
+  [key: string]: unknown;
 }
 
 interface FullDetailsTableProps {

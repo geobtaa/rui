@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { SearchResults } from '../../pages/SearchResults';
+import { SearchPage } from '../../pages/SearchPage';
 import { ApiProvider } from '../../context/ApiContext';
 
 describe('Search Results Page', () => {
@@ -8,7 +8,7 @@ describe('Search Results Page', () => {
     render(
       <BrowserRouter>
         <ApiProvider>
-          <SearchResults />
+          <SearchPage />
         </ApiProvider>
       </BrowserRouter>
     );
