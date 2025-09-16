@@ -51,8 +51,41 @@ src/
 │       ├── Home.test.tsx
 │       ├── ResourceView.test.tsx
 │       └── SearchResults.test.tsx
+├── pages/
+│   └── FixturesTestPage.tsx  # Test fixtures utility page
 └── setupTests.ts
 ```
+
+### Test Fixtures Page
+
+The project includes a special testing utility page at `/test/fixtures` that provides:
+
+- **Fixture Validation**: Checks the availability of test data records
+- **Category Organization**: Groups fixtures by data type (Point Data, Polygon Data, Raster Data, etc.)
+- **Status Monitoring**: Shows real-time availability status of each fixture
+- **Development Testing**: Helps developers verify that test data is accessible
+
+**Access the fixtures page**: Navigate to `http://localhost:5173/test/fixtures` in your browser.
+
+**Fixture Categories Include**:
+- Point Data
+- Polygon Data  
+- Raster Data
+- Scanned Maps
+- Esri Services
+- Databases
+- Index Maps
+- Collections
+- Websites
+- Downloads
+- Child/Parent Records
+- Error Cases
+
+This page is essential for:
+- Verifying test data availability during development
+- Debugging issues with specific data types
+- Understanding what test fixtures are available
+- Monitoring the health of test data endpoints
 
 ### Test File Naming Convention
 - Test files should end with `.test.tsx` or `.test.ts`
@@ -217,6 +250,39 @@ A detailed HTML report is generated in the `coverage/` directory:
 
 #### JSON Report
 A machine-readable JSON report is saved as `coverage/coverage-final.json` for CI/CD integration.
+
+## Test Data and Fixtures
+
+### Using Test Fixtures
+
+The project includes a comprehensive set of test fixtures (sample data records) that represent different types of geospatial data. These fixtures are essential for testing various data scenarios.
+
+**Available Fixture Types:**
+- **Point Data**: Individual point locations with WMS/WFS services
+- **Polygon Data**: Area-based datasets with various service types
+- **Raster Data**: Image-based geospatial data
+- **Scanned Maps**: Historical maps with IIIF support
+- **Esri Services**: ArcGIS-based map services
+- **Databases**: SQLite and Geodatabase files
+- **Index Maps**: GeoJSON index maps for data discovery
+- **Collections**: Collection-level metadata records
+- **Websites**: Web-based resources
+- **Downloads**: Files with direct download links
+- **Child/Parent Records**: Hierarchical data relationships
+- **Error Cases**: Records that test error handling
+
+**Accessing Fixtures:**
+- **Fixtures Page**: Visit `/test/fixtures` to see all available fixtures and their status
+- **Fixture IDs**: Use fixture IDs in tests (e.g., `'mit-001145244'`, `'nyu-2451-34564'`)
+- **API Endpoints**: Fixtures are accessible via `/resources/{fixture-id}` endpoints
+
+**Using Fixtures in Tests:**
+```typescript
+// Test with a specific fixture
+const fixtureId = 'mit-001145244'; // actual-papermap1
+render(<ResourceView />);
+// Mock the API to return fixture data
+```
 
 ## Mocking
 

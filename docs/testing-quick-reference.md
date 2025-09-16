@@ -19,6 +19,22 @@ npm run test:ui
 npm run test:coverage:ui
 ```
 
+## Test Fixtures Page
+
+Access the test fixtures utility at: `http://localhost:5173/test/fixtures`
+
+**What it does:**
+- Validates availability of test data records
+- Shows real-time status of fixtures
+- Organizes fixtures by data type
+- Helps debug data-related issues
+
+**Use cases:**
+- Verify test data is accessible
+- Debug specific data type issues
+- Monitor test data health
+- Understand available test fixtures
+
 ## Test File Template
 
 ```typescript
