@@ -32,6 +32,7 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
   const endpoint = data.meta?.ui?.viewer?.endpoint || '';
   const geometry = data.meta?.ui?.viewer?.geometry;
   const available = !!protocol && !!endpoint;
+  
 
 
   // Helper function to titleize a string
@@ -128,7 +129,7 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
             data-controller="leaflet-viewer"
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
-            data-leaflet-viewer-layer-id-value=""
+            data-leaflet-viewer-layer-id-value={data.attributes.gbl_wxsIdentifier_s || ""}
             data-leaflet-viewer-options-value={JSON.stringify(
               leafletViewerOptions
             )}
