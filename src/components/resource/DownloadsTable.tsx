@@ -15,8 +15,6 @@ interface DownloadsTableProps {
 export function DownloadsTable({ downloads }: DownloadsTableProps) {
   if (!downloads || downloads.length === 0) return null;
 
-
-
   // Separate IIIF image downloads from other downloads
   const iiifDownloads = downloads.filter(
     (d) => d.type === 'image/jpeg' && d.label.includes('Image')

@@ -8,9 +8,9 @@ vi.mock('./services/api', () => ({
     meta: {
       total: 0,
       page: 1,
-      per_page: 10
+      per_page: 10,
     },
-    included: []
+    included: [],
   }),
   fetchResourceDetails: vi.fn().mockResolvedValue({
     id: 'test-id',
@@ -20,7 +20,7 @@ vi.mock('./services/api', () => ({
       dct_description_sm: ['Test description'],
       dct_temporal_sm: ['2023'],
       dc_publisher_sm: ['Test Publisher'],
-      gbl_resourceClass_sm: ['Dataset']
+      gbl_resourceClass_sm: ['Dataset'],
     },
     meta: {
       ui: {
@@ -28,11 +28,11 @@ vi.mock('./services/api', () => ({
         viewer: {
           geometry: {
             type: 'Point',
-            coordinates: [-93.265, 44.9778]
-          }
-        }
-      }
-    }
+            coordinates: [-93.265, 44.9778],
+          },
+        },
+      },
+    },
   }),
   fetchSuggestions: vi.fn().mockResolvedValue([
     {
@@ -40,17 +40,17 @@ vi.mock('./services/api', () => ({
       type: 'suggestion',
       attributes: {
         text: 'minnesota',
-        title: 'Minnesota'
-      }
-    }
+        title: 'Minnesota',
+      },
+    },
   ]),
   fetchBookmarkedResources: vi.fn().mockResolvedValue({
     data: [],
     meta: {
       total: 0,
       page: 1,
-      per_page: 10
+      per_page: 10,
     },
-    included: []
-  })
+    included: [],
+  }),
 }));

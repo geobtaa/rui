@@ -2,8 +2,6 @@ import React from 'react';
 import { leafletViewerOptions } from '../../config/leafletConfig';
 import { MetadataTable } from './MetadataTable';
 
-
-
 interface ResourceViewerProps {
   data: {
     attributes: {
@@ -32,8 +30,6 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
   const endpoint = data.meta?.ui?.viewer?.endpoint || '';
   const geometry = data.meta?.ui?.viewer?.geometry;
   const available = !!protocol && !!endpoint && !!geometry;
-  
-
 
   // Helper function to titleize a string
   const titleize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -125,7 +121,7 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
       if (!available) {
         return null;
       }
-      
+
       return (
         <div className="sticky top-[88px]">
           <div
@@ -134,7 +130,9 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
             data-controller="leaflet-viewer"
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
-            data-leaflet-viewer-layer-id-value={data.attributes.gbl_wxsIdentifier_s || ""}
+            data-leaflet-viewer-layer-id-value={
+              data.attributes.gbl_wxsIdentifier_s || ''
+            }
             data-leaflet-viewer-options-value={JSON.stringify(
               leafletViewerOptions
             )}

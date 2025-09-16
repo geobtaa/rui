@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fetchSearchResults } from '../services/api';
 import { parseSearchParams } from '../utils/searchParams';
@@ -22,8 +22,10 @@ export function useSearch() {
   const { setLastApiUrl } = useApi();
   const sort = searchParams.get('sort') || 'relevance';
 
-  // Parse search parameters
-  const { query, page, facets } = parseSearchParams(searchParams);
+  // Parse search parameters and memoize facets to prevent infinite loops
+  const { query, page, facets: rawFacets } = parseSearchParams(searchParams);
+  const facetsString = JSON.stringify(rawFacets);
+  const facets = useMemo(() => rawFacets, [rawFacets.length, facetsString]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     console.log('🔍 useSearch useEffect triggered with:', {
@@ -31,7 +33,7 @@ export function useSearch() {
       page,
       facetsLength: facets?.length,
       sort,
-      setLastApiUrl: typeof setLastApiUrl
+      setLastApiUrl: typeof setLastApiUrl,
     });
 
     // Only fetch if we have a query parameter (even if empty) or facets
@@ -57,15 +59,20 @@ export function useSearch() {
           setLastApiUrl,
           sort
         );
-        
+
         const endTime = performance.now();
-        console.log(`✅ Search completed in ${(endTime - startTime).toFixed(2)}ms`);
+        console.log(
+          `✅ Search completed in ${(endTime - startTime).toFixed(2)}ms`
+        );
         console.log(`📊 Results: ${searchResults?.data?.length || 0} items`);
-        
+
         setResults(searchResults);
       } catch (err) {
         const endTime = performance.now();
-        console.error(`❌ Search failed after ${(endTime - startTime).toFixed(2)}ms:`, err);
+        console.error(
+          `❌ Search failed after ${(endTime - startTime).toFixed(2)}ms:`,
+          err
+        );
         setError(err instanceof Error ? err.message : 'An error occurred');
         setResults(null);
       } finally {
@@ -74,7 +81,7 @@ export function useSearch() {
     };
 
     fetchResults();
-  }, [query, page, facets?.length, sort, setLastApiUrl]);
+  }, [query, page, facets, sort, setLastApiUrl]);
 
   const updateSearch = ({
     query,

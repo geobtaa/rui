@@ -4,7 +4,12 @@ import 'leaflet/dist/leaflet.css';
 import { normalizeGeometry } from '../../utils/geometryUtils';
 
 interface LocationMapProps {
-  geometry: string | GeoJSON.Polygon | GeoJSON.MultiPolygon | { wkt: string } | null; // Accept any format, we'll normalize it
+  geometry:
+    | string
+    | GeoJSON.Polygon
+    | GeoJSON.MultiPolygon
+    | { wkt: string }
+    | null; // Accept any format, we'll normalize it
 }
 
 export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
@@ -25,11 +30,14 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
     if (!mapRef.current) {
       mapRef.current = L.map(mapContainer.current).setView([0, 0], 2);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors, © CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20
-      }).addTo(mapRef.current);
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        {
+          attribution: '© OpenStreetMap contributors, © CARTO',
+          subdomains: 'abcd',
+          maxZoom: 20,
+        }
+      ).addTo(mapRef.current);
     }
 
     // Clear existing layers
@@ -40,33 +48,50 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
     });
 
     try {
-      console.log('LocationMap - Normalized geometry type:', normalizedGeometry.type);
+      console.log(
+        'LocationMap - Normalized geometry type:',
+        normalizedGeometry.type
+      );
       console.log('LocationMap - Normalized geometry:', normalizedGeometry);
-      
+
       // Handle MultiPolygon by converting to individual Polygon features
       let features;
       if (normalizedGeometry.type === 'MultiPolygon') {
-        console.log('LocationMap - Converting MultiPolygon with', normalizedGeometry.coordinates.length, 'polygons');
-        features = normalizedGeometry.coordinates.map((polygonCoords, index) => {
-          console.log(`LocationMap - Polygon ${index + 1} coordinates:`, polygonCoords);
-          return {
-            type: 'Feature' as const,
-            geometry: {
-              type: 'Polygon' as const,
-              coordinates: [polygonCoords], // Wrap in array for proper Polygon structure
-            },
-            properties: {},
-          };
-        });
+        console.log(
+          'LocationMap - Converting MultiPolygon with',
+          normalizedGeometry.coordinates.length,
+          'polygons'
+        );
+        features = normalizedGeometry.coordinates.map(
+          (polygonCoords, index) => {
+            console.log(
+              `LocationMap - Polygon ${index + 1} coordinates:`,
+              polygonCoords
+            );
+            return {
+              type: 'Feature' as const,
+              geometry: {
+                type: 'Polygon' as const,
+                coordinates: [polygonCoords], // Wrap in array for proper Polygon structure
+              },
+              properties: {},
+            };
+          }
+        );
       } else {
-        features = [{
-          type: 'Feature' as const,
-          geometry: normalizedGeometry,
-          properties: {},
-        }];
+        features = [
+          {
+            type: 'Feature' as const,
+            geometry: normalizedGeometry,
+            properties: {},
+          },
+        ];
       }
 
-      console.log('LocationMap - Features to render:', JSON.stringify(features, null, 2));
+      console.log(
+        'LocationMap - Features to render:',
+        JSON.stringify(features, null, 2)
+      );
 
       // Add the GeoJSON layer
       const geoJsonLayer = L.geoJSON(features, {
@@ -81,10 +106,13 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
       // Add a dashed bounding box for MultiPolygon to show full extent
       if (normalizedGeometry.type === 'MultiPolygon') {
         // Calculate the bounding box of all polygons
-        let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-        
-        normalizedGeometry.coordinates.forEach(polygonCoords => {
-          polygonCoords.forEach(coord => {
+        let minLat = Infinity,
+          maxLat = -Infinity,
+          minLon = Infinity,
+          maxLon = -Infinity;
+
+        normalizedGeometry.coordinates.forEach((polygonCoords) => {
+          polygonCoords.forEach((coord) => {
             const [lon, lat] = coord;
             minLat = Math.min(minLat, lat);
             maxLat = Math.max(maxLat, lat);
@@ -106,7 +134,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
           opacity: 0.8,
           fillOpacity: 0,
           dashArray: '10, 5',
-          className: 'multipolygon-extent'
+          className: 'multipolygon-extent',
         }).addTo(mapRef.current);
       }
 

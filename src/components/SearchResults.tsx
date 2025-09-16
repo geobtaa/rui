@@ -87,7 +87,11 @@ export function SearchResults({
           <article
             key={result.id}
             className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow relative"
-            data-geom={result.meta?.ui?.viewer?.geometry ? JSON.stringify(result.meta.ui.viewer.geometry) : ''}
+            data-geom={
+              result.meta?.ui?.viewer?.geometry
+                ? JSON.stringify(result.meta.ui.viewer.geometry)
+                : ''
+            }
             onMouseEnter={() =>
               setHoveredGeometry(result.meta?.ui?.viewer?.geometry || null)
             }
@@ -153,8 +157,8 @@ export function SearchResults({
                   className="block"
                 >
                   <h2 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
-                    {typeof result.attributes.dct_title_s === 'string' 
-                      ? result.attributes.dct_title_s 
+                    {typeof result.attributes.dct_title_s === 'string'
+                      ? result.attributes.dct_title_s
                       : String(result.attributes.dct_title_s)}
                   </h2>
                 </Link>
@@ -164,7 +168,8 @@ export function SearchResults({
                   Array.isArray(result.attributes.dct_description_sm) &&
                   result.attributes.dct_description_sm.length > 0 && (
                     <p className="text-gray-600 mb-4 line-clamp-3">
-                      {typeof result.attributes.dct_description_sm[0] === 'string'
+                      {typeof result.attributes.dct_description_sm[0] ===
+                      'string'
                         ? result.attributes.dct_description_sm[0]
                         : String(result.attributes.dct_description_sm[0])}
                     </p>
@@ -176,7 +181,9 @@ export function SearchResults({
                   result.attributes.dct_temporal_sm.length > 0 && (
                     <p className="text-gray-500 text-sm mb-4">
                       {result.attributes.dct_temporal_sm
-                        .map(item => typeof item === 'string' ? item : String(item))
+                        .map((item) =>
+                          typeof item === 'string' ? item : String(item)
+                        )
                         .join(', ')}
                     </p>
                   )}
@@ -189,7 +196,9 @@ export function SearchResults({
                         <BookOpen size={16} />
                         <span>
                           {result.attributes.dc_publisher_sm
-                            .map(item => typeof item === 'string' ? item : String(item))
+                            .map((item) =>
+                              typeof item === 'string' ? item : String(item)
+                            )
                             .join(', ')}
                         </span>
                       </div>

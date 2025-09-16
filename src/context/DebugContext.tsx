@@ -19,6 +19,7 @@ export function DebugProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useDebug() {
   const context = useContext(DebugContext);
   if (context === undefined) {

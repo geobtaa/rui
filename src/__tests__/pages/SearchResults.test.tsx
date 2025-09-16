@@ -27,6 +27,8 @@ describe('Search Results Page', () => {
   it('shows the map view', () => {
     renderSearchResults();
     // The map is always visible on large screens, check for map container
-    expect(screen.getByRole('button', { name: /zoom in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /zoom in/i })
+    ).toBeInTheDocument();
   });
 });

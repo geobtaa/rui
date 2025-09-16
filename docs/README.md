@@ -8,6 +8,10 @@ This directory contains documentation for the Research University Interface (RUI
 - **[Testing Guide](testing.md)** - Comprehensive guide to the test suite, coverage, and best practices
 - **[Testing Quick Reference](testing-quick-reference.md)** - Quick reference for common testing patterns and commands
 
+### Code Quality
+- **[Linting and Formatting](linting-and-formatting.md)** - Guide to ESLint, Prettier, and code quality tools
+- **[Linting Quick Reference](linting-quick-reference.md)** - Quick reference for linting commands and common issues
+
 ### Images
 - **rui.png** - Project logo/icon
 
@@ -45,9 +49,11 @@ npm test             # Run tests
 npm run test:watch   # Run tests in watch mode
 npm run test:coverage # Run tests with coverage
 
-# Linting
+# Code Quality
 npm run lint         # Run ESLint
 npm run lint:fix     # Fix ESLint issues
+npm run format       # Format code with Prettier
+npm run format:check # Check code formatting
 ```
 
 ## Contributing

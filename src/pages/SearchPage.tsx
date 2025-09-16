@@ -12,11 +12,10 @@ import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
 
-
 // Create a separate component for the search content
 function SearchContent() {
   console.log('🔄 SearchContent rendering...');
-  
+
   const {
     query,
     results: searchResults,
@@ -38,7 +37,7 @@ function SearchContent() {
     page,
     totalResults: searchTotalResults,
     facetsCount: searchFacets.length,
-    sort
+    sort,
   });
 
   const totalPages = Math.ceil(searchTotalResults / perPage);
@@ -75,7 +74,9 @@ function SearchContent() {
   const spellingSuggestions = searchResults?.meta?.spelling_suggestions || [];
 
   // Type guard to check if suggestion is a SpellingSuggestion object
-  const isSpellingSuggestion = (suggestion: any): suggestion is { text: string; highlighted: string; score: number } => {
+  const isSpellingSuggestion = (
+    suggestion: unknown
+  ): suggestion is { text: string; highlighted: string; score: number } => {
     return suggestion && typeof suggestion === 'object' && 'text' in suggestion;
   };
 
@@ -89,22 +90,22 @@ function SearchContent() {
             <div className="mb-4 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
                 Did you mean:{' '}
-                {spellingSuggestions.map(
-                  (suggestion, index) => {
-                    const suggestionText = isSpellingSuggestion(suggestion) ? suggestion.text : suggestion;
-                    return (
-                      <React.Fragment key={suggestionText}>
-                        {index > 0 && ', '}
-                        <button
-                          onClick={() => updateSearch({ query: suggestionText })}
-                          className="font-medium underline hover:text-blue-900"
-                        >
-                          {suggestionText}
-                        </button>
-                      </React.Fragment>
-                    );
-                  }
-                )}
+                {spellingSuggestions.map((suggestion, index) => {
+                  const suggestionText = isSpellingSuggestion(suggestion)
+                    ? suggestion.text
+                    : suggestion;
+                  return (
+                    <React.Fragment key={suggestionText}>
+                      {index > 0 && ', '}
+                      <button
+                        onClick={() => updateSearch({ query: suggestionText })}
+                        className="font-medium underline hover:text-blue-900"
+                      >
+                        {suggestionText}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
                 ?
               </p>
             </div>

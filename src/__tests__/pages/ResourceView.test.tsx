@@ -29,14 +29,18 @@ describe('Resource View Page', () => {
   it('displays resource details', async () => {
     renderResourceView();
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Test Resource' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Test Resource' })
+      ).toBeInTheDocument();
     });
   });
 
   it('shows the location map when geometry is available', async () => {
     renderResourceView();
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Test Resource' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Test Resource' })
+      ).toBeInTheDocument();
     });
   });
 });

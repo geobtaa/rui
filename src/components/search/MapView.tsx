@@ -16,8 +16,12 @@ export function MapView({ results }: MapViewProps) {
 
   useEffect(() => {
     const startTime = performance.now();
-    console.log('🗺️ MapView useEffect triggered with', results?.length || 0, 'results');
-    
+    console.log(
+      '🗺️ MapView useEffect triggered with',
+      results?.length || 0,
+      'results'
+    );
+
     if (!mapContainer.current) {
       console.log('⏭️ No map container, skipping');
       return;
@@ -40,7 +44,7 @@ export function MapView({ results }: MapViewProps) {
     // Always render if we have results
     if (results && results.length > 0) {
       console.log('🎯 Rendering map with', results.length, 'results');
-      
+
       // Clear existing layers
       mapRef.current.eachLayer((layer) => {
         if (layer instanceof L.GeoJSON) {
@@ -66,7 +70,7 @@ export function MapView({ results }: MapViewProps) {
           {
             type: 'FeatureCollection' as const,
             features: features,
-          } as any, // Leaflet's GeoJSON typing is complex, using any for compatibility
+          } as L.GeoJSON.FeatureCollection, // Proper Leaflet GeoJSON typing
           {
             style: {
               color: '#2563eb',
@@ -82,9 +86,11 @@ export function MapView({ results }: MapViewProps) {
 
         // Fit bounds to show all features
         mapRef.current.fitBounds(geoJsonLayer.getBounds());
-        
+
         const endTime = performance.now();
-        console.log(`✅ Map rendered in ${(endTime - startTime).toFixed(2)}ms with ${features.length} features`);
+        console.log(
+          `✅ Map rendered in ${(endTime - startTime).toFixed(2)}ms with ${features.length} features`
+        );
       }
     } else {
       console.log('⏭️ No results to render');
@@ -97,7 +103,7 @@ export function MapView({ results }: MapViewProps) {
         mapRef.current = null;
       }
     };
-  }, [results]);
+  }, [results.length, JSON.stringify(results.map((r) => r.id))]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!mapRef.current) return;

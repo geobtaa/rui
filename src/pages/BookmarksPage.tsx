@@ -40,7 +40,13 @@ export function BookmarksPage() {
 
   const filteredFacets = results?.included
     ? results.included.filter(
-        (item): item is { type: 'facet'; id: string; attributes: Record<string, unknown> } =>
+        (
+          item
+        ): item is {
+          type: 'facet';
+          id: string;
+          attributes: Record<string, unknown>;
+        } =>
           item.type === 'facet' &&
           CONFIGURED_FACETS.includes(
             item.id as (typeof CONFIGURED_FACETS)[number]

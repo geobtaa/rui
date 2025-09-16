@@ -17,6 +17,7 @@ export function MapProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useMap() {
   const context = useContext(MapContext);
   if (context === undefined) {

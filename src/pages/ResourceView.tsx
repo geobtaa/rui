@@ -14,7 +14,6 @@ import { useApi } from '../context/ApiContext';
 import { ResourceViewer } from '../components/resource/ResourceViewer';
 import { ResourceBreadcrumbs } from '../components/resource/ResourceBreadcrumbs';
 import { ResourceSubtitle } from '../components/resource/ResourceSubtitle';
-import { ResourceDescription } from '../components/resource/ResourceDescription';
 import { CitationTable } from '../components/resource/CitationTable';
 import { FullDetailsTable } from '../components/resource/FullDetailsTable';
 import { LocationMap } from '../components/resource/LocationMap';
@@ -153,7 +152,7 @@ export function ResourceView() {
 
       // Extract facets from the URL if they exist
       const facets: FacetFilter[] = [];
-      for (const [key, value] of urlParams as any) {
+      for (const [key, value] of urlParams.entries()) {
         if (key.startsWith('fq[') && key.endsWith('][]')) {
           const field = key.slice(3, -3); // Extract field name from fq[field][]
           facets.push({ field, value });
@@ -193,7 +192,7 @@ export function ResourceView() {
 
       // Extract facets from the URL if they exist
       const facets: FacetFilter[] = [];
-      for (const [key, value] of urlParams as any) {
+      for (const [key, value] of urlParams.entries()) {
         if (key.startsWith('fq[') && key.endsWith('][]')) {
           const field = key.slice(3, -3); // Extract field name from fq[field][]
           facets.push({ field, value });
@@ -334,7 +333,7 @@ export function ResourceView() {
     return () => {
       isMounted = false;
     };
-  }, [id]); // Remove setLastApiUrl from dependencies
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps -- setLastApiUrl is stable and intentionally excluded
 
   if (isLoading) {
     return (
@@ -376,7 +375,6 @@ export function ResourceView() {
 
   // Extract data from the new structure
   const viewerProtocol = data?.meta?.ui?.viewer?.protocol;
-
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -469,7 +467,9 @@ export function ResourceView() {
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
-                  <FullDetailsTable data={{ attributes: data.attributes, meta: data.meta }} />
+                  <FullDetailsTable
+                    data={{ attributes: data.attributes, meta: data.meta }}
+                  />
                 </div>
 
                 {/* Sidebar */}
@@ -482,8 +482,13 @@ export function ResourceView() {
                       <LocationMap
                         geometry={
                           (data?.meta?.ui?.viewer?.geometry ||
-                          data?.attributes?.locn_geometry_original ||
-                          data?.attributes?.locn_geometry) as string | GeoJSON.Polygon | GeoJSON.MultiPolygon | { wkt: string } | null
+                            data?.attributes?.locn_geometry_original ||
+                            data?.attributes?.locn_geometry) as
+                            | string
+                            | GeoJSON.Polygon
+                            | GeoJSON.MultiPolygon
+                            | { wkt: string }
+                            | null
                         }
                       />
                     )}

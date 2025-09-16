@@ -4,16 +4,12 @@ import { LinksTable } from '../../components/resource/LinksTable';
 
 describe('LinksTable', () => {
   const mockLinks = {
-    'Visit Source': [
-      { label: 'Original Website', url: 'https://example.com' }
-    ],
+    'Visit Source': [{ label: 'Original Website', url: 'https://example.com' }],
     'Web Services': [
       { label: 'WMS Service', url: 'https://example.com/wms' },
-      { label: 'WFS Service', url: 'https://example.com/wfs' }
+      { label: 'WFS Service', url: 'https://example.com/wfs' },
     ],
-    'Metadata': [
-      { label: 'ISO 19115', url: 'https://example.com/metadata.xml' }
-    ]
+    Metadata: [{ label: 'ISO 19115', url: 'https://example.com/metadata.xml' }],
   };
 
   it('renders without crashing', () => {
@@ -30,9 +26,11 @@ describe('LinksTable', () => {
 
   it('opens lightbox for Web Services category', () => {
     render(<LinksTable links={mockLinks} />);
-    const webServicesButton = screen.getByRole('button', { name: 'Web Services' });
+    const webServicesButton = screen.getByRole('button', {
+      name: 'Web Services',
+    });
     fireEvent.click(webServicesButton);
-    
+
     // Check if lightbox is opened - look for the lightbox content
     expect(screen.getByText('WMS Service')).toBeInTheDocument();
     expect(screen.getByText('WFS Service')).toBeInTheDocument();
@@ -40,16 +38,18 @@ describe('LinksTable', () => {
 
   it('closes lightbox when close button is clicked', () => {
     render(<LinksTable links={mockLinks} />);
-    const webServicesButton = screen.getByRole('button', { name: 'Web Services' });
+    const webServicesButton = screen.getByRole('button', {
+      name: 'Web Services',
+    });
     fireEvent.click(webServicesButton);
-    
+
     // Lightbox should be open
     expect(screen.getByText('WMS Service')).toBeInTheDocument();
-    
+
     // Click close button (X) - it's the button with no accessible name
     const closeButton = screen.getByRole('button', { name: '' });
     fireEvent.click(closeButton);
-    
+
     // Lightbox should be closed
     expect(screen.queryByText('WMS Service')).not.toBeInTheDocument();
   });
@@ -60,7 +60,7 @@ describe('LinksTable', () => {
   });
 
   it('does not render when links are null', () => {
-    const { container } = render(<LinksTable links={null as any} />);
+    const { container } = render(<LinksTable links={null} />);
     expect(container.firstChild).toBeNull();
   });
 });

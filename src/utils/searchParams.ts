@@ -15,7 +15,7 @@ export function parseSearchParams(searchParams: URLSearchParams) {
 
   console.log('🔗 parseSearchParams called with:', {
     rawParams: Object.fromEntries(searchParams.entries()),
-    parsed: { query, page, facets: facets.length }
+    parsed: { query, page, facets: facets.length },
   });
 
   return { query, page, facets };

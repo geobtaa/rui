@@ -2,10 +2,6 @@ import { useSearchParams } from 'react-router-dom';
 import { FACET_LABELS } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
 
-
-
-
-
 // New JSON:API facet structure
 interface JsonApiFacet {
   type: 'facet';
