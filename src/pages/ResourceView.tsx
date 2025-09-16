@@ -475,13 +475,15 @@ export function ResourceView() {
                 {/* Sidebar */}
                 <div className="lg:col-span-4">
                   <div className="lg:sticky lg:top-[88px] space-y-6">
-                    {/* Location Map - using geometry from viewer or original geometry */}
+                    {/* Location Map - using geometry from viewer, original geometry, or locn_geometry */}
                     {(data?.meta?.ui?.viewer?.geometry ||
-                      data?.attributes?.locn_geometry_original) && (
+                      data?.attributes?.locn_geometry_original ||
+                      data?.attributes?.locn_geometry) && (
                       <LocationMap
                         geometry={
                           data?.meta?.ui?.viewer?.geometry ||
-                          data?.attributes?.locn_geometry_original
+                          data?.attributes?.locn_geometry_original ||
+                          data?.attributes?.locn_geometry
                         }
                       />
                     )}
