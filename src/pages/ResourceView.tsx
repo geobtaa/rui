@@ -153,7 +153,7 @@ export function ResourceView() {
 
       // Extract facets from the URL if they exist
       const facets: FacetFilter[] = [];
-      for (const [key, value] of urlParams.entries()) {
+      for (const [key, value] of urlParams as any) {
         if (key.startsWith('fq[') && key.endsWith('][]')) {
           const field = key.slice(3, -3); // Extract field name from fq[field][]
           facets.push({ field, value });
@@ -193,7 +193,7 @@ export function ResourceView() {
 
       // Extract facets from the URL if they exist
       const facets: FacetFilter[] = [];
-      for (const [key, value] of urlParams.entries()) {
+      for (const [key, value] of urlParams as any) {
         if (key.startsWith('fq[') && key.endsWith('][]')) {
           const field = key.slice(3, -3); // Extract field name from fq[field][]
           facets.push({ field, value });
@@ -481,9 +481,9 @@ export function ResourceView() {
                       data?.attributes?.locn_geometry) && (
                       <LocationMap
                         geometry={
-                          data?.meta?.ui?.viewer?.geometry ||
+                          (data?.meta?.ui?.viewer?.geometry ||
                           data?.attributes?.locn_geometry_original ||
-                          data?.attributes?.locn_geometry
+                          data?.attributes?.locn_geometry) as string | GeoJSON.Polygon | GeoJSON.MultiPolygon | { wkt: string } | null
                         }
                       />
                     )}

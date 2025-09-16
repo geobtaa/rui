@@ -20,6 +20,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
-  "types": ["jest", "@testing-library/jest-dom"]
+  "include": ["src", "src/vite-env.d.ts"],
+  "types": ["jest", "@testing-library/jest-dom", "vite/client"]
 }

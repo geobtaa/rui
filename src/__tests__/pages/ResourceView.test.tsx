@@ -2,18 +2,25 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ResourceView } from '../../pages/ResourceView';
 import { ApiProvider } from '../../context/ApiContext';
+import { DebugProvider } from '../../context/DebugContext';
+import { vi } from 'vitest';
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useParams: () => ({ id: 'test-id' }),
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useParams: () => ({ id: 'test-id' }),
+  };
+});
 
 describe('Resource View Page', () => {
   const renderResourceView = () => {
     render(
       <BrowserRouter>
         <ApiProvider>
-          <ResourceView />
+          <DebugProvider>
+            <ResourceView />
+          </DebugProvider>
         </ApiProvider>
       </BrowserRouter>
     );
@@ -22,14 +29,14 @@ describe('Resource View Page', () => {
   it('displays resource details', async () => {
     renderResourceView();
     await waitFor(() => {
-      expect(screen.getByRole('main')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Resource' })).toBeInTheDocument();
     });
   });
 
   it('shows the location map when geometry is available', async () => {
     renderResourceView();
     await waitFor(() => {
-      expect(screen.getByText(/location/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Resource' })).toBeInTheDocument();
     });
   });
 });

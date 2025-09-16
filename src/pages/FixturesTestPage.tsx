@@ -238,7 +238,7 @@ export function FixturesTestPage() {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-3">
             <FlaskConical className="w-6 h-6 text-purple-600" />
-            <h1 className="text-3xl font-bold text-gray-900">GeoBlacklight Test Fixtures</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Geoportal Test Fixtures</h1>
           </div>
           <p className="text-base text-gray-600 max-w-2xl mx-auto">
             Easter egg page for testing React app rendering with all GeoBlacklight test fixtures. 

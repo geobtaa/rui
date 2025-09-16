@@ -2,13 +2,16 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SearchPage } from '../../pages/SearchPage';
 import { ApiProvider } from '../../context/ApiContext';
+import { DebugProvider } from '../../context/DebugContext';
 
 describe('Search Results Page', () => {
   const renderSearchResults = () => {
     render(
       <BrowserRouter>
         <ApiProvider>
-          <SearchPage />
+          <DebugProvider>
+            <SearchPage />
+          </DebugProvider>
         </ApiProvider>
       </BrowserRouter>
     );
@@ -21,8 +24,9 @@ describe('Search Results Page', () => {
     });
   });
 
-  it('shows the map view toggle', () => {
+  it('shows the map view', () => {
     renderSearchResults();
-    expect(screen.getByRole('button', { name: /map/i })).toBeInTheDocument();
+    // The map is always visible on large screens, check for map container
+    expect(screen.getByRole('button', { name: /zoom in/i })).toBeInTheDocument();
   });
 });

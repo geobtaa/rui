@@ -3,13 +3,16 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { HomePage } from '../../pages/HomePage';
 import { ApiProvider } from '../../context/ApiContext';
+import { DebugProvider } from '../../context/DebugContext';
 
 describe('Home Page', () => {
   const renderHome = () => {
     render(
       <BrowserRouter>
         <ApiProvider>
-          <HomePage />
+          <DebugProvider>
+            <HomePage />
+          </DebugProvider>
         </ApiProvider>
       </BrowserRouter>
     );
@@ -26,7 +29,8 @@ describe('Home Page', () => {
     await userEvent.type(searchInput, 'minnesota');
 
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      // The suggestions dropdown should appear with the mocked suggestion
+      expect(screen.getByText('Minnesota')).toBeInTheDocument();
     });
   });
 });
