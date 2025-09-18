@@ -544,8 +544,7 @@ export function FixturesTestPage() {
             </h1>
           </div>
           <p className="text-base text-gray-600 max-w-2xl mx-auto">
-            Easter egg page for testing React app rendering with all
-            GeoBlacklight test fixtures. Click any link to test if that resource
+            Easter egg page of test fixtures. Click any link to test if that resource
             page renders properly.
           </p>
           <div className="mt-2 text-sm text-gray-500">

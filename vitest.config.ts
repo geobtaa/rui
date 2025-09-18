@@ -21,6 +21,20 @@ export default defineConfig({
         'coverage/',
         '**/*.test.*',
         '**/*.spec.*',
+        // React application scaffolding
+        'src/App.tsx',
+        'src/main.tsx',
+        // Test infrastructure
+        'src/__mocks__/**',
+        // Type definitions
+        'src/types/**',
+        // Demo/test pages
+        'src/pages/FixturesTestPage.tsx',
+        // Configuration files
+        '.eslintrc.js',
+        'check-all-fixtures.js',
+        // Server code
+        'server/**',
       ],
       thresholds: {
         global: {

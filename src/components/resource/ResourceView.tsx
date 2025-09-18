@@ -5,12 +5,12 @@ import {
   fetchSearchResults,
   fetchResourceDetails,
   ApiError,
-} from '../services/api';
-import { ErrorMessage } from '../components/ErrorMessage';
-import { Header } from '../components/layout/Header';
-import { Footer } from '../components/layout/Footer';
+} from '../../services/api';
+import { ErrorMessage } from '../ErrorMessage';
+import { Header } from '../layout/Header';
+import { Footer } from '../layout/Footer';
 import { MetadataTable } from './MetadataTable';
-import { useApi } from '../context/ApiContext';
+import { useApi } from '../../context/ApiContext';
 import { ResourceViewer } from './ResourceViewer';
 import { ResourceBreadcrumbs } from './ResourceBreadcrumbs';
 import { ResourceSubtitle } from './ResourceSubtitle';
@@ -248,7 +248,7 @@ export function ResourceView() {
             <>
               {/* Navigation bar with breadcrumbs and pagination */}
               <div className="flex justify-between items-center mb-2">
-                <ResourceBreadcrumbs item={data.data.attributes} />
+                <ResourceBreadcrumbs item={data.data} />
 
                 <div className="flex items-center gap-4">
                   <Link
@@ -303,7 +303,7 @@ export function ResourceView() {
                 <h1 className="text-3xl font-bold text-gray-900">
                   {data.data.attributes.dct_title_s}
                 </h1>
-                <ResourceSubtitle item={data.data.attributes} />
+                <ResourceSubtitle item={data.data} />
               </div>
 
               {/* Rest of the content */}
