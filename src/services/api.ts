@@ -1,7 +1,4 @@
-import {
-  JsonApiResponse,
-  GeoDocumentDetails,
-} from '../types/api';
+import { JsonApiResponse, GeoDocumentDetails } from '../types/api';
 import { FacetFilter } from '../types/search';
 
 export class ApiError extends Error {
@@ -48,10 +45,6 @@ function createApiUrl(baseUrl: string): URL {
   url.searchParams.set('format', 'json');
   return url;
 }
-
-
-
-
 
 // Update the jsonp function to use the cache
 function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
@@ -223,8 +216,14 @@ export async function fetchSearchResults(
   options: FetchOptions = defaultFetchOptions
 ): Promise<JsonApiResponse> {
   const startTime = performance.now();
-  console.log('🌐 fetchSearchResults called with:', { query, page, perPage, facets: facets.length, sort });
-  
+  console.log('🌐 fetchSearchResults called with:', {
+    query,
+    page,
+    perPage,
+    facets: facets.length,
+    sort,
+  });
+
   const baseUrl = import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/search`
     : 'https://geo.btaa.org/api/v1/search';
@@ -252,23 +251,28 @@ export async function fetchSearchResults(
   try {
     const apiStartTime = performance.now();
     console.log('📡 Making API request...');
-    
+
     const response = await unifiedFetch<JsonApiResponse>(
       url.toString(),
       options
     );
-    
+
     const apiEndTime = performance.now();
     const totalTime = performance.now() - startTime;
-    
-    console.log(`⚡ API response received in ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
+
+    console.log(
+      `⚡ API response received in ${(apiEndTime - apiStartTime).toFixed(2)}ms`
+    );
     console.log(`⏱️ Total fetchSearchResults time: ${totalTime.toFixed(2)}ms`);
     console.log(`📦 Response data: ${response?.data?.length || 0} items`);
-    
+
     return response; // Return the JSON:API response directly
   } catch (error) {
     const totalTime = performance.now() - startTime;
-    console.error(`💥 API request failed after ${totalTime.toFixed(2)}ms:`, error);
+    console.error(
+      `💥 API request failed after ${totalTime.toFixed(2)}ms:`,
+      error
+    );
     throw error;
   }
 }

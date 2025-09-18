@@ -6,6 +6,7 @@ import {
   fetchResourceDetails,
   ApiError,
 } from '../services/api';
+import type { GeoDocument } from '../types/api';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -13,7 +14,6 @@ import { useApi } from '../context/ApiContext';
 import { ResourceViewer } from '../components/resource/ResourceViewer';
 import { ResourceBreadcrumbs } from '../components/resource/ResourceBreadcrumbs';
 import { ResourceSubtitle } from '../components/resource/ResourceSubtitle';
-import { ResourceDescription } from '../components/resource/ResourceDescription';
 import { CitationTable } from '../components/resource/CitationTable';
 import { FullDetailsTable } from '../components/resource/FullDetailsTable';
 import { LocationMap } from '../components/resource/LocationMap';
@@ -41,25 +41,7 @@ interface FacetFilter {
 }
 
 // Define the ResourceData type to match the actual API response
-interface ResourceData {
-  id: string;
-  type: string;
-  attributes: {
-    id: string;
-    dct_title_s: string;
-    dct_description_sm?: string[];
-    locn_geometry?: string;
-    locn_geometry_original?: string;
-    ui_thumbnail_url?: string;
-    ui_viewer_protocol?: string;
-    ui_viewer_endpoint?: string;
-    gbl_wxsidentifier_s?: string;
-    dct_accessRights_s?: string;
-    ui_viewer_geometry?: string;
-    ui_downloads?: unknown[];
-    ui_citation?: string;
-    [key: string]: unknown; // Allow other properties
-  };
+interface ResourceData extends GeoDocument {
   meta?: {
     ui?: {
       viewer?: {
@@ -67,10 +49,15 @@ interface ResourceData {
         endpoint?: string;
         geometry?: string;
       };
-      downloads?: unknown[];
+      downloads?: Array<{
+        label: string;
+        url: string;
+        type: string;
+      }>;
       citation?: string;
       thumbnail_url?: string;
       links?: Record<string, Array<{ label: string; url: string }>>;
+      relationships?: Record<string, unknown>;
     };
   };
 }
@@ -346,7 +333,7 @@ export function ResourceView() {
     return () => {
       isMounted = false;
     };
-  }, [id]); // Remove setLastApiUrl from dependencies
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps -- setLastApiUrl is stable and intentionally excluded
 
   if (isLoading) {
     return (
@@ -388,7 +375,6 @@ export function ResourceView() {
 
   // Extract data from the new structure
   const viewerProtocol = data?.meta?.ui?.viewer?.protocol;
-
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -460,14 +446,7 @@ export function ResourceView() {
                   <h1 className="text-3xl font-bold text-gray-900">
                     {data.attributes.dct_title_s}
                   </h1>
-                  <ResourceSubtitle item={data.attributes} />
-
-                  {/* Description */}
-                  {data.attributes.dct_description_sm && (
-                    <div className="mt-4">
-                      <ResourceDescription item={data.attributes} />
-                    </div>
-                  )}
+                  <ResourceSubtitle item={data} />
                 </div>
 
                 {/* Viewer section */}
@@ -488,19 +467,28 @@ export function ResourceView() {
                   {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
-                  <FullDetailsTable data={{ attributes: data.attributes, meta: data.meta }} />
+                  <FullDetailsTable
+                    data={{ attributes: data.attributes, meta: data.meta }}
+                  />
                 </div>
 
                 {/* Sidebar */}
                 <div className="lg:col-span-4">
                   <div className="lg:sticky lg:top-[88px] space-y-6">
-                    {/* Location Map - using geometry from viewer or original geometry */}
+                    {/* Location Map - using geometry from viewer, original geometry, or locn_geometry */}
                     {(data?.meta?.ui?.viewer?.geometry ||
-                      data?.attributes?.locn_geometry_original) && (
+                      data?.attributes?.locn_geometry_original ||
+                      data?.attributes?.locn_geometry) && (
                       <LocationMap
                         geometry={
-                          data?.meta?.ui?.viewer?.geometry ||
-                          data?.attributes?.locn_geometry_original
+                          (data?.meta?.ui?.viewer?.geometry ||
+                            data?.attributes?.locn_geometry_original ||
+                            data?.attributes?.locn_geometry) as
+                            | string
+                            | GeoJSON.Polygon
+                            | GeoJSON.MultiPolygon
+                            | { wkt: string }
+                            | null
                         }
                       />
                     )}

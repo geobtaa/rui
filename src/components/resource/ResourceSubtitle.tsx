@@ -7,15 +7,15 @@ interface ResourceSubtitleProps {
 
 export function ResourceSubtitle({ item }: ResourceSubtitleProps) {
   // Get publisher or creator
-  const mainCredit = item.dc_publisher_sm?.length
-    ? item.dc_publisher_sm.join(', ')
-    : item.dct_creator_sm?.length
-      ? item.dct_creator_sm.join(', ')
+  const mainCredit = item.attributes.dct_publisher_sm?.length
+    ? item.attributes.dct_publisher_sm.join(', ')
+    : item.attributes.dct_creator_sm?.length
+      ? item.attributes.dct_creator_sm.join(', ')
       : null;
 
   // Get year
-  const year = item.dct_temporal_sm?.length
-    ? item.dct_temporal_sm.join(', ')
+  const year = item.attributes.dct_temporal_sm?.length
+    ? item.attributes.dct_temporal_sm.join(', ')
     : null;
 
   if (!mainCredit && !year) return null;

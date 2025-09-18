@@ -30,13 +30,16 @@ export function HomePage() {
           (item) => item.type === 'facet' && item.id === 'resource_class_agg'
         );
         const facetCounts =
-          resourceClassFacet?.attributes?.items?.reduce(
-            (acc, item) => {
-              acc[item.attributes.value as string] = item.attributes.hits;
-              return acc;
-            },
-            {} as Record<string, number>
-          ) || {};
+          (resourceClassFacet?.attributes &&
+          'items' in resourceClassFacet.attributes
+            ? resourceClassFacet.attributes.items?.reduce(
+                (acc, item) => {
+                  acc[item.attributes.value as string] = item.attributes.hits;
+                  return acc;
+                },
+                {} as Record<string, number>
+              )
+            : {}) || {};
         setResourceCounts(facetCounts);
       } catch (error) {
         console.error('Error fetching resource counts:', error);

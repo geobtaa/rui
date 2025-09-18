@@ -8,6 +8,7 @@ import { HomePage } from './pages/HomePage';
 import { useSearchParams } from 'react-router-dom';
 import { BookmarkProvider } from './context/BookmarkContext';
 import { BookmarksPage } from './pages/BookmarksPage';
+import { FixturesTestPage } from './pages/FixturesTestPage';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -48,6 +49,7 @@ function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/resources/:id" element={<ResourceView />} />
+          <Route path="/test/fixtures" element={<FixturesTestPage />} />
         </Routes>
       </DebugProvider>
     </BookmarkProvider>

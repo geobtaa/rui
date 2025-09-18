@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { ExternalLink, Link as LinkIcon, X, FileText, Globe, Database, BookOpen, Code, MapPin } from 'lucide-react';
+import {
+  ExternalLink,
+  Link as LinkIcon,
+  X,
+  FileText,
+  Globe,
+  Database,
+  BookOpen,
+  Code,
+  MapPin,
+} from 'lucide-react';
 
 interface LinkItem {
   label: string;
@@ -12,34 +22,66 @@ interface LinksTableProps {
 
 export function LinksTable({ links }: LinksTableProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxContent, setLightboxContent] = useState<{ category: string; items: LinkItem[] } | null>(null);
+  const [lightboxContent, setLightboxContent] = useState<{
+    category: string;
+    items: LinkItem[];
+  } | null>(null);
 
   if (!links || Object.keys(links).length === 0) return null;
 
   const getCategoryIcon = (category: string) => {
     const categoryLower = category.toLowerCase();
-    
+
     if (categoryLower.includes('metadata')) {
-      return <Database className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
-    } else if (categoryLower.includes('documentation') || categoryLower.includes('document')) {
-      return <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
-    } else if (categoryLower.includes('web services') || categoryLower.includes('api')) {
-      return <Code className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
-    } else if (categoryLower.includes('source') || categoryLower.includes('visit')) {
-      return <Globe className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
-    } else if (categoryLower.includes('download') || categoryLower.includes('file')) {
-      return <FileText className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
-    } else if (categoryLower.includes('map') || categoryLower.includes('location')) {
-      return <MapPin className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
+      return (
+        <Database className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
+    } else if (
+      categoryLower.includes('documentation') ||
+      categoryLower.includes('document')
+    ) {
+      return (
+        <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
+    } else if (
+      categoryLower.includes('web services') ||
+      categoryLower.includes('api')
+    ) {
+      return (
+        <Code className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
+    } else if (
+      categoryLower.includes('source') ||
+      categoryLower.includes('visit')
+    ) {
+      return (
+        <Globe className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
+    } else if (
+      categoryLower.includes('download') ||
+      categoryLower.includes('file')
+    ) {
+      return (
+        <FileText className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
+    } else if (
+      categoryLower.includes('map') ||
+      categoryLower.includes('location')
+    ) {
+      return (
+        <MapPin className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
     } else {
-      return <LinkIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />;
+      return (
+        <LinkIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+      );
     }
   };
 
   const handleCategoryClick = (category: string, items: LinkItem[]) => {
     // Categories that should open in lightbox
     const lightboxCategories = ['Web Services', 'Metadata'];
-    
+
     if (lightboxCategories.includes(category)) {
       setLightboxContent({ category, items });
       setLightboxOpen(true);

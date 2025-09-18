@@ -9,7 +9,7 @@ import {
 
 // Define a type for the attributes
 interface Attributes {
-  [key: string]: string | string[] | null | undefined;
+  [key: string]: unknown;
 }
 
 interface FullDetailsTableProps {
@@ -22,8 +22,6 @@ interface FullDetailsTableProps {
     };
   };
 }
-
-
 
 const relationshipLabels: { [key: string]: string } = {
   memberOf: 'Belongs to collection...',
@@ -45,7 +43,6 @@ const relationshipLabels: { [key: string]: string } = {
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.attributes || {};
   const uiRelationships = data?.meta?.ui?.relationships || {};
-  
 
   // Define the fields for the Document Metadata table - BTAA schema only
   const documentMetadataFields = [
@@ -106,7 +103,7 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     'dcat_theme_sm',
     'dct_spatial_sm',
     'schema_provider_s',
-    'b1g_localCollectionLabel_sm'
+    'b1g_localCollectionLabel_sm',
   ];
 
   // Define the relationship fields for the Metadata Facets table - BTAA schema only
@@ -285,9 +282,9 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
             day: 'numeric',
           });
         }
-              } catch {
-          // Fall back to original value if date parsing fails
-        }
+      } catch {
+        // Fall back to original value if date parsing fails
+      }
     }
 
     const facetField = getFacetField(key);
