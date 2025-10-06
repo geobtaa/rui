@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import L from 'leaflet';
-import { getTopStateAbbrByCountyHits, stateAbbrToFips } from '../utils/geoCounty';
+import { getTopStateAbbrByCountyHits, stateAbbrToFips, parseCountyFacetValue, normalizeName } from '../utils/geoCounty';
 
 interface Params {
   map: L.Map;
@@ -19,23 +19,33 @@ export function useCountyAutoFit({ map, geoJson, countyItems, searchQuery }: Par
       return;
     }
 
-    const topStateAbbr = getTopStateAbbrByCountyHits(countyItems);
-    if (!topStateAbbr) return;
+    // Find top county by hits
+    const topCountyItem = countyItems.reduce((max, item) =>
+      (item.attributes.hits || 0) > (max?.attributes.hits || 0) ? item : max,
+      countyItems[0]
+    );
+    if (!topCountyItem) return;
 
-    const topStateFips = stateAbbrToFips[topStateAbbr];
-    if (!topStateFips) return;
+    const { stateAbbr, countyName } = parseCountyFacetValue(topCountyItem.attributes.value);
+    const targetStateFips = stateAbbrToFips[stateAbbr];
+    if (!targetStateFips || !countyName) return;
+
+    const targetCountyNorm = normalizeName(countyName);
 
     try {
+      // Filter GeoJSON to the specific county feature
       const layer = L.geoJSON(geoJson, {
         filter: (feature: any) => {
           const featureStateFips = (feature?.properties?.STATE || feature?.properties?.STATEFP || '').toString().padStart(2, '0');
-          return featureStateFips === topStateFips;
+          const featureCountyNameRaw = feature?.properties?.NAME || feature?.properties?.name || feature?.properties?.county || '';
+          const featureCountyNorm = normalizeName(featureCountyNameRaw);
+          return featureStateFips === targetStateFips && featureCountyNorm === targetCountyNorm;
         },
       });
 
       const bounds = layer.getBounds();
       if (bounds && bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [20, 20] });
+        map.fitBounds(bounds, { padding: [20, 20], maxZoom: 7 });
       }
 
       layer.remove();
