@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Simple card container for map sections with a title and optional subtitle
 interface Props {
   title: string;
   subtitle?: string;

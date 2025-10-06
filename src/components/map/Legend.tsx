@@ -1,4 +1,4 @@
-
+// Legend component visualizes the color scale used for resource density
 function getColor(intensity: number): string {
   return intensity > 0.8 ? '#800026' :
          intensity > 0.6 ? '#BD0026' :

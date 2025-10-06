@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import L from 'leaflet';
-import { getTopStateAbbrByCountyHits, stateAbbrToFips, parseCountyFacetValue, normalizeName } from '../utils/geoCounty';
+import { stateAbbrToFips, parseCountyFacetValue, normalizeName } from '../utils/geoCounty';
 
 interface Params {
   map: L.Map;
@@ -9,6 +9,9 @@ interface Params {
   searchQuery: string;
 }
 
+// Auto-pans the county map:
+// - No query: default US view (consistent with other maps)
+// - With query: zooms to the top-hit county (by facet hits) for a closer view
 export function useCountyAutoFit({ map, geoJson, countyItems, searchQuery }: Params) {
   useEffect(() => {
     if (!geoJson || !geoJson.features || !Array.isArray(countyItems)) return;
@@ -19,7 +22,7 @@ export function useCountyAutoFit({ map, geoJson, countyItems, searchQuery }: Par
       return;
     }
 
-    // Find top county by hits
+    // Find top county by hits and compute bounds from GeoJSON
     const topCountyItem = countyItems.reduce((max, item) =>
       (item.attributes.hits || 0) > (max?.attributes.hits || 0) ? item : max,
       countyItems[0]
@@ -45,12 +48,13 @@ export function useCountyAutoFit({ map, geoJson, countyItems, searchQuery }: Par
 
       const bounds = layer.getBounds();
       if (bounds && bounds.isValid()) {
+        // Pull in closer than state bounds; cap zoom to avoid over-zooming small counties
         map.fitBounds(bounds, { padding: [20, 20], maxZoom: 7 });
       }
 
       layer.remove();
     } catch (_) {
-      // no-op
+      // no-op: on failure, keep existing view
     }
   }, [map, geoJson, countyItems, searchQuery]);
 }

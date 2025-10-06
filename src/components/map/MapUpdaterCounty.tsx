@@ -5,6 +5,7 @@ import { fetchGeoJsonForLevel } from '../../services/geojson';
 import { getCountyHitsFromFeature } from '../../utils/geoCounty';
 import { useCountyAutoFit } from '../../hooks/useCountyAutoFit';
 
+// Shared color scale
 function getColor(intensity: number): string {
   return intensity > 0.8 ? '#800026' :
          intensity > 0.6 ? '#BD0026' :
@@ -25,14 +26,17 @@ export function MapUpdaterCounty({
   searchQuery: string;
 }) {
   const map = useMap();
+  // Load county GeoJSON (FIPS-coded) locally
   const [geoJson, setGeoJson] = useState<any>(null);
 
   useEffect(() => {
     fetchGeoJsonForLevel('county').then(setGeoJson).catch(() => setGeoJson(null));
   }, []);
 
+  // Auto-pan/zoom: without query -> default US; with query -> top county bounds
   useCountyAutoFit({ map, geoJson, countyItems: data.county, searchQuery });
 
+  // Precompute scale for choropleth intensity
   const currentData = data.county;
   const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
 
@@ -47,6 +51,7 @@ export function MapUpdaterCounty({
     );
   }
 
+  // Render GeoJSON, match each county using (state FIPS + normalized county name) against facet value (WOF-derived)
   return (
     <GeoJSON
       data={geoJson}

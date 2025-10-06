@@ -3,10 +3,12 @@ import { GeoJSON } from 'react-leaflet';
 import type { ChoroplethData } from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
 
+// Normalize for loose matching between API labels and GeoJSON names
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[^a-z\s]/g, '').trim();
 }
 
+// Color scale used across maps
 function getColor(intensity: number): string {
   return intensity > 0.8 ? '#800026' :
          intensity > 0.6 ? '#BD0026' :
@@ -24,12 +26,14 @@ export function MapUpdaterCountry({
   data: ChoroplethData;
   onFeatureClick: (feature: any) => void;
 }) {
+  // GeoJSON is loaded per-zoom-level to keep code small and responsibilities clear
   const [geoJson, setGeoJson] = useState<any>(null);
 
   useEffect(() => {
     fetchGeoJsonForLevel('country').then(setGeoJson).catch(() => setGeoJson(null));
   }, []);
 
+  // Precompute scale for choropleth intensity
   const currentData = data.country;
   const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
 
@@ -44,6 +48,7 @@ export function MapUpdaterCountry({
     );
   }
 
+  // Map API facet label to GeoJSON feature name for hit lookup
   const getHits = (featureName: string) => {
     const item = currentData.find((dataItem) => {
       const dataLabel = dataItem.attributes.label.toLowerCase();
@@ -60,6 +65,7 @@ export function MapUpdaterCountry({
     return item ? item.attributes.hits : 0;
   };
 
+  // Render GeoJSON and wire style and popups
   return (
     <GeoJSON
       data={geoJson}

@@ -1,3 +1,4 @@
+// Control group for toggling the emphasized geographic level in the UI
 import type { ZoomLevel } from '../../types/map';
 
 interface Props {

@@ -3,6 +3,7 @@ import { GeoJSON } from 'react-leaflet';
 import type { ChoroplethData } from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
 
+// Color scale shared with other updaters
 function getColor(intensity: number): string {
   return intensity > 0.8 ? '#800026' :
          intensity > 0.6 ? '#BD0026' :
@@ -20,12 +21,14 @@ export function MapUpdaterRegion({
   data: ChoroplethData;
   onFeatureClick: (feature: any) => void;
 }) {
+  // Load US states GeoJSON and keep local
   const [geoJson, setGeoJson] = useState<any>(null);
 
   useEffect(() => {
     fetchGeoJsonForLevel('region').then(setGeoJson).catch(() => setGeoJson(null));
   }, []);
 
+  // Precompute scale for choropleth intensity
   const currentData = data.region;
   const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
 
@@ -40,6 +43,7 @@ export function MapUpdaterRegion({
     );
   }
 
+  // Map API facet label to state feature name (simple partial match)
   const getHits = (featureName: string) => {
     const dataItem = currentData.find((d) => {
       const label = d.attributes.label.toLowerCase();
@@ -49,6 +53,7 @@ export function MapUpdaterRegion({
     return dataItem ? dataItem.attributes.hits : 0;
   };
 
+  // Render GeoJSON and wire style and popups
   return (
     <GeoJSON
       data={geoJson}

@@ -1,3 +1,4 @@
+// Wrapper that routes to the appropriate map updater by zoomLevel
 import type { ChoroplethData, ZoomLevel } from '../../types/map';
 import { MapUpdaterCountry } from './MapUpdaterCountry';
 import { MapUpdaterRegion } from './MapUpdaterRegion';

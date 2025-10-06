@@ -1,3 +1,5 @@
+// Service: fetch GeoJSON for a given zoom level (country/region/county)
+// Keeps MapUpdater components slim and centralizes URL selection
 import type { ZoomLevel } from '../types/map';
 
 export async function fetchGeoJsonForLevel(level: ZoomLevel): Promise<any> {

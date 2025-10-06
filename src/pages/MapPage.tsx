@@ -1,3 +1,5 @@
+// MapPage renders three synchronized maps (country, region, county) and supporting UI.
+// Data is fetched via useGeoFacets; county auto-fit/logic handled in specialized components/hooks.
 import { useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
@@ -24,30 +26,34 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-
-
 export function MapPage() {
+  // Local UI state: selected feature popup, current search query, and zoom level tab
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('region');
+
+  // Last API URL is recorded in context for footer display; data fetched via hook
   const { setLastApiUrl } = useApi();
   const { data, loading, error } = useGeoFacets(searchQuery, setLastApiUrl);
 
-
+  // When user clicks a shape on any map, store a small payload for the details panel
   const handleFeatureClick = (feature: any) => {
     setSelectedFeature(feature);
   };
 
+  // Search input triggers new facet fetch and resets selected details
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setSelectedFeature(null);
   };
 
+  // Toggle which map set is emphasized in the StatsBar; all three maps still render
   const handleZoomLevelChange = (level: ZoomLevel) => {
     setZoomLevel(level);
     setSelectedFeature(null);
   };
 
+  // Helpers for StatsBar
   const getCurrentData = () => {
     return data[zoomLevel] || [];
   };
@@ -56,6 +62,7 @@ export function MapPage() {
     return data[zoomLevel].reduce((sum, item) => sum + item.attributes.hits, 0);
   };
 
+  // Loading and error states for the whole page (maps require facet data)
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -107,6 +114,7 @@ export function MapPage() {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Title and intro copy */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Geographic Resource Distribution
@@ -116,10 +124,12 @@ export function MapPage() {
           </p>
         </div>
 
+        {/* Controls to emphasize one level in the StatsBar */}
         <ZoomLevelControls zoomLevel={zoomLevel} onChange={handleZoomLevelChange} />
 
-        {/* All Three Maps */}
+        {/* Three synchronized maps; each uses MapUpdater variant under the hood */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Country */}
           <MapCard title="Country Level" subtitle={`Features: ${data.country.length}`}>
             <MapContainer
               center={DEFAULT_US_CENTER}
@@ -139,6 +149,7 @@ export function MapPage() {
             </MapContainer>
           </MapCard>
 
+          {/* Region (state) */}
           <MapCard title="Region (State) Level" subtitle={`Features: ${data.region.length}`}>
             <MapContainer
               center={DEFAULT_US_CENTER}
@@ -158,6 +169,7 @@ export function MapPage() {
             </MapContainer>
           </MapCard>
 
+          {/* County (with WOF-aware matching and auto-fit) */}
           <MapCard title="County Level" subtitle={`Features: ${data.county.length}`}>
             <MapContainer
               center={DEFAULT_US_CENTER}
@@ -178,7 +190,7 @@ export function MapPage() {
           </MapCard>
         </div>
 
-        {/* Search and Controls */}
+        {/* Search input and overview stats */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
@@ -204,6 +216,7 @@ export function MapPage() {
           />
         </div>
 
+        {/* Color legend and selected feature details */}
         <Legend />
 
         {selectedFeature && (

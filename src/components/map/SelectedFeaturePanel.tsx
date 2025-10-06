@@ -1,4 +1,4 @@
-
+// Displays details for the feature last clicked on any of the maps
 interface Props {
   name: string;
   hits: number;

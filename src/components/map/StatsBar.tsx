@@ -1,3 +1,4 @@
+// Summary bar displaying current query, total resources, and count of features for level
 import type { ZoomLevel, GeoFacetItem } from '../../types/map';
 
 interface Props {

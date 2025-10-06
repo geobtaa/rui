@@ -3,6 +3,8 @@ import { fetchSearchResults } from '../services/api';
 import type { JsonApiResponse } from '../types/api';
 import type { ChoroplethData, GeoFacet } from '../types/map';
 
+// Fetches search facet aggregations (country/region/county) for a given query.
+// Returns normalized choropleth data structure + loading/error states.
 export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
   const [data, setData] = useState<ChoroplethData>({ country: [], region: [], county: [] });
   const [loading, setLoading] = useState(true);
@@ -14,13 +16,16 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
       try {
         setLoading(true);
         setError(null);
+        // Delegate to unified API service; record URL via onApiCall (Footer shows last request)
         const response: JsonApiResponse = await fetchSearchResults(query || '', 1, 10, [], onApiCall);
         if (!isMounted) return;
         if (response.included) {
+          // Extract only the three geo facets we're interested in
           const geoFacets = response.included.filter(
             (item): item is GeoFacet =>
               item.type === 'facet' && ['geo_country_agg', 'geo_region_agg', 'geo_county_agg'].includes(item.id)
           );
+          // Normalize into ChoroplethData shape used by map updaters
           const newData: ChoroplethData = { country: [], region: [], county: [] };
           geoFacets.forEach((facet) => {
             if (facet.id === 'geo_country_agg') newData.country = facet.attributes.items;
