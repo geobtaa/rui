@@ -170,7 +170,10 @@ describe('useSearch', () => {
         );
       });
 
-      expect(result.current.isLoading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
       expect(result.current.results).toBeDefined();
       expect(result.current.totalResults).toBe(1);
     });
@@ -189,7 +192,10 @@ describe('useSearch', () => {
         );
       });
 
-      expect(result.current.isLoading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
       expect(result.current.results).toBeDefined();
     });
 

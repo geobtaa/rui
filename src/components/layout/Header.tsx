@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Globe2 } from 'lucide-react';
 import { SearchField } from '../SearchField';
@@ -36,6 +35,12 @@ export function Header() {
 
           {/* Navigation - matches map column width */}
           <nav className="col-span-4 flex items-center justify-end space-x-4">
+                <Link
+                  to="/map"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Map
+                </Link>
             <Link
               to="/bookmarks"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
