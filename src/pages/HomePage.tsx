@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -25,9 +25,9 @@ export function HomePage() {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const results = await fetchSearchResults('', 1, 0);
+        const results = await fetchSearchResults('', 1, 1);
         const resourceClassFacet = results.included?.find(
-          (item) => item.type === 'facet' && item.id === 'resource_class_agg'
+          (item) => item.type === 'facet' && (item.id === 'gbl_resourceClass_sm' || item.id === 'resource_class_agg')
         );
         const facetCounts =
           (resourceClassFacet?.attributes &&
@@ -111,7 +111,7 @@ export function HomePage() {
 
   const handleResourceClassClick = (aggValue: string) => {
     navigate(
-      `/search?fq[resource_class_agg][]=${encodeURIComponent(aggValue)}`
+      `/search?fq[gbl_resourceClass_sm][]=${encodeURIComponent(aggValue)}`
     );
   };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { leafletViewerOptions } from '../../config/leafletConfig';
 import { MetadataTable } from './MetadataTable';
 
@@ -25,6 +25,16 @@ interface ResourceViewerProps {
 }
 
 export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
+  // Load Geoblacklight only when needed (for viewer controllers)
+  useEffect(() => {
+    if (!(window as any).Geoblacklight) {
+      import('@geoblacklight/frontend').then((Geoblacklight) => {
+        (window as any).Geoblacklight = Geoblacklight;
+        console.log('Geoblacklight loaded for viewer');
+      });
+    }
+  }, []);
+
   // Extract viewer information from the new data structure
   const protocol = data.meta?.ui?.viewer?.protocol || '';
   const endpoint = data.meta?.ui?.viewer?.endpoint || '';

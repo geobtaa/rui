@@ -10,6 +10,7 @@ import { BookmarksPage } from './pages/BookmarksPage';
 import { FixturesTestPage } from './pages/FixturesTestPage';
 import { MapPage } from './pages/MapPage';
 import { TestPage } from './pages/TestPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -19,12 +20,6 @@ const application = Application.start();
 (window as any).Stimulus = application;
 console.log('Stimulus initialized:', (window as any).Stimulus);
 
-// Import Geoblacklight after Stimulus is initialized
-import('@geoblacklight/frontend').then((Geoblacklight) => {
-  (window as any).Geoblacklight = Geoblacklight;
-  console.log('Geoblacklight initialized:', (window as any).Geoblacklight);
-});
-
 function App() {
   console.log('Environment variables:', {
     VITE_USE_JSONP: import.meta.env.VITE_USE_JSONP,
@@ -32,6 +27,9 @@ function App() {
   });
   const [searchParams] = useSearchParams();
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
+  
+  // Build search string from URLSearchParams to avoid window.location issues
+  const searchString = hasSearchParams ? `?${searchParams.toString()}` : '';
 
   return (
     <BookmarkProvider>
@@ -41,7 +39,7 @@ function App() {
             path="/"
             element={
               hasSearchParams ? (
-                <Navigate to={`/search${window.location.search}`} />
+                <Navigate to={`/search${searchString}`} replace />
               ) : (
                 <HomePage />
               )
@@ -53,6 +51,7 @@ function App() {
           <Route path="/test/fixtures" element={<FixturesTestPage />} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/map" element={<MapPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </DebugProvider>
     </BookmarkProvider>

@@ -44,7 +44,7 @@ export function Footer({ id }: FooterProps) {
                 {showDetails ? 'Hide Details' : 'Show Details'}
               </button>
               <a
-                href="https://www.btaa.org/library/geoportal/geoportal"
+                href="https://gin.btaa.org/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-gray-500 hover:text-gray-900"

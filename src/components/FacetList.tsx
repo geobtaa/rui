@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { FACET_LABELS } from '../utils/facetLabels';
+import { FACET_LABELS, normalizeFacetId } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
 
 // New JSON:API facet structure
@@ -30,20 +30,35 @@ export function FacetList({ facets }: FacetListProps) {
 
   // Helper function to check if a facet is active
   const isFacetActive = (field: string, value: string | number) => {
-    const facetParams = searchParams.getAll(`fq[${field}][]`);
-    return facetParams.includes(value.toString());
+    const normalized = normalizeFacetId(field);
+    const primary = searchParams.getAll(`fq[${normalized}][]`);
+    if (primary.includes(value.toString())) return true;
+    // Also check legacy param key if different
+    if (normalized !== field) {
+      const legacy = searchParams.getAll(`fq[${field}][]`);
+      if (legacy.includes(value.toString())) return true;
+    }
+    return false;
   };
 
   // Helper function to toggle a facet
   const handleFacetClick = (field: string, value: string | number) => {
     const newParams = new URLSearchParams(searchParams);
-    const facetKey = `fq[${field}][]`;
+    const normalized = normalizeFacetId(field);
+    const facetKey = `fq[${normalized}][]`;
 
     if (isFacetActive(field, value)) {
-      // Remove the facet if it's active
-      const currentValues = newParams.getAll(facetKey);
+      // Remove the facet if it's active (clean both legacy and new keys)
+      const currentValuesNew = newParams.getAll(facetKey);
+      const legacyKey = normalized !== field ? `fq[${field}][]` : null;
+      const currentValuesOld = legacyKey ? newParams.getAll(legacyKey) : [];
+
+      // Delete both keys
       newParams.delete(facetKey);
-      currentValues
+      if (legacyKey) newParams.delete(legacyKey);
+
+      // Merge remaining values under normalized key
+      [...currentValuesNew, ...currentValuesOld]
         .filter((v) => v !== value.toString())
         .forEach((v) => newParams.append(facetKey, v));
     } else {
@@ -64,7 +79,7 @@ export function FacetList({ facets }: FacetListProps) {
       (facet) => facet.attributes.items && facet.attributes.items.length > 0
     )
     .map((facet) => ({
-      id: facet.id,
+      id: normalizeFacetId(facet.id),
       label: facet.attributes.label,
       items: facet.attributes.items.map((item) => ({
         label: item.attributes.label,
