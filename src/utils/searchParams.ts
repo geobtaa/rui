@@ -6,19 +6,26 @@ export function parseSearchParams(searchParams: URLSearchParams) {
 
   // Get all facet parameters (now using fq instead of f)
   const facets = Array.from(searchParams.entries())
-    .filter(([key]) => key.startsWith('fq['))
+    .filter(([key]) => key.startsWith('fq[') || key.startsWith('include_filters['))
     .map(([key, value]) => {
-      // Extract field name from fq[field_name][]
-      const field = key.match(/fq\[(.*?)\]/)?.[1] || '';
+      const field = key.match(/(?:fq|include_filters)\[(.*?)\]/)?.[1] || '';
+      return { field, value };
+    });
+
+  // Get excluded facet parameters
+  const excludeFacets = Array.from(searchParams.entries())
+    .filter(([key]) => key.startsWith('exclude_filters['))
+    .map(([key, value]) => {
+      const field = key.match(/exclude_filters\[(.*?)\]/)?.[1] || '';
       return { field, value };
     });
 
   console.log('🔗 parseSearchParams called with:', {
     rawParams: Object.fromEntries(searchParams.entries()),
-    parsed: { query, page, facets: facets.length },
+    parsed: { query, page, facets: facets.length, excludeFacets: excludeFacets.length },
   });
 
-  return { query, page, facets };
+  return { query, page, facets, excludeFacets };
 }
 
 export function buildSearchParams(params: SearchParams): URLSearchParams {
@@ -36,10 +43,17 @@ export function buildSearchParams(params: SearchParams): URLSearchParams {
     searchParams.set('per_page', params.perPage.toString());
   }
 
-  // Add facet parameters using fq[] format
+  // Add facet parameters using include_filters[] format for new API while keeping fq for backward links
   params.facets.forEach(({ field, value }) => {
-    searchParams.append(`fq[${field}][]`, value);
+    searchParams.append(`include_filters[${field}][]`, value);
   });
+
+  // Add exclude filters if provided
+  if (params.excludeFacets) {
+    params.excludeFacets.forEach(({ field, value }) => {
+      searchParams.append(`exclude_filters[${field}][]`, value);
+    });
+  }
 
   return searchParams;
 }

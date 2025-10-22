@@ -1,24 +1,29 @@
-import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { X, Search, XCircle } from 'lucide-react';
 import type { FacetFilter } from '../../types/search';
 import { getFacetLabel } from '../../utils/facetLabels';
 
 interface SearchConstraintsProps {
   facets: FacetFilter[];
+  excludeFacets?: FacetFilter[];
   query: string;
   onRemoveFacet: (facet: FacetFilter) => void;
+  onRemoveExclude?: (facet: FacetFilter) => void;
   onRemoveQuery: () => void;
   onClearAll: () => void;
 }
 
 export function SearchConstraints({
   facets,
+  excludeFacets = [],
   query,
   onRemoveFacet,
+  onRemoveExclude,
   onRemoveQuery,
   onClearAll,
 }: SearchConstraintsProps) {
-  if (facets.length === 0 && !query) return null;
+  const [searchParams, setSearchParams] = useSearchParams();
+  if (facets.length === 0 && excludeFacets.length === 0 && !query) return null;
 
   return (
     <div className="mb-6">
@@ -53,6 +58,34 @@ export function SearchConstraints({
               {getFacetLabel(facet.field)}: {facet.value}
             </span>
             <X size={14} className="text-blue-500" />
+          </button>
+        ))}
+        {excludeFacets.map((facet, index) => (
+          <button
+            key={`exclude-${facet.field}-${index}`}
+            onClick={() => {
+              // Prefer parent handler if provided
+              onRemoveExclude?.(facet);
+
+              // Also ensure URL params update locally in case parent doesn't modify them
+              const params = new URLSearchParams(searchParams);
+              const key = `exclude_filters[${facet.field}][]`;
+              const current = params.getAll(key);
+              if (current.length > 0) {
+                params.delete(key);
+                current
+                  .filter((v) => v !== facet.value)
+                  .forEach((v) => params.append(key, v));
+                setSearchParams(params);
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+            title="Remove exclusion"
+          >
+            <span className="text-sm">
+              Exclude {getFacetLabel(facet.field)}: {facet.value}
+            </span>
+            <X size={14} className="text-red-500" />
           </button>
         ))}
       </div>

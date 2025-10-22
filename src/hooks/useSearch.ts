@@ -23,21 +23,24 @@ export function useSearch() {
   const sort = searchParams.get('sort') || 'relevance';
 
   // Parse search parameters and memoize facets to prevent infinite loops
-  const { query, page, facets: rawFacets } = parseSearchParams(searchParams);
+  const { query, page, facets: rawFacets, excludeFacets: rawExclude } = parseSearchParams(searchParams);
   const facetsString = JSON.stringify(rawFacets);
   const facets = useMemo(() => rawFacets, [rawFacets.length, facetsString]); // eslint-disable-line react-hooks/exhaustive-deps
+  const excludeString = JSON.stringify(rawExclude || []);
+  const excludeFacets = useMemo(() => rawExclude || [], [rawExclude?.length, excludeString]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     console.log('🔍 useSearch useEffect triggered with:', {
       query,
       page,
       facetsLength: facets?.length,
+      excludeLength: excludeFacets?.length,
       sort,
       setLastApiUrl: typeof setLastApiUrl,
     });
 
     // Only fetch if we have a query parameter (even if empty) or facets
-    if (query === undefined && (!facets || facets.length === 0)) {
+    if (query === undefined && (!facets || facets.length === 0) && (!excludeFacets || excludeFacets.length === 0)) {
       console.log('⏭️ Skipping search - no query or facets');
       setResults(null);
       return;
@@ -57,7 +60,8 @@ export function useSearch() {
           10,
           facets,
           setLastApiUrl,
-          sort
+          sort,
+          excludeFacets
         );
 
         const endTime = performance.now();
@@ -81,7 +85,7 @@ export function useSearch() {
     };
 
     fetchResults();
-  }, [query, page, facets, sort, setLastApiUrl]);
+  }, [query, page, facets, excludeFacets, sort, setLastApiUrl]);
 
   const updateSearch = ({
     query,
@@ -92,6 +96,7 @@ export function useSearch() {
     query?: string;
     page?: number;
     facets?: FacetFilter[];
+    excludeFacets?: FacetFilter[];
     sort?: string;
   }) => {
     const newParams = new URLSearchParams(searchParams);
@@ -122,14 +127,26 @@ export function useSearch() {
     }
 
     if (facets !== undefined) {
-      // Clear existing facets
+      // Clear existing include filters
       Array.from(newParams.keys())
-        .filter((key) => key.startsWith('fq['))
+        .filter((key) => key.startsWith('include_filters[') || key.startsWith('fq['))
         .forEach((key) => newParams.delete(key));
 
-      // Add new facets using fq[] format
+      // Add new include filters
       facets.forEach(({ field, value }) => {
-        newParams.append(`fq[${field}][]`, value);
+        newParams.append(`include_filters[${field}][]`, value);
+      });
+    }
+
+    if (excludeFacets !== undefined) {
+      // Clear existing exclude filters
+      Array.from(newParams.keys())
+        .filter((key) => key.startsWith('exclude_filters['))
+        .forEach((key) => newParams.delete(key));
+
+      // Add new exclude filters
+      excludeFacets.forEach(({ field, value }) => {
+        newParams.append(`exclude_filters[${field}][]`, value);
       });
     }
 
@@ -145,6 +162,7 @@ export function useSearch() {
     perPage: results?.meta?.perPage || 10,
     totalResults: results?.meta?.totalCount || 0,
     facets: facets || [],
+    excludeFacets: excludeFacets || [],
     updateSearch,
     sort,
   };

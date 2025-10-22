@@ -22,7 +22,7 @@ const defaultFetchOptions: FetchOptions = {
 };
 
 // Add a request cache at the top of the file
-const requestCache: Record<string, Promise<unknown>> = {};
+const requestCache: Record<string, Promise<unknown> | undefined> = {};
 
 // Helper function to ensure HTTPS URL
 function ensureHttps(url: string): string {
@@ -47,9 +47,10 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
 
   // Check if this URL is already being requested
   const cacheKey = url;
-  if (requestCache[cacheKey]) {
+  const cached = requestCache[cacheKey] as Promise<T> | undefined;
+  if (cached) {
     console.log('Using cached JSONP request for:', url);
-    return requestCache[cacheKey] as Promise<T>;
+    return cached;
   }
 
   // Create a new promise for this request
@@ -205,6 +206,7 @@ export async function fetchSearchResults(
   facets: FacetFilter[] = [],
   onApiCall?: (url: string) => void,
   sort?: string,
+  excludeFacets: FacetFilter[] = [],
   options: FetchOptions = defaultFetchOptions
 ): Promise<JsonApiResponse> {
   const startTime = performance.now();
@@ -250,7 +252,13 @@ export async function fetchSearchResults(
 
   facets.forEach(({ field, value }) => {
     const normalized = FACET_ID_MAP[field] || field;
-    url.searchParams.append(`fq[${normalized}][]`, value);
+    url.searchParams.append(`include_filters[${normalized}][]`, value);
+  });
+
+  // Apply exclude filters
+  excludeFacets.forEach(({ field, value }) => {
+    const normalized = FACET_ID_MAP[field] || field;
+    url.searchParams.append(`exclude_filters[${normalized}][]`, value);
   });
 
   console.log('🔗 API URL:', url.toString());

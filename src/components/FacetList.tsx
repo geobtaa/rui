@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
+import { MinusCircle } from 'lucide-react';
 import { FACET_LABELS, normalizeFacetId } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
 
@@ -31,7 +32,7 @@ export function FacetList({ facets }: FacetListProps) {
   // Helper function to check if a facet is active
   const isFacetActive = (field: string, value: string | number) => {
     const normalized = normalizeFacetId(field);
-    const primary = searchParams.getAll(`fq[${normalized}][]`);
+    const primary = searchParams.getAll(`include_filters[${normalized}][]`);
     if (primary.includes(value.toString())) return true;
     // Also check legacy param key if different
     if (normalized !== field) {
@@ -45,7 +46,7 @@ export function FacetList({ facets }: FacetListProps) {
   const handleFacetClick = (field: string, value: string | number) => {
     const newParams = new URLSearchParams(searchParams);
     const normalized = normalizeFacetId(field);
-    const facetKey = `fq[${normalized}][]`;
+    const facetKey = `include_filters[${normalized}][]`;
 
     if (isFacetActive(field, value)) {
       // Remove the facet if it's active (clean both legacy and new keys)
@@ -66,6 +67,23 @@ export function FacetList({ facets }: FacetListProps) {
       newParams.append(facetKey, value.toString());
     }
 
+    setSearchParams(newParams);
+  };
+
+  const handleFacetExclude = (field: string, value: string | number) => {
+    const newParams = new URLSearchParams(searchParams);
+    const normalized = normalizeFacetId(field);
+    const excludeKey = `exclude_filters[${normalized}][]`;
+    // Toggle exclude (if already excluded, remove it)
+    const existing = newParams.getAll(excludeKey);
+    if (existing.includes(value.toString())) {
+      newParams.delete(excludeKey);
+      existing
+        .filter((v) => v !== value.toString())
+        .forEach((v) => newParams.append(excludeKey, v));
+    } else {
+      newParams.append(excludeKey, value.toString());
+    }
     setSearchParams(newParams);
   };
 
@@ -111,8 +129,12 @@ export function FacetList({ facets }: FacetListProps) {
           <ul className="space-y-1">
             {facet.items.map((item) => {
               const isActive = isFacetActive(facet.id, item.value);
+              const normalizedId = normalizeFacetId(facet.id);
+              const isExcluded = searchParams
+                .getAll(`exclude_filters[${normalizedId}][]`)
+                .includes(item.value.toString());
               return (
-                <li key={`${facet.id}-${item.value}`}>
+                <li key={`${facet.id}-${item.value}`} className="group flex items-center gap-2">
                   <button
                     onClick={() => handleFacetClick(facet.id, item.value)}
                     className={`text-sm flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-gray-100 ${
@@ -130,6 +152,18 @@ export function FacetList({ facets }: FacetListProps) {
                     {isActive && (
                       <span className="text-blue-400 ml-auto">×</span>
                     )}
+                  </button>
+                  <button
+                    onClick={() => handleFacetExclude(facet.id, item.value)}
+                    className={`ml-1 p-1 rounded transition-colors ${
+                      isExcluded
+                        ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                        : 'text-gray-400 hover:text-red-600 hover:bg-gray-100'
+                    } ${isExcluded ? '' : 'opacity-0 group-hover:opacity-100'}`}
+                    aria-label={isExcluded ? 'Remove exclusion' : 'Exclude this value'}
+                    title={isExcluded ? 'Remove exclusion' : 'Exclude this value'}
+                  >
+                    <MinusCircle className="w-4 h-4" />
                   </button>
                 </li>
               );
