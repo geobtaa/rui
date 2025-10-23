@@ -20,21 +20,21 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
         const response: JsonApiResponse = await fetchSearchResults(query || '', 1, 10, [], onApiCall);
         if (!isMounted) return;
         if (response.included) {
-          // Extract only the three geo facets we're interested in
+          // Extract only the three geo facets we're interested in (field-named IDs)
           const geoFacets = response.included.filter(
             (item): item is GeoFacet =>
               item.type === 'facet' && [
-                'b1g_geoCountry_sm', 'geo_country_agg',
-                'b1g_geoRegion_sm', 'geo_region_agg',
-                'b1g_geoCounty_sm', 'geo_county_agg',
+                'geo_country',
+                'geo_region',
+                'geo_county',
               ].includes(item.id)
           );
           // Normalize into ChoroplethData shape used by map updaters
           const newData: ChoroplethData = { country: [], region: [], county: [] };
           geoFacets.forEach((facet) => {
-            if (facet.id === 'b1g_geoCountry_sm' || facet.id === 'geo_country_agg') newData.country = facet.attributes.items;
-            if (facet.id === 'b1g_geoRegion_sm' || facet.id === 'geo_region_agg') newData.region = facet.attributes.items;
-            if (facet.id === 'b1g_geoCounty_sm' || facet.id === 'geo_county_agg') newData.county = facet.attributes.items;
+            if (facet.id === 'geo_country') newData.country = facet.attributes.items;
+            if (facet.id === 'geo_region') newData.region = facet.attributes.items;
+            if (facet.id === 'geo_county') newData.county = facet.attributes.items;
           });
           setData(newData);
         } else {
