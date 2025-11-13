@@ -8,7 +8,7 @@ import './styles/leaflet.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter basename={import.meta.env.VITE_BASE_URL}>
+    <BrowserRouter basename={import.meta.env.VITE_BASE_URL || '/'}>
       <ApiProvider>
         <App />
       </ApiProvider>

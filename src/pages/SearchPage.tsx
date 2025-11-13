@@ -25,6 +25,7 @@ function SearchContent() {
     perPage,
     totalResults: searchTotalResults,
     facets: searchFacets,
+    excludeFacets: searchExcludeFacets,
     sort,
     updateSearch,
   } = useSearch();
@@ -56,6 +57,17 @@ function SearchContent() {
         )
     );
     updateSearch({ facets: updatedFacets });
+  };
+
+  const handleRemoveExclude = (facetToRemove: FacetFilter) => {
+    const updated = (searchExcludeFacets || []).filter(
+      (facet) =>
+        !(
+          facet.field === facetToRemove.field &&
+          facet.value === facetToRemove.value
+        )
+    );
+    updateSearch({ excludeFacets: updated });
   };
 
   const handleRemoveQuery = () => {
@@ -113,8 +125,10 @@ function SearchContent() {
 
           <SearchConstraints
             facets={searchFacets}
+            excludeFacets={searchExcludeFacets}
             query={query}
             onRemoveFacet={handleRemoveFacet}
+            onRemoveExclude={handleRemoveExclude}
             onRemoveQuery={handleRemoveQuery}
             onClearAll={handleClearAll}
           />

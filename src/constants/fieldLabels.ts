@@ -17,24 +17,24 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   dct_temporal_sm: {
     label: 'Temporal Coverage',
     display: true,
-    facet: 'index_year_agg',
+    facet: 'gbl_indexyear_im',
   },
   dct_issued_s: { label: 'Date Issued', display: true },
-  dct_spatial_sm: { label: 'Place', display: true, facet: 'spatial_agg' },
+  dct_spatial_sm: { label: 'Place', display: true, facet: 'dct_spatial_sm' },
   dct_provenance_s: {
     label: 'Institution',
     display: true,
-    facet: 'institution_agg',
+    facet: 'dct_provenance_s',
   },
   dct_accessRights_s: { label: 'Access Rights', display: true },
-  dct_format_s: { label: 'Format', display: true, facet: 'format_agg' },
+  dct_format_s: { label: 'Format', display: true, facet: 'dct_format_s' },
   dct_license_sm: { label: 'License', display: true },
   dct_identifier_sm: { label: 'Identifier', display: true },
   dct_isPartOf_sm: { label: 'Is Part Of', display: false },
   dct_references_s: { label: 'References', display: false },
   dct_rights_sm: { label: 'Rights', display: true },
   dct_source_sm: { label: 'Source', display: true },
-  dct_subject_sm: { label: 'Subject', display: true, facet: 'subject_agg' },
+  dct_subject_sm: { label: 'Subject', display: true, facet: 'dct_subject_sm' },
   dct_type_sm: { label: 'Type', display: true },
 
   // DCAT
@@ -58,12 +58,12 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   gbl_resourceClass_sm: {
     label: 'Resource Class',
     display: true,
-    facet: 'resource_class_agg',
+    facet: 'gbl_resourceClass_sm',
   },
   gbl_resourceType_sm: {
     label: 'Resource Type',
     display: true,
-    facet: 'resource_type_agg',
+    facet: 'gbl_resourceType_sm',
   },
   gbl_wxsidentifier_s: { label: 'WXS Identifier', display: true },
 
@@ -71,7 +71,7 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   schema_provider_s: {
     label: 'Provider',
     display: true,
-    facet: 'provider_agg',
+    facet: 'schema_provider_s',
   },
 
   // System Fields

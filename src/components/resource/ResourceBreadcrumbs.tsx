@@ -25,7 +25,7 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
   if (item.attributes.gbl_resourceClass_sm?.[0]) {
     accumulatedFacets = [
       {
-        field: 'resource_class_agg',
+        field: 'gbl_resourceClass_sm',
         value: item.attributes.gbl_resourceClass_sm[0],
       },
     ];
@@ -40,7 +40,7 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
     accumulatedFacets = [
       ...accumulatedFacets,
       {
-        field: 'resource_type_agg',
+        field: 'gbl_resourceType_sm',
         value: item.attributes.gbl_resourceType_sm[0],
       },
     ];
@@ -55,7 +55,7 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
     accumulatedFacets = [
       ...accumulatedFacets,
       {
-        field: 'spatial_agg',
+        field: 'dct_spatial_sm',
         value: item.attributes.dct_spatial_sm[0],
       },
     ];
@@ -70,7 +70,7 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
     accumulatedFacets = [
       ...accumulatedFacets,
       {
-        field: 'issued_agg',
+        field: 'dct_issued_s',
         value: item.attributes.dct_issued_s,
       },
     ];

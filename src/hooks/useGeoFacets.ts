@@ -20,17 +20,21 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
         const response: JsonApiResponse = await fetchSearchResults(query || '', 1, 10, [], onApiCall);
         if (!isMounted) return;
         if (response.included) {
-          // Extract only the three geo facets we're interested in
+          // Extract only the three geo facets we're interested in (field-named IDs)
           const geoFacets = response.included.filter(
             (item): item is GeoFacet =>
-              item.type === 'facet' && ['geo_country_agg', 'geo_region_agg', 'geo_county_agg'].includes(item.id)
+              item.type === 'facet' && [
+                'geo_country',
+                'geo_region',
+                'geo_county',
+              ].includes(item.id)
           );
           // Normalize into ChoroplethData shape used by map updaters
           const newData: ChoroplethData = { country: [], region: [], county: [] };
           geoFacets.forEach((facet) => {
-            if (facet.id === 'geo_country_agg') newData.country = facet.attributes.items;
-            if (facet.id === 'geo_region_agg') newData.region = facet.attributes.items;
-            if (facet.id === 'geo_county_agg') newData.county = facet.attributes.items;
+            if (facet.id === 'geo_country') newData.country = facet.attributes.items;
+            if (facet.id === 'geo_region') newData.region = facet.attributes.items;
+            if (facet.id === 'geo_county') newData.county = facet.attributes.items;
           });
           setData(newData);
         } else {

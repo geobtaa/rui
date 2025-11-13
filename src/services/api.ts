@@ -12,14 +12,9 @@ export class ApiError extends Error {
 }
 
 const defaultHeaders = {
-  Accept: 'application/vnd.api+json',
-  'Content-Type': 'application/json',
-  // Only include CSRF token if it exists
-  ...(import.meta.env.VITE_CSRF_TOKEN
-    ? {
-        'X-CSRF-Token': import.meta.env.VITE_CSRF_TOKEN,
-      }
-    : {}),
+  Accept: 'application/vnd.api+json, application/json',
+  // Note: Content-Type and CSRF token removed to avoid CORS preflight issues
+  // Re-add if the API requires authentication
 };
 
 const defaultFetchOptions: FetchOptions = {
@@ -27,7 +22,7 @@ const defaultFetchOptions: FetchOptions = {
 };
 
 // Add a request cache at the top of the file
-const requestCache: Record<string, Promise<unknown>> = {};
+const requestCache: Record<string, Promise<unknown> | undefined> = {};
 
 // Helper function to ensure HTTPS URL
 function ensureHttps(url: string): string {
@@ -52,9 +47,10 @@ function jsonp<T>(url: string, callbackName: string = 'rui'): Promise<T> {
 
   // Check if this URL is already being requested
   const cacheKey = url;
-  if (requestCache[cacheKey]) {
+  const cached = requestCache[cacheKey] as Promise<T> | undefined;
+  if (cached) {
     console.log('Using cached JSONP request for:', url);
-    return requestCache[cacheKey] as Promise<T>;
+    return cached;
   }
 
   // Create a new promise for this request
@@ -172,12 +168,9 @@ async function unifiedFetch<T>(
 
   try {
     const response = await fetch(finalUrl.toString(), {
-      headers: {
-        ...defaultHeaders,
-        Accept: 'application/vnd.api+json, application/json',
-      },
+      headers: defaultHeaders,
       mode: 'cors',
-      credentials: 'include',
+      credentials: 'omit',
       redirect: 'follow',
     });
 
@@ -213,6 +206,7 @@ export async function fetchSearchResults(
   facets: FacetFilter[] = [],
   onApiCall?: (url: string) => void,
   sort?: string,
+  excludeFacets: FacetFilter[] = [],
   options: FetchOptions = defaultFetchOptions
 ): Promise<JsonApiResponse> {
   const startTime = performance.now();
@@ -238,8 +232,33 @@ export async function fetchSearchResults(
     url.searchParams.set('sort', sort);
   }
 
+  // Normalize legacy *_agg facet IDs to field-named IDs for the API
+  const FACET_ID_MAP: Record<string, string> = {
+    spatial_agg: 'dct_spatial_sm',
+    resource_class_agg: 'gbl_resourceClass_sm',
+    resource_type_agg: 'gbl_resourceType_sm',
+    provider_agg: 'schema_provider_s',
+    creator_agg: 'dct_creator_sm',
+    access_rights_agg: 'dct_accessRights_s',
+    access_agg: 'dct_accessRights_s',
+    index_year_agg: 'gbl_indexyear_im',
+    language_agg: 'dct_language_sm',
+    subject_agg: 'dct_subject_sm',
+    institution_agg: 'dct_provenance_s',
+    format_agg: 'dct_format_s',
+    georeferenced_agg: 'gbl_georeferenced_b',
+    id_agg: 'id',
+  };
+
   facets.forEach(({ field, value }) => {
-    url.searchParams.append(`fq[${field}][]`, value);
+    const normalized = FACET_ID_MAP[field] || field;
+    url.searchParams.append(`include_filters[${normalized}][]`, value);
+  });
+
+  // Apply exclude filters
+  excludeFacets.forEach(({ field, value }) => {
+    const normalized = FACET_ID_MAP[field] || field;
+    url.searchParams.append(`exclude_filters[${normalized}][]`, value);
   });
 
   console.log('🔗 API URL:', url.toString());
@@ -379,7 +398,7 @@ export async function fetchBookmarkedResources(
   url.searchParams.set('q', '');
 
   ids.forEach((id) => {
-    url.searchParams.append('fq[id_agg][]', id);
+    url.searchParams.append('fq[id][]', id);
   });
 
   const finalUrl = url.toString();

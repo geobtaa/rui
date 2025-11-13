@@ -6,11 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-param" content="authenticity_token" />
     <meta name="csrf-token" content="%VITE_CSRF_TOKEN%" />
+    
+    <!-- Prevent search engine indexing -->
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet" />
+    
     <title>BTAA Geoportal - Exploratory React UI</title>
   </head>
   <body>
     <div id="root"></div>
-    <div id="blacklight-modal" data-controller="blacklight-modal"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
