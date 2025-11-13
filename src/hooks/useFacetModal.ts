@@ -27,6 +27,7 @@ export function useFacetModal({
   const [items, setItems] = useState<FacetValue[]>([]);
   const [meta, setMeta] = useState<FacetValuesMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPageState] = useState(1);
   const [perPageState, setPerPageState] = useState(perPage);
@@ -35,6 +36,14 @@ export function useFacetModal({
 
   const paramsSignature = useMemo(() => searchParams.toString(), [searchParams]);
   const lastParamsRef = useRef<string>('');
+
+  useEffect(() => {
+    if (!isOpen || !facetId) return;
+    setItems([]);
+    setMeta(null);
+    setHasLoaded(false);
+    setPageState(1);
+  }, [facetId, isOpen]);
 
   useEffect(() => {
     setPerPageState(perPage);
@@ -73,6 +82,7 @@ export function useFacetModal({
         setPerPageState(nextPerPage);
         setSortState(nextSort);
         setQFacetState(nextQFacet);
+        setHasLoaded(true);
         lastParamsRef.current = paramsSignature;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load facet values');
@@ -154,6 +164,7 @@ export function useFacetModal({
     perPage: perPageState,
     sort,
     qFacet,
+    hasLoaded,
     setPage,
     setPerPage,
     setSort,

@@ -223,6 +223,12 @@ export function FacetList({ facets }: FacetListProps) {
           onToggleExclude={(value) =>
             handleFacetExclude(activeFacetModal.id, value)
           }
+          onToggleFacetInclude={(field, value) =>
+            handleFacetClick(field, value)
+          }
+          onToggleFacetExclude={(field, value) =>
+            handleFacetExclude(field, value)
+          }
           isValueIncluded={(value) =>
             isFacetActive(activeFacetModal.id, value)
           }

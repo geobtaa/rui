@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { FacetMoreModal } from '../../components/search/FacetMoreModal';
@@ -7,6 +7,8 @@ const mockSetPage = vi.fn();
 const mockSetSort = vi.fn();
 const mockSetFacetQuery = vi.fn();
 const mockResetFacetQuery = vi.fn();
+const mockToggleFacetInclude = vi.fn();
+const mockToggleFacetExclude = vi.fn();
 
 vi.mock('../../hooks/useFacetModal', () => ({
   useFacetModal: vi.fn(),
@@ -23,6 +25,8 @@ describe('FacetMoreModal', () => {
     searchParams: new URLSearchParams(),
     onToggleInclude: vi.fn(),
     onToggleExclude: vi.fn(),
+    onToggleFacetInclude: mockToggleFacetInclude,
+    onToggleFacetExclude: mockToggleFacetExclude,
     isValueIncluded: vi.fn(() => false),
     isValueExcluded: vi.fn(() => false),
   };
@@ -33,6 +37,11 @@ describe('FacetMoreModal', () => {
     mockSetSort.mockReset();
     mockSetFacetQuery.mockReset();
     mockResetFacetQuery.mockReset();
+    mockToggleFacetInclude.mockReset();
+    mockToggleFacetExclude.mockReset();
+    defaultProps.onToggleInclude.mockReset();
+    defaultProps.onToggleExclude.mockReset();
+    defaultProps.onClose.mockReset();
     const mockUseFacetModal = vi.mocked(useFacetModal);
     mockUseFacetModal.mockReturnValue({
       items: [
@@ -62,6 +71,7 @@ describe('FacetMoreModal', () => {
         perPage: 10,
       },
       isLoading: false,
+      hasLoaded: true,
       error: null,
       page: 1,
       perPage: 10,
@@ -94,10 +104,17 @@ describe('FacetMoreModal', () => {
     const user = userEvent.setup();
     render(<FacetMoreModal {...defaultProps} />);
 
-    await user.click(screen.getByRole('button', { name: /Alpha/ }));
+    const alphaRow = screen.getByText('Alpha').closest('li');
+    expect(alphaRow).not.toBeNull();
+
+    await user.click(
+      within(alphaRow as HTMLElement).getByRole('button', { name: /Include/ })
+    );
     expect(defaultProps.onToggleInclude).toHaveBeenCalledWith('alpha');
 
-    await user.click(screen.getByRole('button', { name: /Exclude/ }));
+    await user.click(
+      within(alphaRow as HTMLElement).getByRole('button', { name: /Exclude/ })
+    );
     expect(defaultProps.onToggleExclude).toHaveBeenCalledWith('alpha');
   });
 
@@ -157,6 +174,7 @@ describe('FacetMoreModal', () => {
       sort: 'count_desc' as const,
       qFacet: '',
       isLoading: false,
+      hasLoaded: true,
       error: null,
       setPage: mockSetPage,
       setPerPage: vi.fn(),
@@ -178,6 +196,63 @@ describe('FacetMoreModal', () => {
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(defaultProps.onClose).toHaveBeenCalled();
+  });
+
+  it('closes when clicking on the overlay background', () => {
+    render(<FacetMoreModal {...defaultProps} />);
+
+    fireEvent.mouseDown(screen.getByTestId('facet-modal-overlay'));
+    expect(defaultProps.onClose).toHaveBeenCalled();
+  });
+
+  it('displays current search context chips', () => {
+    const props = {
+      ...defaultProps,
+      searchParams: new URLSearchParams(
+        'q=lakes&include_filters[resource_class_agg][]=Maps&exclude_filters[dct_spatial_sm][]=Illinois'
+      ),
+    };
+
+    render(<FacetMoreModal {...props} />);
+
+    expect(
+      screen.getByText(/Current search context/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Search:/)).toBeInTheDocument();
+    expect(screen.getByText(/Maps/)).toBeInTheDocument();
+    expect(screen.getByText(/Illinois/)).toBeInTheDocument();
+  });
+
+  it('allows toggling include/exclude filters via context chips', async () => {
+    const user = userEvent.setup();
+    const props = {
+      ...defaultProps,
+      searchParams: new URLSearchParams(
+        'include_filters[resource_class_agg][]=Maps&exclude_filters[dct_spatial_sm][]=Illinois'
+      ),
+    };
+
+    render(<FacetMoreModal {...props} />);
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Remove included filter Maps/i,
+      })
+    );
+    expect(mockToggleFacetInclude).toHaveBeenCalledWith(
+      'resource_class_agg',
+      'Maps'
+    );
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Remove excluded filter Illinois/i,
+      })
+    );
+    expect(mockToggleFacetExclude).toHaveBeenCalledWith(
+      'dct_spatial_sm',
+      'Illinois'
+    );
   });
 });
 

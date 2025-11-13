@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState, MouseEvent } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useFacetModal } from '../../hooks/useFacetModal';
 import type { FacetValuesSort } from '../../types/api';
+import { FACET_LABELS, normalizeFacetId } from '../../utils/facetLabels';
 
 interface FacetMoreModalProps {
   facetId: string;
@@ -19,6 +20,8 @@ interface FacetMoreModalProps {
   searchParams: URLSearchParams;
   onToggleInclude: (value: string | number) => void;
   onToggleExclude: (value: string | number) => void;
+  onToggleFacetInclude: (field: string, value: string | number) => void;
+  onToggleFacetExclude: (field: string, value: string | number) => void;
   isValueIncluded: (value: string | number) => boolean;
   isValueExcluded: (value: string | number) => boolean;
 }
@@ -38,6 +41,8 @@ export function FacetMoreModal({
   searchParams,
   onToggleInclude,
   onToggleExclude,
+  onToggleFacetInclude,
+  onToggleFacetExclude,
   isValueIncluded,
   isValueExcluded,
 }: FacetMoreModalProps) {
@@ -46,6 +51,7 @@ export function FacetMoreModal({
     meta,
     isLoading,
     error,
+    hasLoaded,
     page,
     sort,
     qFacet,
@@ -80,6 +86,8 @@ export function FacetMoreModal({
 
   const totalPages = meta?.totalPages ?? 1;
   const totalCount = meta?.totalCount ?? items.length;
+  const isInitialLoading = isLoading && !hasLoaded;
+  const isRefetching = isLoading && hasLoaded;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -91,16 +99,105 @@ export function FacetMoreModal({
     resetFacetQuery();
   };
 
+  const handleOverlayMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   const emptyStateMessage = useMemo(() => {
     if (isLoading) return 'Loading facet values...';
     if (qFacet) return 'No facet values match your filter.';
     return 'No facet values available.';
   }, [isLoading, qFacet]);
 
+  const searchContextEntries = useMemo(() => {
+    const entries: Array<{
+      type: 'query' | 'include' | 'exclude' | 'advanced';
+      label: string;
+      value: string;
+      fieldId?: string;
+    }> = [];
+    const seen = new Set<string>();
+
+    const queryValue = searchParams.get('q');
+    if (queryValue) {
+      entries.push({
+        type: 'query',
+        label: 'Search',
+        value: queryValue,
+      });
+    }
+
+    searchParams.getAll('adv_q').forEach((value, index) => {
+      if (!value) return;
+      entries.push({
+        type: 'advanced',
+        label: `Advanced ${index + 1}`,
+        value,
+      });
+    });
+
+    const addFacetEntries = (
+      prefix: 'include_filters[' | 'exclude_filters[' | 'fq[',
+      type: 'include' | 'exclude'
+    ) => {
+      Array.from(searchParams.keys())
+        .filter((key) => key.startsWith(prefix))
+        .forEach((key) => {
+          const fieldMatch = key.match(/\[(.*?)\]/);
+          const fieldId = fieldMatch?.[1] ?? '';
+          const normalizedField = normalizeFacetId(fieldId);
+          const displayLabel =
+            FACET_LABELS[normalizedField] ||
+            FACET_LABELS[fieldId] ||
+            fieldId ||
+            'Facet';
+
+          searchParams.getAll(key).forEach((value) => {
+            if (!value) return;
+            const signature = `${type}:${normalizedField}:${value}`;
+            if (seen.has(signature)) return;
+            seen.add(signature);
+            entries.push({
+              type,
+              label: displayLabel,
+              value,
+              fieldId,
+            });
+          });
+        });
+    };
+
+    addFacetEntries('include_filters[', 'include');
+    addFacetEntries('fq[', 'include');
+    addFacetEntries('exclude_filters[', 'exclude');
+
+    return entries;
+  }, [searchParams]);
+
+  const badgeStyles: Record<
+    'query' | 'include' | 'exclude' | 'advanced',
+    string
+  > = {
+    query:
+      'bg-blue-50 text-blue-700 border border-blue-200',
+    include:
+      'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    exclude:
+      'bg-rose-50 text-rose-700 border border-rose-200',
+    advanced:
+      'bg-indigo-50 text-indigo-700 border border-indigo-200',
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      onMouseDown={handleOverlayMouseDown}
+      data-testid="facet-modal-overlay"
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
         <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
           <div>
@@ -166,9 +263,68 @@ export function FacetMoreModal({
           </div>
         </div>
 
-        <section className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-sm text-gray-500">
+        {searchContextEntries.length > 0 && (
+          <div className="px-6 py-3 border-b border-gray-100 bg-white">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Current search context
+            </h3>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {searchContextEntries.map((entry, index) => {
+                const key = `${entry.type}-${entry.label}-${entry.value}-${index}`;
+                const isTogglable =
+                  (entry.type === 'include' || entry.type === 'exclude') &&
+                  Boolean(entry.fieldId);
+
+                if (isTogglable && entry.fieldId) {
+                  const handleClick = () => {
+                    if (entry.type === 'include') {
+                      onToggleFacetInclude(entry.fieldId!, entry.value);
+                    } else {
+                      onToggleFacetExclude(entry.fieldId!, entry.value);
+                    }
+                  };
+
+                  const ariaLabel =
+                    entry.type === 'include'
+                      ? `Remove included filter ${entry.value} from ${entry.label}`
+                      : `Remove excluded filter ${entry.value} from ${entry.label}`;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={handleClick}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${badgeStyles[entry.type]} ${
+                        entry.type === 'include'
+                          ? 'hover:bg-emerald-100 focus-visible:ring-emerald-500'
+                          : 'hover:bg-rose-100 focus-visible:ring-rose-500'
+                      }`}
+                      aria-label={ariaLabel}
+                    >
+                      <span>{entry.label}:</span>
+                      <span>{entry.value}</span>
+                      <X className="h-3 w-3" />
+                    </button>
+                  );
+                }
+
+                return (
+                  <span
+                    key={key}
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${badgeStyles[entry.type]}`}
+                  >
+                    <span>{entry.label}:</span>
+                    <span>{entry.value}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <section className="relative flex-1 overflow-y-auto">
+          {isInitialLoading ? (
+            <div className="flex h-full items-center justify-center py-12 text-sm text-gray-500">
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
               Loading facet values...
             </div>
@@ -190,46 +346,78 @@ export function FacetMoreModal({
                     key={`${facetId}-${item.id || item.attributes.value}`}
                     className="flex items-center justify-between px-6 py-3 gap-4"
                   >
-                    <button
-                      onClick={() => onToggleInclude(item.attributes.value)}
-                      className={`flex-1 text-left text-sm rounded-md px-3 py-2 transition-colors ${
-                        included
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : 'text-gray-700 hover:bg-gray-50 border border-transparent'
-                      }`}
-                    >
-                      <span className="font-medium">{item.attributes.label}</span>
-                      <span className="ml-2 text-xs text-gray-500">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">
+                        {item.attributes.label}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
                         ({item.attributes.hits})
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => onToggleExclude(item.attributes.value)}
-                      className={`flex items-center gap-2 text-sm rounded-md px-3 py-2 border transition-colors ${
-                        excluded
-                          ? 'text-red-600 border-red-200 bg-red-50'
-                          : 'text-gray-500 border-gray-200 hover:bg-gray-100'
-                      }`}
-                      aria-label={
-                        excluded ? 'Remove exclusion filter' : 'Exclude this value'
-                      }
-                    >
-                      <MinusCircle className="h-4 w-4" />
-                      {excluded ? 'Excluded' : 'Exclude'}
-                    </button>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 text-xs">
+                        {included && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-blue-600">
+                            <PlusCircle className="h-3 w-3" />
+                            Included
+                          </span>
+                        )}
+                        {excluded && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-rose-600">
+                            <MinusCircle className="h-3 w-3" />
+                            Excluded
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                      {included ? (
-                        <span className="text-xs text-blue-600 font-medium">
-                          Included
-                        </span>
-                      ) : (
-                        <PlusCircle className="h-4 w-4 text-gray-300" />
-                      )}
+                      <button
+                        onClick={() => onToggleInclude(item.attributes.value)}
+                        className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border ${
+                          included
+                            ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                            : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                        aria-label={
+                          included
+                            ? `Remove ${item.attributes.label} from included filters`
+                            : `Include ${item.attributes.label}`
+                        }
+                      >
+                        <PlusCircle
+                          className={`h-4 w-4 ${included ? 'text-white' : 'text-blue-500'}`}
+                        />
+                        {included ? 'Included' : 'Include'}
+                      </button>
+                      <button
+                        onClick={() => onToggleExclude(item.attributes.value)}
+                        className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border ${
+                          excluded
+                            ? 'border-rose-400 text-rose-600 bg-rose-50 hover:bg-rose-100'
+                            : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                        aria-label={
+                          excluded
+                            ? `Remove ${item.attributes.label} from excluded filters`
+                            : `Exclude ${item.attributes.label}`
+                        }
+                      >
+                        <MinusCircle
+                          className={`h-4 w-4 ${excluded ? 'text-rose-500' : 'text-rose-400'}`}
+                        />
+                        {excluded ? 'Excluded' : 'Exclude'}
+                      </button>
                     </div>
                   </li>
                 );
               })}
             </ul>
+          )}
+          {isRefetching && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Updating facet values…
+              </div>
+            </div>
           )}
         </section>
 
