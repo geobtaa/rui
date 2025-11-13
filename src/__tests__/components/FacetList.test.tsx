@@ -35,6 +35,19 @@ vi.mock('../../constants/facets', () => ({
   ],
 }));
 
+vi.mock('../../components/search/FacetMoreModal', () => ({
+  FacetMoreModal: ({
+    facetLabel,
+    isOpen,
+  }: {
+    facetLabel: string;
+    isOpen: boolean;
+  }) =>
+    isOpen ? (
+      <div data-testid="facet-more-modal">More modal for {facetLabel}</div>
+    ) : null,
+}));
+
 // Real fixture data structure for facets
 const mockFacetData = [
   {
@@ -155,6 +168,18 @@ const mockFacetData = [
     },
   },
 ];
+
+const buildFacetItems = (count: number) =>
+  Array.from({ length: count }, (_, index) => ({
+    attributes: {
+      label: `Facet Item ${index + 1}`,
+      value: `facet-item-${index + 1}`,
+      hits: 100 - index,
+    },
+    links: {
+      self: `/search?fq[resource_class_agg][]=facet-item-${index + 1}`,
+    },
+  }));
 
 // Test wrapper component
 const TestWrapper = ({ children, initialSearchParams = '' }: { children: React.ReactNode; initialSearchParams?: string }) => {
@@ -375,6 +400,76 @@ describe('FacetList Component', () => {
 
       const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
       expect(paperMapsButton).not.toHaveTextContent('×');
+    });
+  });
+
+  describe('"More" facet modal trigger', () => {
+    it('renders a "More »" button when there are more than 10 items', () => {
+      const facetsWithMoreItems = [
+        {
+          type: 'facet' as const,
+          id: 'resource_class_agg',
+          attributes: {
+            label: 'Resource Type',
+            items: buildFacetItems(12),
+          },
+        },
+      ];
+
+      render(
+        <TestWrapper>
+          <FacetList facets={facetsWithMoreItems} />
+        </TestWrapper>
+      );
+
+      expect(screen.getByRole('button', { name: /More »/i })).toBeInTheDocument();
+    });
+
+    it('does not render "More »" button when there are 10 or fewer items', () => {
+      const facetsWithLimitedItems = [
+        {
+          type: 'facet' as const,
+          id: 'resource_class_agg',
+          attributes: {
+            label: 'Resource Type',
+            items: buildFacetItems(10),
+          },
+        },
+      ];
+
+      render(
+        <TestWrapper>
+          <FacetList facets={facetsWithLimitedItems} />
+        </TestWrapper>
+      );
+
+      expect(screen.queryByRole('button', { name: /More »/i })).not.toBeInTheDocument();
+    });
+
+    it('opens the facet modal when "More »" is clicked', async () => {
+      const facetsWithMoreItems = [
+        {
+          type: 'facet' as const,
+          id: 'resource_class_agg',
+          attributes: {
+            label: 'Resource Type',
+            items: buildFacetItems(12),
+          },
+        },
+      ];
+
+      render(
+        <TestWrapper>
+          <FacetList facets={facetsWithMoreItems} />
+        </TestWrapper>
+      );
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /More »/i }));
+
+      expect(screen.getByTestId('facet-more-modal')).toHaveTextContent(
+        'More modal for Resource Type'
+      );
     });
   });
 

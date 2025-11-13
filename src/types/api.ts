@@ -80,6 +80,52 @@ interface Facet {
   };
 }
 
+export type FacetValuesSort =
+  | 'count_desc'
+  | 'count_asc'
+  | 'alpha_asc'
+  | 'alpha_desc';
+
+export interface FacetValue {
+  type: 'facet_value' | 'facet-item';
+  id: string;
+  attributes: {
+    label: string;
+    value: string | number;
+    hits: number;
+  };
+  links?: {
+    self: string;
+  };
+}
+
+export interface FacetValuesMeta {
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  perPage: number;
+  facet?: {
+    id: string;
+    label: string;
+  };
+}
+
+export interface FacetValuesResponse {
+  jsonapi?: {
+    version: string;
+    profile: string[];
+  };
+  data: FacetValue[];
+  links?: {
+    self: string;
+    next?: string;
+    prev?: string;
+    first?: string;
+    last?: string;
+  };
+  meta: FacetValuesMeta;
+}
+
 export interface SortOption {
   type: 'sort';
   id: string;

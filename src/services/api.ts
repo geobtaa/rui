@@ -1,4 +1,9 @@
-import { JsonApiResponse, GeoDocumentDetails } from '../types/api';
+import {
+  JsonApiResponse,
+  GeoDocumentDetails,
+  FacetValuesResponse,
+  FacetValuesSort,
+} from '../types/api';
 import { FacetFilter } from '../types/search';
 
 export class ApiError extends Error {
@@ -294,6 +299,66 @@ export async function fetchSearchResults(
     );
     throw error;
   }
+}
+
+interface FetchFacetValuesParams {
+  facetName: string;
+  searchParams: URLSearchParams;
+  page?: number;
+  perPage?: number;
+  sort?: FacetValuesSort;
+  qFacet?: string;
+  options?: FetchOptions;
+}
+
+export async function fetchFacetValues({
+  facetName,
+  searchParams,
+  page = 1,
+  perPage = 10,
+  sort = 'count_desc',
+  qFacet,
+  options = defaultFetchOptions,
+}: FetchFacetValuesParams): Promise<FacetValuesResponse> {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL
+    ? `${import.meta.env.VITE_API_BASE_URL}/search/facets/${facetName}`
+    : `https://geo.btaa.org/api/v1/search/facets/${facetName}`;
+
+  const url = createApiUrl(baseUrl);
+
+  const copyParamKeys = ['q', 'adv_q'] as const;
+  copyParamKeys.forEach((key) => {
+    const value = searchParams.get(key);
+    if (value !== null && value !== '') {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  Array.from(searchParams.keys())
+    .filter(
+      (key) =>
+        key.startsWith('include_filters[') ||
+        key.startsWith('exclude_filters[') ||
+        key.startsWith('fq[')
+    )
+    .forEach((key) => {
+      searchParams.getAll(key).forEach((value) => {
+        url.searchParams.append(key, value);
+      });
+    });
+
+  url.searchParams.set('page', Math.max(1, page).toString());
+  url.searchParams.set('per_page', Math.max(1, Math.min(100, perPage)).toString());
+
+  if (sort) {
+    url.searchParams.set('sort', sort);
+  }
+
+  if (qFacet) {
+    url.searchParams.set('q_facet', qFacet);
+  }
+
+  return unifiedFetch<FacetValuesResponse>(url.toString(), options);
 }
 
 export async function fetchResourceDetails(
