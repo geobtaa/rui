@@ -37,6 +37,8 @@ export function getFacetLabel(field: string): string {
 }
 
 // Reverse mapping: convert field names to legacy facet names for API endpoints
+// Note: Both provider_agg and institution_agg map to schema_provider_s in the forward direction,
+// but for reverse mapping we use provider_agg as the primary legacy name
 const REVERSE_FACET_ID_MAP: Record<string, string> = {
   'dct_spatial_sm': 'spatial_agg',
   'gbl_resourceClass_sm': 'resource_class_agg',
@@ -47,7 +49,6 @@ const REVERSE_FACET_ID_MAP: Record<string, string> = {
   'gbl_indexyear_im': 'index_year_agg',
   'dct_language_sm': 'language_agg',
   'dct_subject_sm': 'subject_agg',
-  'schema_provider_s': 'institution_agg',
   'dct_format_s': 'format_agg',
   'gbl_georeferenced_b': 'georeferenced_agg',
 };
