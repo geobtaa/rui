@@ -104,15 +104,10 @@ describe('useSearch', () => {
       expect(result.current.page).toBe(1);
       expect(result.current.facets).toEqual([]);
       expect(result.current.sort).toBe('relevance');
-      
-      // Wait for initial loading to complete
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-      
+      expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
-      // The hook makes a search call even with empty query, so results will be populated
-      expect(result.current.results).toBeDefined();
+      expect(result.current.results).toBeNull();
+      expect(mockFetchSearchResults).not.toHaveBeenCalled();
     });
 
     it('parses search parameters correctly', () => {
@@ -149,7 +144,9 @@ describe('useSearch', () => {
         query: 'test',
         page: 2,
         facetsLength: 0,
+        excludeLength: 0,
         sort: 'relevance',
+        advancedClauses: 0,
         setLastApiUrl: 'function'
       });
     });
@@ -166,7 +163,9 @@ describe('useSearch', () => {
           10,
           [],
           expect.any(Function),
-          'relevance'
+          'relevance',
+          [],
+          []
         );
       });
 
@@ -188,7 +187,9 @@ describe('useSearch', () => {
           10,
           [{ field: 'dc_publisher_sm', value: 'MIT Libraries' }],
           expect.any(Function),
-          'relevance'
+          'relevance',
+          [],
+          []
         );
       });
 
@@ -199,23 +200,15 @@ describe('useSearch', () => {
       expect(result.current.results).toBeDefined();
     });
 
-    it('makes search call even with empty query', async () => {
+    it('skips search when no query, facets, or advanced clauses are provided', async () => {
       const { result } = renderUseSearch('');
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // The hook makes a search call even with empty query
-      expect(result.current.results).toBeDefined();
-      expect(mockFetchSearchResults).toHaveBeenCalledWith(
-        '',
-        1,
-        10,
-        [],
-        expect.any(Function),
-        'relevance'
-      );
+      expect(result.current.results).toBeNull();
+      expect(mockFetchSearchResults).not.toHaveBeenCalled();
     });
 
     it('handles search with custom sort parameter', async () => {
@@ -228,7 +221,9 @@ describe('useSearch', () => {
           10,
           [],
           expect.any(Function),
-          'date'
+          'date',
+          [],
+          []
         );
       });
 
@@ -245,11 +240,37 @@ describe('useSearch', () => {
           10,
           [],
           expect.any(Function),
-          'relevance'
+          'relevance',
+          [],
+          []
         );
       });
 
       expect(result.current.page).toBe(3);
+    });
+
+    it('performs search when advanced clauses are provided', async () => {
+      const advanced = encodeURIComponent(
+        JSON.stringify([{ op: 'AND', f: 'dct_title_s', q: 'Iowa' }])
+      );
+      const { result } = renderUseSearch(`adv_q=${advanced}`);
+
+      await waitFor(() => {
+        expect(mockFetchSearchResults).toHaveBeenCalledWith(
+          '',
+          1,
+          10,
+          [],
+          expect.any(Function),
+          'relevance',
+          [],
+          [{ op: 'AND', field: 'dct_title_s', q: 'Iowa' }]
+        );
+      });
+
+      expect(result.current.advancedQuery).toEqual([
+        { op: 'AND', field: 'dct_title_s', q: 'Iowa' },
+      ]);
     });
 
     it('logs search completion time', async () => {
@@ -418,6 +439,48 @@ describe('useSearch', () => {
 
       expect(result.current.facets).toEqual(newFacets);
       expect(result.current.facets).not.toContainEqual({ field: 'dc_publisher_sm', value: 'Old Publisher' });
+    });
+
+    it('updates advanced query parameter', async () => {
+      const { result } = renderUseSearch('q=test');
+
+      const advancedClauses = [{ op: 'AND', field: 'dct_title_s', q: 'Iowa' }];
+
+      act(() => {
+        result.current.updateSearch({ advancedQuery: advancedClauses });
+      });
+
+      await waitFor(() => {
+        expect(mockFetchSearchResults).toHaveBeenLastCalledWith(
+          'test',
+          1,
+          10,
+          [],
+          expect.any(Function),
+          'relevance',
+          [],
+          advancedClauses
+        );
+      });
+
+      expect(result.current.advancedQuery).toEqual(advancedClauses);
+    });
+
+    it('removes advanced query parameter when empty array is provided', async () => {
+      const advanced = encodeURIComponent(
+        JSON.stringify([{ op: 'AND', f: 'dct_title_s', q: 'Iowa' }])
+      );
+      const { result } = renderUseSearch(`q=test&adv_q=${advanced}`);
+
+      expect(result.current.advancedQuery).toHaveLength(1);
+
+      act(() => {
+        result.current.updateSearch({ advancedQuery: [] });
+      });
+
+      await waitFor(() => {
+        expect(result.current.advancedQuery).toEqual([]);
+      });
     });
 
     it('handles multiple updates in sequence', async () => {

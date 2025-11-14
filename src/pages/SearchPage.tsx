@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SearchResults } from '../components/SearchResults';
 import { Pagination } from '../components/Pagination';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -6,15 +6,18 @@ import { SearchConstraints } from '../components/search/SearchConstraints';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { useSearch } from '../hooks/useSearch';
-import type { FacetFilter } from '../types/search';
+import type { AdvancedClause, FacetFilter } from '../types/search';
 import { FacetList } from '../components/FacetList';
 import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
+import { AdvancedSearchBuilder } from '../components/search/AdvancedSearchBuilder';
 
 // Create a separate component for the search content
 function SearchContent() {
   console.log('🔄 SearchContent rendering...');
+
+  const [showAdvancedBuilder, setShowAdvancedBuilder] = useState(false);
 
   const {
     query,
@@ -26,6 +29,7 @@ function SearchContent() {
     totalResults: searchTotalResults,
     facets: searchFacets,
     excludeFacets: searchExcludeFacets,
+    advancedQuery,
     sort,
     updateSearch,
   } = useSearch();
@@ -42,7 +46,8 @@ function SearchContent() {
   });
 
   const totalPages = Math.ceil(searchTotalResults / perPage);
-  const hasSearchCriteria = query !== undefined || searchFacets.length > 0;
+  const hasSearchCriteria =
+    !!query || searchFacets.length > 0 || searchExcludeFacets.length > 0 || advancedQuery.length > 0;
 
   const handlePageChange = (newPage: number) => {
     updateSearch({ page: newPage });
@@ -74,12 +79,32 @@ function SearchContent() {
     updateSearch({ query: '' });
   };
 
+  const handleRemoveAdvancedClause = (_clause: AdvancedClause, index: number) => {
+    const nextClauses = [...advancedQuery];
+    nextClauses.splice(index, 1);
+    updateSearch({ advancedQuery: nextClauses });
+  };
+
   const handleClearAll = () => {
-    updateSearch({ query: '', facets: [] });
+    updateSearch({
+      query: '',
+      facets: [],
+      excludeFacets: [],
+      advancedQuery: [],
+    });
   };
 
   const handleSortChange = (newSort: string) => {
     updateSearch({ sort: newSort });
+  };
+
+  const handleAdvancedApply = (clauses: typeof advancedQuery) => {
+    updateSearch({ advancedQuery: clauses });
+    setShowAdvancedBuilder(false);
+  };
+
+  const handleAdvancedReset = () => {
+    updateSearch({ advancedQuery: [] });
   };
 
   // Extract spelling suggestions from meta
@@ -127,11 +152,38 @@ function SearchContent() {
             facets={searchFacets}
             excludeFacets={searchExcludeFacets}
             query={query}
+          advancedClauses={advancedQuery}
             onRemoveFacet={handleRemoveFacet}
             onRemoveExclude={handleRemoveExclude}
+          onRemoveAdvancedClause={handleRemoveAdvancedClause}
             onRemoveQuery={handleRemoveQuery}
             onClearAll={handleClearAll}
           />
+
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => setShowAdvancedBuilder((prev) => !prev)}
+            className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              advancedQuery.length > 0
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-white text-blue-700 border border-blue-300 hover:border-blue-400 hover:text-blue-900'
+            }`}
+          >
+            Advanced Search
+          </button>
+        </div>
+
+        {showAdvancedBuilder && (
+          <div className="mb-8">
+            <AdvancedSearchBuilder
+              clauses={advancedQuery}
+              onApply={handleAdvancedApply}
+              onCancel={() => setShowAdvancedBuilder(false)}
+              onReset={handleAdvancedReset}
+            />
+          </div>
+        )}
 
           {/* Responsive grid layout */}
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
