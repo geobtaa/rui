@@ -196,6 +196,49 @@ describe('API Service', () => {
       );
     });
 
+    it('fetches search results with advanced clauses', async () => {
+      const mockResponse = {
+        jsonapi: { version: '1.0', profile: [] },
+        links: { self: '', first: '', last: '' },
+        meta: {
+          totalCount: 2,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [],
+        included: [],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const advancedClauses = [
+        { op: 'AND', field: 'dct_title_s', q: 'Iowa' },
+        { op: 'NOT', field: 'dct_title_s', q: 'Wisconsin' },
+      ];
+
+      const result = await fetchSearchResults('', 1, 10, [], undefined, undefined, [], advancedClauses);
+
+      expect(result).toEqual(mockResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          encodeURIComponent('adv_q') +
+            '=' +
+            encodeURIComponent(
+              JSON.stringify([
+                { op: 'AND', f: 'dct_title_s', q: 'Iowa' },
+                { op: 'NOT', f: 'dct_title_s', q: 'Wisconsin' },
+              ])
+            )
+        ),
+        expect.any(Object)
+      );
+    });
+
     it('fetches search results with sort parameter', async () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },

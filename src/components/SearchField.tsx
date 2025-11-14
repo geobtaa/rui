@@ -86,10 +86,10 @@ export function SearchField({
 
   return (
     <div className="relative">
-      <form onSubmit={handleSubmit} className="relative">
+      <form onSubmit={handleSubmit} className="relative" role="search" aria-label="Search">
         <input
           ref={inputRef}
-          type="text"
+          type="search"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -100,11 +100,23 @@ export function SearchField({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          className="w-full px-4 py-2 pl-10 pr-4 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          aria-label="Search input"
+          aria-describedby="search-description"
+          className="w-full px-4 py-2 pl-10 pr-12 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-          <Search className="w-5 h-5 text-gray-400" />
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <Search className="w-5 h-5 text-gray-400" aria-hidden="true" />
         </div>
+        <button
+          type="submit"
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-r-lg"
+          aria-label="Submit search"
+        >
+          <Search className="w-5 h-5" aria-hidden="true" />
+        </button>
+        <span id="search-description" className="sr-only">
+          Press Enter or click the search button to submit your search
+        </span>
       </form>
 
       {/* Suggestions dropdown */}

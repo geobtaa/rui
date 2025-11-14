@@ -4,7 +4,7 @@ import {
   FacetValuesResponse,
   FacetValuesSort,
 } from '../types/api';
-import { FacetFilter } from '../types/search';
+import { AdvancedClause, FacetFilter } from '../types/search';
 
 export class ApiError extends Error {
   constructor(
@@ -212,6 +212,7 @@ export async function fetchSearchResults(
   onApiCall?: (url: string) => void,
   sort?: string,
   excludeFacets: FacetFilter[] = [],
+  advancedQuery: AdvancedClause[] = [],
   options: FetchOptions = defaultFetchOptions
 ): Promise<JsonApiResponse> {
   const startTime = performance.now();
@@ -221,6 +222,7 @@ export async function fetchSearchResults(
     perPage,
     facets: facets.length,
     sort,
+    advancedClauses: advancedQuery.length,
   });
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL
@@ -249,7 +251,7 @@ export async function fetchSearchResults(
     index_year_agg: 'gbl_indexyear_im',
     language_agg: 'dct_language_sm',
     subject_agg: 'dct_subject_sm',
-    institution_agg: 'dct_provenance_s',
+    institution_agg: 'schema_provider_s',
     format_agg: 'dct_format_s',
     georeferenced_agg: 'gbl_georeferenced_b',
     id_agg: 'id',
@@ -265,6 +267,15 @@ export async function fetchSearchResults(
     const normalized = FACET_ID_MAP[field] || field;
     url.searchParams.append(`exclude_filters[${normalized}][]`, value);
   });
+
+  if (advancedQuery.length > 0) {
+    const serialized = advancedQuery.map(({ op, field, q }) => ({
+      op,
+      f: FACET_ID_MAP[field] || field,
+      q,
+    }));
+    url.searchParams.set('adv_q', JSON.stringify(serialized));
+  }
 
   console.log('🔗 API URL:', url.toString());
 

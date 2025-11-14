@@ -13,16 +13,19 @@ describe('searchParams', () => {
     it('parses basic search parameters', () => {
       const searchParams = new URLSearchParams({
         q: 'test query',
-        page: '2'
+        page: '2',
       });
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test query',
         page: 2,
-        facets: []
+        facets: [],
+        excludeFacets: [],
+        advancedQuery: [],
       });
+      expect(result.hasQueryParam).toBe(true);
     });
 
     it('handles empty search parameters', () => {
@@ -30,11 +33,14 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: '',
         page: 1,
-        facets: []
+        facets: [],
+        excludeFacets: [],
+        advancedQuery: [],
       });
+      expect(result.hasQueryParam).toBe(false);
     });
 
     it('parses facet parameters with fq format', () => {
@@ -47,13 +53,15 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'geospatial data',
         page: 1,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-          { field: 'gbl_resourceClass_sm', value: 'Dataset' }
-        ]
+          { field: 'gbl_resourceClass_sm', value: 'Dataset' },
+        ],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -66,13 +74,15 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'maps',
         page: 1,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-          { field: 'dc_publisher_sm', value: 'Harvard University' }
-        ]
+          { field: 'dc_publisher_sm', value: 'Harvard University' },
+        ],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -85,13 +95,15 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'geographic data',
         page: 1,
         facets: [
           { field: 'dct_temporal_sm', value: '2020' },
-          { field: 'dc_subject_sm', value: 'Geographic Information Systems' }
-        ]
+          { field: 'dc_subject_sm', value: 'Geographic Information Systems' },
+        ],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -106,12 +118,12 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test',
         page: 1,
-        facets: [
-          { field: 'dc_publisher_sm', value: 'MIT Libraries' }
-        ]
+        facets: [{ field: 'dc_publisher_sm', value: 'MIT Libraries' }],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -123,10 +135,12 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test',
         page: NaN, // parseInt returns NaN for invalid input
-        facets: []
+        facets: [],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -138,10 +152,12 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test',
         page: -1,
-        facets: []
+        facets: [],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -153,10 +169,12 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test',
         page: 0,
-        facets: []
+        facets: [],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -168,12 +186,12 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'geographic%20information%20systems', // URLSearchParams doesn't auto-decode
         page: 1,
-        facets: [
-          { field: 'dc_publisher_sm', value: 'MIT%20Libraries' }
-        ]
+        facets: [{ field: 'dc_publisher_sm', value: 'MIT%20Libraries' }],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
 
@@ -186,14 +204,44 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test',
         page: 1,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries & Archives' },
-          { field: 'dc_subject_sm', value: 'GIS & Remote Sensing' }
-        ]
+          { field: 'dc_subject_sm', value: 'GIS & Remote Sensing' },
+        ],
+        excludeFacets: [],
+        advancedQuery: [],
       });
+    });
+
+    it('parses advanced query clauses', () => {
+      const advanced = JSON.stringify([
+        { op: 'AND', f: 'dct_title_s', q: 'Iowa' },
+        { op: 'NOT', f: 'dct_title_s', q: 'Wisconsin' },
+      ]);
+      const searchParams = new URLSearchParams({
+        adv_q: advanced,
+      });
+
+      const result = parseSearchParams(searchParams);
+
+      expect(result.advancedQuery).toEqual([
+        { op: 'AND', field: 'dct_title_s', q: 'Iowa' },
+        { op: 'NOT', field: 'dct_title_s', q: 'Wisconsin' },
+      ]);
+      expect(result.hasQueryParam).toBe(false);
+    });
+
+    it('ignores malformed advanced clauses gracefully', () => {
+      const searchParams = new URLSearchParams({
+        adv_q: '{"op":"AND","bad":"data"}',
+      });
+
+      const result = parseSearchParams(searchParams);
+
+      expect(result.advancedQuery).toEqual([]);
     });
 
     it('logs debug information', () => {
@@ -206,14 +254,23 @@ describe('searchParams', () => {
 
       parseSearchParams(searchParams);
 
-      expect(consoleSpy).toHaveBeenCalledWith('🔗 parseSearchParams called with:', {
-        rawParams: {
-          q: 'test query',
-          page: '2',
-          'fq[dc_publisher_sm][]': 'MIT Libraries'
-        },
-        parsed: { query: 'test query', page: 2, facets: 1 }
-      });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '🔗 parseSearchParams called with:',
+        expect.objectContaining({
+          rawParams: {
+            q: 'test query',
+            page: '2',
+            'fq[dc_publisher_sm][]': 'MIT Libraries',
+          },
+          parsed: expect.objectContaining({
+            query: 'test query',
+            page: 2,
+            facets: 1,
+            excludeFacets: 0,
+            advancedClauses: 0,
+          }),
+        })
+      );
     });
 
     it('handles malformed facet field names', () => {
@@ -225,13 +282,15 @@ describe('searchParams', () => {
 
       const result = parseSearchParams(searchParams);
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         query: 'test',
         page: 1,
         facets: [
           { field: '', value: 'value' }, // malformed field becomes empty string
-          { field: 'valid_field', value: 'valid value' }
-        ]
+          { field: 'valid_field', value: 'valid value' },
+        ],
+        excludeFacets: [],
+        advancedQuery: [],
       });
     });
   });
@@ -378,6 +437,40 @@ describe('searchParams', () => {
 
       expect(result.get('q')).toBe('geographic information systems');
       expect(result.get('fq[dc_publisher_sm][]')).toBe('MIT Libraries');
+    });
+
+    it('serializes advanced query clauses', () => {
+      const params: SearchParams = {
+        query: 'maps',
+        page: 1,
+        perPage: 10,
+        facets: [],
+        advancedQuery: [
+          { op: 'AND', field: 'dct_title_s', q: 'Iowa' },
+          { op: 'OR', field: 'dct_description_sm', q: 'Water' },
+        ],
+      };
+
+      const result = buildSearchParams(params);
+      const advParam = result.get('adv_q');
+      expect(advParam).not.toBeNull();
+      expect(JSON.parse(advParam as string)).toEqual([
+        { op: 'AND', f: 'dct_title_s', q: 'Iowa' },
+        { op: 'OR', f: 'dct_description_sm', q: 'Water' },
+      ]);
+    });
+
+    it('omits advanced query when no clauses are provided', () => {
+      const params: SearchParams = {
+        query: 'maps',
+        page: 1,
+        perPage: 10,
+        facets: [],
+        advancedQuery: [],
+      };
+
+      const result = buildSearchParams(params);
+      expect(result.get('adv_q')).toBeNull();
     });
 
     it('handles very long query strings', () => {
