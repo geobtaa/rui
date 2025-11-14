@@ -46,8 +46,6 @@ function SearchContent() {
   });
 
   const totalPages = Math.ceil(searchTotalResults / perPage);
-  const hasSearchCriteria =
-    !!query || searchFacets.length > 0 || searchExcludeFacets.length > 0 || advancedQuery.length > 0;
 
   const handlePageChange = (newPage: number) => {
     updateSearch({ page: newPage });
@@ -222,54 +220,44 @@ function SearchContent() {
                 <ErrorMessage message={error} />
               ) : (
                 <>
-                  {!hasSearchCriteria ? (
-                    <div>
-                      <p className="text-gray-500">
-                        Enter a search term or apply filters to see results
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-6 flex justify-between items-center">
-                        <h2 className="text-lg text-gray-600">
-                          Showing results{' '}
-                          {Math.min(
-                            (page - 1) * perPage + 1,
-                            searchTotalResults
-                          )}
-                          -{Math.min(page * perPage, searchTotalResults)} of{' '}
-                          {searchTotalResults}
-                        </h2>
-                        <SortControl
-                          options={
-                            searchResults?.included
-                              ?.filter((item) => item.type === 'sort')
-                              .map((sortOption) => ({
-                                id: sortOption.id,
-                                label: sortOption.attributes.label,
-                                url: sortOption.links?.self || '',
-                              })) || []
-                          }
-                          currentSort={sort || 'relevance'}
-                          onSortChange={handleSortChange}
-                        />
-                      </div>
-
-                      <SearchResults
-                        results={searchResults?.data || []}
-                        isLoading={searchIsLoading}
-                        totalResults={searchTotalResults}
-                        currentPage={page}
-                      />
-
-                      {!searchIsLoading && totalPages > 1 && (
-                        <Pagination
-                          currentPage={page}
-                          totalPages={totalPages}
-                          onPageChange={handlePageChange}
-                        />
+                  <div className="mb-6 flex justify-between items-center">
+                    <h2 className="text-lg text-gray-600">
+                      Showing results{' '}
+                      {Math.min(
+                        (page - 1) * perPage + 1,
+                        searchTotalResults
                       )}
-                    </>
+                      -{Math.min(page * perPage, searchTotalResults)} of{' '}
+                      {searchTotalResults}
+                    </h2>
+                    <SortControl
+                      options={
+                        searchResults?.included
+                          ?.filter((item) => item.type === 'sort')
+                          .map((sortOption) => ({
+                            id: sortOption.id,
+                            label: sortOption.attributes.label,
+                            url: sortOption.links?.self || '',
+                          })) || []
+                      }
+                      currentSort={sort || 'relevance'}
+                      onSortChange={handleSortChange}
+                    />
+                  </div>
+
+                  <SearchResults
+                    results={searchResults?.data || []}
+                    isLoading={searchIsLoading}
+                    totalResults={searchTotalResults}
+                    currentPage={page}
+                  />
+
+                  {!searchIsLoading && totalPages > 1 && (
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
                   )}
                 </>
               )}

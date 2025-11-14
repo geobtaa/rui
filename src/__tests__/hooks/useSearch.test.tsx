@@ -589,7 +589,9 @@ describe('useSearch', () => {
           10,
           [],
           expect.any(Function),
-          'relevance'
+          'relevance',
+          [],
+          []
         );
       });
     });
@@ -609,7 +611,9 @@ describe('useSearch', () => {
             { field: 'dct_temporal_sm', value: '2020' }
           ],
           expect.any(Function),
-          'relevance'
+          'relevance',
+          [],
+          []
         );
       });
     });
@@ -635,7 +639,9 @@ describe('useSearch', () => {
           10,
           [],
           expect.any(Function),
-          'relevance'
+          'relevance',
+          [],
+          []
         );
       });
     });
@@ -679,7 +685,9 @@ describe('useSearch', () => {
             { field: 'gbl_resourceClass_sm', value: 'Dataset' }
           ],
           expect.any(Function),
-          'date'
+          'date',
+          [],
+          []
         );
       });
 

@@ -39,17 +39,8 @@ export function SearchConstraints({
 
   return (
     <div className="mb-6">
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-sm font-medium text-gray-500">Active Filters:</h2>
-        <button
-          onClick={onClearAll}
-          className="inline-flex items-center gap-1.5 px-3 py-1 text-sm text-red-600 hover:text-red-700 transition-colors"
-        >
-          <XCircle size={16} />
-          Clear All
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
         {query && (
           <button
             onClick={onRemoveQuery}
@@ -118,6 +109,13 @@ export function SearchConstraints({
             <X size={14} className={clause.op === 'NOT' ? 'text-red-500' : 'text-purple-500'} />
           </button>
         ))}
+        <button
+          onClick={onClearAll}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <XCircle size={14} className="text-gray-500" />
+          <span className="text-sm">Clear All</span>
+        </button>
       </div>
     </div>
   );

@@ -38,8 +38,9 @@ export function useSearch() {
   const advancedString = JSON.stringify(rawAdvanced || []);
   const advancedQuery = useMemo(
     () => rawAdvanced || [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [rawAdvanced?.length, advancedString]
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   useEffect(() => {
     console.log('🔍 useSearch useEffect triggered with:', {

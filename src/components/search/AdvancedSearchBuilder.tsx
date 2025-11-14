@@ -60,8 +60,27 @@ export function AdvancedSearchBuilder({
   const fieldOptions = useMemo(() => {
     const seen = new Set(COMMON_FIELD_OPTIONS.map((option) => option.value));
 
+    // Fields to exclude from the dropdown
+    const excludedFields = new Set([
+      'layer_modified_dt', // Last Modified
+      'gbl_mdversion_s', // Metadata Version
+      'layer_slug_s', // Layer ID
+      'layer_id_s', // Layer Identifier
+      'gbl_wxsidentifier_s', // WXS Identifier
+      'dct_references_s', // References
+      'dcat_bbox', // Bounding Box
+      'dcat_bbox_original', // Bounding Box
+      'dcat_centroid', // Centroid
+      'dcat_centroid_original', // Centroid
+      'locn_geometry', // Geometry
+      'locn_geometry_original', // Geometry
+      'solr_geom', // Geometry
+      'dc_publisher_sm', // Duplicate Publisher (prefer dct_publisher_sm)
+      'dc_type_sm', // Duplicate Type (prefer dct_type_sm)
+    ]);
+
     const remaining = Object.entries(FIELD_LABELS)
-      .filter(([field]) => !seen.has(field))
+      .filter(([field]) => !seen.has(field) && !excludedFields.has(field))
       .map(([field, config]) => ({
         value: field,
         label: config.label || field,
