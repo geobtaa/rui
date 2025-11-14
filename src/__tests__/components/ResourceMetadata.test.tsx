@@ -4,7 +4,7 @@ import type { GeoDocumentDetails } from '../../types/api';
 
 // Real fixture data from the /test/fixtures page
 const realFixtureWithAllFields: GeoDocumentDetails = {
-  dct_provenance_s: 'MIT Libraries',
+  schema_provider_s: 'MIT Libraries',
   dc_publisher_sm: ['MIT Libraries'],
   creator_sm: ['MIT Libraries Staff'],
   dct_spatial_sm: ['Massachusetts', 'United States'],
@@ -92,7 +92,7 @@ const realFixtureWithMinimalFields: GeoDocumentDetails = {
 };
 
 const realFixtureWithPolygonData: GeoDocumentDetails = {
-  dct_provenance_s: 'Tufts University',
+  schema_provider_s: 'Tufts University',
   dc_publisher_sm: ['Tufts University'],
   creator_sm: ['Tufts GIS Staff'],
   dct_spatial_sm: ['Massachusetts', 'Cambridge'],
@@ -237,7 +237,7 @@ describe('ResourceMetadata Component', () => {
     it('renders only available fields', () => {
       const partialItem: GeoDocumentDetails = {
         ...realFixtureWithMinimalFields,
-        dct_provenance_s: 'NYU Libraries',
+        schema_provider_s: 'NYU Libraries',
         dc_publisher_sm: ['NYU Libraries'],
       };
       
@@ -284,7 +284,7 @@ describe('ResourceMetadata Component', () => {
     it('handles null/undefined fields gracefully', () => {
       const itemWithNullFields: GeoDocumentDetails = {
         ...realFixtureWithMinimalFields,
-        dct_provenance_s: null as any,
+        schema_provider_s: null as any,
         dc_publisher_sm: null as any,
         creator_sm: null as any,
         dct_spatial_sm: null as any,
@@ -402,7 +402,7 @@ describe('ResourceMetadata Component', () => {
     it('handles very long text content', () => {
       const longTextData: GeoDocumentDetails = {
         ...realFixtureWithMinimalFields,
-        dct_provenance_s: 'This is a very long source name that might contain extensive information about the data provider and should still render correctly without breaking the layout or causing any display issues.',
+        schema_provider_s: 'This is a very long source name that might contain extensive information about the data provider and should still render correctly without breaking the layout or causing any display issues.',
         dc_publisher_sm: ['Very Long Publisher Name That Might Contain Extensive Information'],
         creator_sm: ['Creator with Very Long Name That Might Contain Additional Details'],
       };
@@ -417,7 +417,7 @@ describe('ResourceMetadata Component', () => {
     it('handles special characters in content', () => {
       const specialCharData: GeoDocumentDetails = {
         ...realFixtureWithMinimalFields,
-        dct_provenance_s: 'Source with special chars: !@#$%^&*()',
+        schema_provider_s: 'Source with special chars: !@#$%^&*()',
         dc_publisher_sm: ['Publisher with unicode: ñáéíóú'],
         creator_sm: ['Creator with symbols: <>&"\''],
         dct_spatial_sm: ['Location with numbers: 12345'],

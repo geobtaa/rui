@@ -11,7 +11,6 @@ interface MetadataAttributes {
   dct_language_sm?: string | string[];
   dct_format_s?: string;
   schema_provider_s?: string;
-  dct_provenance_s?: string;
   dct_accessRights_s?: string;
   dct_license_sm?: string | string[];
   dc_subject_sm?: string | string[];
@@ -86,8 +85,7 @@ export function MetadataTable({ data }: MetadataTableProps) {
       ],
     },
 
-    // Institution and Access
-    { key: 'dct_provenance_s', label: 'Institution', colSpan: 3 },
+    // Access
     { key: 'dct_accessRights_s', label: 'Access Rights', colSpan: 3 },
     { key: 'dct_license_sm', label: 'License', colSpan: 3 },
 

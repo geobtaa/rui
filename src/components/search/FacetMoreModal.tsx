@@ -8,9 +8,11 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useFacetModal } from '../../hooks/useFacetModal';
 import type { FacetValuesSort } from '../../types/api';
 import { FACET_LABELS, normalizeFacetId } from '../../utils/facetLabels';
+import { humanizeFieldName } from '../../constants/fieldLabels';
 
 interface FacetMoreModalProps {
   facetId: string;
@@ -38,7 +40,7 @@ export function FacetMoreModal({
   facetLabel,
   isOpen,
   onClose,
-  searchParams,
+  searchParams: searchParamsProp,
   onToggleInclude,
   onToggleExclude,
   onToggleFacetInclude,
@@ -46,6 +48,7 @@ export function FacetMoreModal({
   isValueIncluded,
   isValueExcluded,
 }: FacetMoreModalProps) {
+  const [, setSearchParams] = useSearchParams();
   const {
     items,
     meta,
@@ -62,8 +65,32 @@ export function FacetMoreModal({
   } = useFacetModal({
     facetId,
     isOpen,
-    searchParams,
+    searchParams: searchParamsProp,
   });
+
+  // Handler to remove an advanced clause
+  const handleRemoveAdvancedClause = (clauseIndex: number) => {
+    const params = new URLSearchParams(searchParamsProp);
+    const advQValue = params.get('adv_q');
+    if (!advQValue) return;
+
+    try {
+      const parsed = JSON.parse(advQValue);
+      if (Array.isArray(parsed) && parsed.length > clauseIndex) {
+        // Remove the clause at the specified index
+        const updated = parsed.filter((_: unknown, index: number) => index !== clauseIndex);
+        
+        if (updated.length > 0) {
+          params.set('adv_q', JSON.stringify(updated));
+        } else {
+          params.delete('adv_q');
+        }
+        setSearchParams(params);
+      }
+    } catch (e) {
+      console.warn('Failed to parse adv_q when removing clause:', e);
+    }
+  };
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -117,10 +144,12 @@ export function FacetMoreModal({
       label: string;
       value: string;
       fieldId?: string;
+      clauseIndex?: number; // For advanced clauses: index within the adv_q array
+      clauseData?: { op: string; f: string; q: string }; // For advanced clauses: the clause data
     }> = [];
     const seen = new Set<string>();
 
-    const queryValue = searchParams.get('q');
+    const queryValue = searchParamsProp.get('q');
     if (queryValue) {
       entries.push({
         type: 'query',
@@ -129,20 +158,38 @@ export function FacetMoreModal({
       });
     }
 
-    searchParams.getAll('adv_q').forEach((value, index) => {
+    // Parse and create individual entries for each advanced query clause
+    // Note: There should only be one adv_q param, but we handle multiple for safety
+    let globalClauseIndex = 0;
+    searchParamsProp.getAll('adv_q').forEach((value) => {
       if (!value) return;
-      entries.push({
-        type: 'advanced',
-        label: `Advanced ${index + 1}`,
-        value,
-      });
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Create a separate entry for each clause
+          parsed.forEach((clause: { op: string; f: string; q: string }) => {
+            const fieldLabel = humanizeFieldName(clause.f);
+            entries.push({
+              type: 'advanced',
+              label: `${clause.op} ${fieldLabel}`,
+              value: clause.q,
+              clauseIndex: globalClauseIndex,
+              clauseData: clause,
+            });
+            globalClauseIndex++;
+          });
+        }
+      } catch (e) {
+        // If parsing fails, skip this adv_q entry
+        console.warn('Failed to parse adv_q:', e);
+      }
     });
 
     const addFacetEntries = (
       prefix: 'include_filters[' | 'exclude_filters[' | 'fq[',
       type: 'include' | 'exclude'
     ) => {
-      Array.from(searchParams.keys())
+      Array.from(searchParamsProp.keys())
         .filter((key) => key.startsWith(prefix))
         .forEach((key) => {
           const fieldMatch = key.match(/\[(.*?)\]/);
@@ -154,7 +201,7 @@ export function FacetMoreModal({
             fieldId ||
             'Facet';
 
-          searchParams.getAll(key).forEach((value) => {
+          searchParamsProp.getAll(key).forEach((value) => {
             if (!value) return;
             const signature = `${type}:${normalizedField}:${value}`;
             if (seen.has(signature)) return;
@@ -174,7 +221,7 @@ export function FacetMoreModal({
     addFacetEntries('exclude_filters[', 'exclude');
 
     return entries;
-  }, [searchParams]);
+  }, [searchParamsProp]);
 
   const badgeStyles: Record<
     'query' | 'include' | 'exclude' | 'advanced',
@@ -300,6 +347,32 @@ export function FacetMoreModal({
                           : 'hover:bg-rose-100 focus-visible:ring-rose-500'
                       }`}
                       aria-label={ariaLabel}
+                    >
+                      <span>{entry.label}:</span>
+                      <span>{entry.value}</span>
+                      <X className="h-3 w-3" />
+                    </button>
+                  );
+                }
+
+                // Handle advanced clauses as removable buttons
+                if (entry.type === 'advanced' && entry.clauseIndex !== undefined) {
+                  const handleRemoveAdvanced = () => {
+                    handleRemoveAdvancedClause(entry.clauseIndex!);
+                  };
+
+                  const isNot = entry.clauseData?.op === 'NOT';
+                  const badgeStyle = isNot
+                    ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                    : 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100';
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={handleRemoveAdvanced}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${badgeStyle}`}
+                      aria-label={`Remove ${entry.label}: ${entry.value}`}
                     >
                       <span>{entry.label}:</span>
                       <span>{entry.value}</span>

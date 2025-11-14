@@ -251,7 +251,7 @@ export async function fetchSearchResults(
     index_year_agg: 'gbl_indexyear_im',
     language_agg: 'dct_language_sm',
     subject_agg: 'dct_subject_sm',
-    institution_agg: 'dct_provenance_s',
+    institution_agg: 'schema_provider_s',
     format_agg: 'dct_format_s',
     georeferenced_agg: 'gbl_georeferenced_b',
     id_agg: 'id',

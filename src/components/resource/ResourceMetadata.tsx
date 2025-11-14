@@ -10,10 +10,10 @@ export function ResourceMetadata({ item }: ResourceMetadataProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="space-y-6">
-        {item.dct_provenance_s && (
+        {item.schema_provider_s && (
           <div>
-            <h2 className="text-sm font-medium text-gray-500">Source</h2>
-            <p className="mt-1 text-gray-900">{item.dct_provenance_s}</p>
+            <h2 className="text-sm font-medium text-gray-500">Provider</h2>
+            <p className="mt-1 text-gray-900">{item.schema_provider_s}</p>
           </div>
         )}
 

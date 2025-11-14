@@ -12,7 +12,6 @@ const realFixtureWithAllFields = {
       dct_language_sm: ['English'],
       dct_format_s: 'Paper Map',
       schema_provider_s: 'MIT Libraries',
-      dct_provenance_s: 'MIT Libraries',
       dct_accessRights_s: 'Public',
       dct_license_sm: ['MIT License'],
       dc_subject_sm: ['Paper Maps', 'Historical Maps', 'Library Collections'],
@@ -42,7 +41,6 @@ const realFixtureWithPolygonData = {
       dct_language_sm: ['English', 'Spanish'],
       dct_format_s: 'Shapefile',
       schema_provider_s: 'Tufts University',
-      dct_provenance_s: 'Tufts University',
       dct_accessRights_s: 'Public',
       dct_license_sm: ['Creative Commons'],
       dc_subject_sm: ['Polygon Data', 'Grid Data', 'Administrative Boundaries'],
@@ -62,7 +60,6 @@ const realFixtureWithRestrictedAccess = {
       dct_language_sm: ['English'],
       dct_format_s: 'GeoTIFF',
       schema_provider_s: 'Stanford University',
-      dct_provenance_s: 'Stanford University',
       dct_accessRights_s: 'Restricted',
       dct_license_sm: ['Restricted License'],
       dc_subject_sm: ['Raster Data', 'Satellite Imagery'],
@@ -93,7 +90,6 @@ describe('MetadataTable Component', () => {
       expect(screen.getByText('Language')).toBeInTheDocument();
       expect(screen.getByText('Format')).toBeInTheDocument();
       expect(screen.getByText('Provider')).toBeInTheDocument();
-      expect(screen.getByText('Institution')).toBeInTheDocument();
       expect(screen.getByText('Access Rights')).toBeInTheDocument();
       expect(screen.getByText('License')).toBeInTheDocument();
       expect(screen.getByText('Subject')).toBeInTheDocument();
@@ -146,16 +142,6 @@ describe('MetadataTable Component', () => {
       expect(providerValue).toHaveTextContent('MIT Libraries');
     });
 
-    it('renders institution information', () => {
-      render(<MetadataTable data={realFixtureWithAllFields} />);
-      
-      expect(screen.getByText('Institution')).toBeInTheDocument();
-      
-      // Check that MIT Libraries appears in the Institution section
-      const institutionSection = screen.getByText('Institution').closest('td');
-      const institutionValue = institutionSection?.querySelector('.text-gray-900');
-      expect(institutionValue).toHaveTextContent('MIT Libraries');
-    });
 
     it('renders access rights', () => {
       render(<MetadataTable data={realFixtureWithAllFields} />);
@@ -202,7 +188,6 @@ describe('MetadataTable Component', () => {
       
       // Should not render these (individual fields)
       expect(screen.queryByText('Places')).not.toBeInTheDocument();
-      expect(screen.queryByText('Institution')).not.toBeInTheDocument();
       expect(screen.queryByText('Access Rights')).not.toBeInTheDocument();
       expect(screen.queryByText('License')).not.toBeInTheDocument();
       expect(screen.queryByText('Subject')).not.toBeInTheDocument();
@@ -499,7 +484,6 @@ describe('MetadataTable Component', () => {
       const providerValue = providerSection?.querySelector('.text-gray-900');
       expect(providerValue).toHaveTextContent('Tufts University');
       
-      expect(screen.getByText('Institution')).toBeInTheDocument();
       expect(screen.getByText('Access Rights')).toBeInTheDocument();
       expect(screen.getByText('Public')).toBeInTheDocument();
       expect(screen.getByText('License')).toBeInTheDocument();

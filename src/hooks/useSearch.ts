@@ -125,11 +125,9 @@ export function useSearch() {
     const newParams = new URLSearchParams(searchParams);
 
     if (query !== undefined) {
-      if (query) {
-        newParams.set('q', query);
-      } else {
-        newParams.delete('q');
-      }
+      // Always set 'q' param, even if empty, to ensure API call is made
+      // Empty 'q' will return all results from the API
+      newParams.set('q', query);
       newParams.delete('page'); // Reset page when query changes
     }
 

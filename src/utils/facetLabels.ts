@@ -22,7 +22,7 @@ export const FACET_ID_MAP: Record<string, string> = {
   index_year_agg: 'gbl_indexyear_im',
   language_agg: 'dct_language_sm',
   subject_agg: 'dct_subject_sm',
-  institution_agg: 'dct_provenance_s',
+  institution_agg: 'schema_provider_s',
   format_agg: 'dct_format_s',
   georeferenced_agg: 'gbl_georeferenced_b',
 };
@@ -34,4 +34,24 @@ export function normalizeFacetId(id: string): string {
 export function getFacetLabel(field: string): string {
   const normalized = normalizeFacetId(field);
   return FACET_LABELS[normalized] || normalized;
+}
+
+// Reverse mapping: convert field names to legacy facet names for API endpoints
+const REVERSE_FACET_ID_MAP: Record<string, string> = {
+  'dct_spatial_sm': 'spatial_agg',
+  'gbl_resourceClass_sm': 'resource_class_agg',
+  'gbl_resourceType_sm': 'resource_type_agg',
+  'schema_provider_s': 'provider_agg',
+  'dct_creator_sm': 'creator_agg',
+  'dct_accessRights_s': 'access_rights_agg',
+  'gbl_indexyear_im': 'index_year_agg',
+  'dct_language_sm': 'language_agg',
+  'dct_subject_sm': 'subject_agg',
+  'schema_provider_s': 'institution_agg',
+  'dct_format_s': 'format_agg',
+  'gbl_georeferenced_b': 'georeferenced_agg',
+};
+
+export function getLegacyFacetName(fieldName: string): string {
+  return REVERSE_FACET_ID_MAP[fieldName] || fieldName;
 }

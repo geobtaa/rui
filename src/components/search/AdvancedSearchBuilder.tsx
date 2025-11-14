@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { Plus, X, Sparkles } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import type { AdvancedClause, AdvancedOperator } from '../../types/search';
-import { FIELD_LABELS } from '../../constants/fieldLabels';
+import { FIELD_LABELS, isFieldFacetable, getFacetNameForField } from '../../constants/fieldLabels';
+import { fetchFacetValues } from '../../services/api';
+import type { FacetValue } from '../../types/api';
 
 interface AdvancedSearchBuilderProps {
   clauses: AdvancedClause[];
@@ -22,7 +25,7 @@ const COMMON_FIELD_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'gbl_resourceClass_sm', label: 'Resource Class' },
   { value: 'gbl_resourceType_sm', label: 'Resource Type' },
   { value: 'dct_subject_sm', label: 'Subject' },
-  { value: 'dct_provenance_s', label: 'Institution' },
+  { value: 'schema_provider_s', label: 'Provider' },
 ];
 
 const generateRowId = () => {
@@ -42,20 +45,347 @@ function createRow(partial?: Partial<AdvancedClause>): BuilderRow {
   };
 }
 
+interface AutocompleteState {
+  rowId: string;
+  suggestions: FacetValue[];
+  isLoading: boolean;
+  isOpen: boolean;
+  selectedIndex: number;
+}
+
 export function AdvancedSearchBuilder({
   clauses,
   onApply,
   onCancel,
   onReset,
 }: AdvancedSearchBuilderProps) {
+  const [searchParams] = useSearchParams();
   const [rows, setRows] = useState<BuilderRow[]>(() =>
     clauses.length > 0 ? clauses.map((clause) => createRow(clause)) : [createRow()]
   );
   const [error, setError] = useState<string | null>(null);
+  const [autocomplete, setAutocomplete] = useState<AutocompleteState | null>(null);
+  const autocompleteTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const fieldSelectRefs = useRef<Record<string, HTMLSelectElement | null>>({});
+  const suggestionsRef = useRef<HTMLDivElement | null>(null);
+  const hasFocusedInitial = useRef(false);
+  const focusAttemptRef = useRef(0);
 
   useEffect(() => {
     setRows(clauses.length > 0 ? clauses.map((clause) => createRow(clause)) : [createRow()]);
+    // Reset focus flag when component mounts/remounts
+    hasFocusedInitial.current = false;
+    focusAttemptRef.current = 0;
   }, [clauses]);
+
+  // Focus the first field select when component mounts or becomes visible
+  useEffect(() => {
+    if (hasFocusedInitial.current) return;
+    
+    const attemptFocus = () => {
+      const firstRowId = rows[0]?.id;
+      if (firstRowId && fieldSelectRefs.current[firstRowId]) {
+        const selectElement = fieldSelectRefs.current[firstRowId];
+        if (selectElement && selectElement.offsetParent !== null) {
+          // Element is visible and in the DOM
+          selectElement.focus();
+          hasFocusedInitial.current = true;
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Use multiple attempts with increasing delays to ensure it works
+    // This handles cases where the component is conditionally rendered
+    const timeouts: NodeJS.Timeout[] = [];
+    
+    // First attempt: after current event loop completes
+    timeouts.push(setTimeout(() => {
+      if (!hasFocusedInitial.current && !attemptFocus()) {
+        // Second attempt: after a short delay
+        timeouts.push(setTimeout(() => {
+          if (!hasFocusedInitial.current && !attemptFocus()) {
+            // Third attempt: after a longer delay
+            timeouts.push(setTimeout(() => {
+              if (!hasFocusedInitial.current) {
+                attemptFocus();
+              }
+            }, 150));
+          }
+        }, 100));
+      }
+    }, 0));
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [rows.length]); // Run when rows change (including initial mount)
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(autocompleteTimeoutRef.current).forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+    };
+  }, []);
+
+  // Close autocomplete when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        !Object.values(inputRefs.current).some((ref) => ref?.contains(event.target as Node))
+      ) {
+        setAutocomplete((prev) => (prev ? { ...prev, isOpen: false } : null));
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Build search context from current form rows (excluding the row being edited)
+  const buildSearchContext = useCallback(
+    (excludeRowId: string): URLSearchParams => {
+      const contextParams = new URLSearchParams();
+      
+      // Get all rows except the one being edited
+      const contextRows = rows.filter((row) => row.id !== excludeRowId && row.q.trim().length > 0);
+      
+      if (contextRows.length === 0) {
+        // No context rows, return empty params (will search all)
+        return contextParams;
+      }
+
+      // Check if there's a basic query (all_fields)
+      const basicQueryRow = contextRows.find((row) => row.field === 'all_fields');
+      if (basicQueryRow) {
+        contextParams.set('q', basicQueryRow.q.trim());
+      }
+
+      // Build advanced query from non-basic rows
+      const advancedRows = contextRows.filter((row) => row.field !== 'all_fields');
+      if (advancedRows.length > 0) {
+        const serialized = advancedRows.map(({ op, field, q }) => ({
+          op,
+          f: field,
+          q: q.trim(),
+        }));
+        contextParams.set('adv_q', JSON.stringify(serialized));
+      }
+
+      return contextParams;
+    },
+    [rows]
+  );
+
+  const fetchFacetSuggestions = useCallback(
+    async (rowId: string, fieldName: string, query: string) => {
+      const facetName = getFacetNameForField(fieldName);
+      if (!facetName) return;
+
+      setAutocomplete((prev) =>
+        prev?.rowId === rowId
+          ? { ...prev, isLoading: true, isOpen: true }
+          : {
+              rowId,
+              suggestions: [],
+              isLoading: true,
+              isOpen: true,
+              selectedIndex: -1,
+            }
+      );
+
+      try {
+        // Build search context from current form rows (excluding the row being edited)
+        const contextParams = buildSearchContext(rowId);
+        
+        console.log('Fetching facet suggestions for:', {
+          fieldName,
+          facetName,
+          query,
+          context: Object.fromEntries(contextParams.entries()),
+        });
+
+        const response = await fetchFacetValues({
+          facetName,
+          searchParams: contextParams,
+          perPage: 20,
+          qFacet: query || undefined,
+          sort: 'count_desc',
+        });
+
+        console.log('Facet suggestions response:', {
+          fieldName,
+          facetName,
+          count: response.data?.length || 0,
+          data: response.data,
+        });
+
+        setAutocomplete((prev) =>
+          prev?.rowId === rowId
+            ? {
+                ...prev,
+                suggestions: response.data || [],
+                isLoading: false,
+                selectedIndex: -1,
+              }
+            : prev
+        );
+      } catch (err) {
+        console.error('Error fetching facet suggestions:', {
+          fieldName,
+          facetName,
+          error: err,
+        });
+        setAutocomplete((prev) =>
+          prev?.rowId === rowId
+            ? {
+                ...prev,
+                suggestions: [],
+                isLoading: false,
+              }
+            : prev
+        );
+      }
+    },
+    [buildSearchContext]
+  );
+
+  const handleFieldChange = (rowId: string, fieldName: string) => {
+    // Clear any pending timeouts for this row
+    if (autocompleteTimeoutRef.current[rowId]) {
+      clearTimeout(autocompleteTimeoutRef.current[rowId]);
+      delete autocompleteTimeoutRef.current[rowId];
+    }
+    
+    // Always close/reset autocomplete when field changes
+    setAutocomplete((prev) => (prev?.rowId === rowId ? null : prev));
+    
+    updateRow(rowId, 'field', fieldName);
+    // Clear the value when field changes
+    updateRow(rowId, 'q', '');
+  };
+
+  const handleValueChange = (rowId: string, value: string) => {
+    updateRow(rowId, 'q', value);
+    const row = rows.find((r) => r.id === rowId);
+    
+    // If this row has autocomplete open, refetch its suggestions
+    if (row && isFieldFacetable(row.field)) {
+      // Clear existing timeout
+      if (autocompleteTimeoutRef.current[rowId]) {
+        clearTimeout(autocompleteTimeoutRef.current[rowId]);
+      }
+
+      // Debounce facet fetching for this row
+      // Note: fetchFacetSuggestions will use buildSearchContext which reads from rows state
+      // By the time the timeout fires, the state will be updated
+      autocompleteTimeoutRef.current[rowId] = setTimeout(() => {
+        // Use the value parameter directly, but get field from updated state
+        // We'll use a ref to get the latest rows, or just rely on the closure
+        // Since buildSearchContext uses rows from closure, we need to ensure it has latest
+        // Actually, buildSearchContext is a useCallback with rows dependency, so it will have latest
+        fetchFacetSuggestions(rowId, row.field, value);
+      }, 300);
+    }
+
+    // If another row has autocomplete open, refetch its suggestions
+    // (because the context has changed)
+    if (autocomplete && autocomplete.rowId !== rowId && autocomplete.isOpen) {
+      const otherRow = rows.find((r) => r.id === autocomplete.rowId);
+      if (otherRow && isFieldFacetable(otherRow.field)) {
+        // Clear existing timeout for the other row
+        if (autocompleteTimeoutRef.current[autocomplete.rowId]) {
+          clearTimeout(autocompleteTimeoutRef.current[autocomplete.rowId]);
+        }
+        // Refetch with updated context
+        // buildSearchContext will use the updated rows state (excluding the changed rowId)
+        autocompleteTimeoutRef.current[autocomplete.rowId] = setTimeout(() => {
+          fetchFacetSuggestions(autocomplete.rowId, otherRow.field, otherRow.q);
+        }, 300);
+      }
+    }
+  };
+
+  const handleValueFocus = (rowId: string) => {
+    const row = rows.find((r) => r.id === rowId);
+    if (!row || !isFieldFacetable(row.field)) return;
+
+    // Fetch initial suggestions if autocomplete is not already open
+    if (!autocomplete || autocomplete.rowId !== rowId || !autocomplete.isOpen) {
+      fetchFacetSuggestions(rowId, row.field, row.q);
+    }
+  };
+
+  const handleValueBlur = (rowId: string) => {
+    // Use a small delay to allow clicking on suggestions before closing
+    setTimeout(() => {
+      setAutocomplete((prev) => {
+        // Only close if the blur is for the current autocomplete row
+        // and the click wasn't on a suggestion
+        if (prev?.rowId === rowId) {
+          const activeElement = document.activeElement;
+          const suggestionsElement = suggestionsRef.current;
+          // If focus moved to a suggestion, don't close
+          if (suggestionsElement?.contains(activeElement)) {
+            return prev;
+          }
+          return null;
+        }
+        return prev;
+      });
+    }, 200);
+  };
+
+  const handleSuggestionSelect = (rowId: string, value: string) => {
+    updateRow(rowId, 'q', value);
+    setAutocomplete((prev) => (prev?.rowId === rowId ? { ...prev, isOpen: false } : prev));
+  };
+
+  const handleKeyDown = (
+    rowId: string,
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (!autocomplete || autocomplete.rowId !== rowId || !autocomplete.isOpen) return;
+
+    const { selectedIndex, suggestions } = autocomplete;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setAutocomplete((prev) =>
+        prev?.rowId === rowId
+          ? {
+              ...prev,
+              selectedIndex: Math.min(selectedIndex + 1, suggestions.length - 1),
+            }
+          : prev
+      );
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setAutocomplete((prev) =>
+        prev?.rowId === rowId
+          ? {
+              ...prev,
+              selectedIndex: Math.max(selectedIndex - 1, -1),
+            }
+          : prev
+      );
+    } else if (event.key === 'Enter' && selectedIndex >= 0 && suggestions[selectedIndex]) {
+      event.preventDefault();
+      const selected = suggestions[selectedIndex];
+      const value = String(selected.attributes.value);
+      handleSuggestionSelect(rowId, value);
+    } else if (event.key === 'Escape') {
+      setAutocomplete((prev) =>
+        prev?.rowId === rowId ? { ...prev, isOpen: false } : prev
+      );
+    }
+  };
 
   const fieldOptions = useMemo(() => {
     const seen = new Set(COMMON_FIELD_OPTIONS.map((option) => option.value));
@@ -77,6 +407,7 @@ export function AdvancedSearchBuilder({
       'solr_geom', // Geometry
       'dc_publisher_sm', // Duplicate Publisher (prefer dct_publisher_sm)
       'dc_type_sm', // Duplicate Type (prefer dct_type_sm)
+      'dc_subject_sm', // Duplicate Subject (prefer dct_subject_sm)
     ]);
 
     const remaining = Object.entries(FIELD_LABELS)
@@ -97,11 +428,26 @@ export function AdvancedSearchBuilder({
   };
 
   const removeRow = (id: string) => {
+    // Cleanup autocomplete and timeout for removed row
+    if (autocompleteTimeoutRef.current[id]) {
+      clearTimeout(autocompleteTimeoutRef.current[id]);
+      delete autocompleteTimeoutRef.current[id];
+    }
+    setAutocomplete((prev) => (prev?.rowId === id ? null : prev));
+    delete inputRefs.current[id];
+    delete fieldSelectRefs.current[id];
     setRows((prev) => (prev.length === 1 ? prev : prev.filter((row) => row.id !== id)));
   };
 
   const handleAddRow = () => {
-    setRows((prev) => [...prev, createRow()]);
+    const newRow = createRow();
+    setRows((prev) => [...prev, newRow]);
+    // Focus the newly added field select after it's rendered
+    setTimeout(() => {
+      if (fieldSelectRefs.current[newRow.id]) {
+        fieldSelectRefs.current[newRow.id]?.focus();
+      }
+    }, 0);
   };
 
   const handleApply = () => {
@@ -149,6 +495,119 @@ export function AdvancedSearchBuilder({
             key={row.id}
             className="flex flex-col gap-3 md:grid md:grid-cols-12 md:items-center md:gap-4"
           >
+            <label className="flex flex-col gap-1 md:col-span-4">
+              <span className="text-xs font-semibold text-blue-700 uppercase">Field</span>
+              <select
+                ref={(el) => {
+                  fieldSelectRefs.current[row.id] = el;
+                  // Focus the first field select when it's mounted (first row, first render)
+                  if (index === 0 && el && !hasFocusedInitial.current) {
+                    // Try to focus immediately
+                    if (el.offsetParent !== null) {
+                      // Element is visible, focus it
+                      requestAnimationFrame(() => {
+                        el.focus();
+                        hasFocusedInitial.current = true;
+                      });
+                    } else {
+                      // Element not yet visible, wait a bit
+                      setTimeout(() => {
+                        if (el.offsetParent !== null && !hasFocusedInitial.current) {
+                          el.focus();
+                          hasFocusedInitial.current = true;
+                        }
+                      }, 100);
+                    }
+                  }
+                }}
+                value={row.field}
+                onChange={(event) => handleFieldChange(row.id, event.target.value)}
+                className="rounded-md border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                {fieldOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 md:col-span-5 relative">
+              <span className="text-xs font-semibold text-blue-700 uppercase flex items-center gap-1">
+                Value
+                {isFieldFacetable(row.field) && (
+                  <Sparkles className="h-3 w-3 text-blue-500" aria-label="Autocomplete available" />
+                )}
+              </span>
+              <div className="relative">
+                <input
+                  ref={(el) => {
+                    inputRefs.current[row.id] = el;
+                  }}
+                  type="text"
+                  value={row.q}
+                  onChange={(event) => handleValueChange(row.id, event.target.value)}
+                  onFocus={() => handleValueFocus(row.id)}
+                  onBlur={() => handleValueBlur(row.id)}
+                  onKeyDown={(event) => handleKeyDown(row.id, event)}
+                  className="rounded-md border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+                  placeholder={
+                    isFieldFacetable(row.field)
+                      ? 'Type to search or select from suggestions'
+                      : 'Enter search term'
+                  }
+                />
+                {autocomplete?.rowId === row.id &&
+                  isFieldFacetable(row.field) &&
+                  autocomplete.isOpen && (
+                    <div
+                      ref={suggestionsRef}
+                      className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-blue-200 max-h-60 overflow-auto"
+                    >
+                      {autocomplete.isLoading ? (
+                        <div className="px-4 py-2 text-sm text-gray-500">Loading suggestions...</div>
+                      ) : autocomplete.suggestions.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-gray-500">
+                          No suggestions found
+                        </div>
+                      ) : (
+                        autocomplete.suggestions.map((suggestion, index) => {
+                          const value = String(suggestion.attributes.value);
+                          const label = suggestion.attributes.label;
+                          const hits = suggestion.attributes.hits;
+                          const isSelected = index === autocomplete.selectedIndex;
+
+                          return (
+                            <button
+                              key={suggestion.id || index}
+                              type="button"
+                              onClick={() => handleSuggestionSelect(row.id, value)}
+                              className={`w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors ${
+                                isSelected ? 'bg-blue-50' : ''
+                              }`}
+                              onMouseEnter={() =>
+                                setAutocomplete((prev) =>
+                                  prev?.rowId === row.id
+                                    ? { ...prev, selectedIndex: index }
+                                    : prev
+                                )
+                              }
+                            >
+                              <div className="text-sm text-gray-900">{label}</div>
+                              {hits !== undefined && (
+                                <div className="text-xs text-gray-500">
+                                  {hits} {hits === 1 ? 'result' : 'results'}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+              </div>
+            </label>
+
             <label className="flex flex-col gap-1 md:col-span-2">
               <span className="text-xs font-semibold text-blue-700 uppercase">Operator</span>
               <select
@@ -162,32 +621,6 @@ export function AdvancedSearchBuilder({
                   </option>
                 ))}
               </select>
-            </label>
-
-            <label className="flex flex-col gap-1 md:col-span-4">
-              <span className="text-xs font-semibold text-blue-700 uppercase">Field</span>
-              <select
-                value={row.field}
-                onChange={(event) => updateRow(row.id, 'field', event.target.value)}
-                className="rounded-md border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                {fieldOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1 md:col-span-5">
-              <span className="text-xs font-semibold text-blue-700 uppercase">Value</span>
-              <input
-                type="text"
-                value={row.q}
-                onChange={(event) => updateRow(row.id, 'q', event.target.value)}
-                className="rounded-md border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="Enter search term"
-              />
             </label>
 
             <div className="flex justify-end md:col-span-1">

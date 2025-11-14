@@ -161,7 +161,11 @@ function SearchContent() {
         <div className="mb-6">
           <button
             type="button"
-            onClick={() => setShowAdvancedBuilder((prev) => !prev)}
+            onClick={(e) => {
+              setShowAdvancedBuilder((prev) => !prev);
+              // Blur the button so it doesn't interfere with autofocus
+              (e.currentTarget as HTMLButtonElement).blur();
+            }}
             className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               advancedQuery.length > 0
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
