@@ -235,6 +235,27 @@ export async function fetchSearchResults(
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
 
+  // Preserve geo filters from current URL if they exist
+  // These are set by the GeospatialFilterMap component via URL params
+  const currentUrl = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+  if (currentUrl) {
+    const geoParams = [
+      'include_filters[geo][type]',
+      'include_filters[geo][field]',
+      'include_filters[geo][top_left][lat]',
+      'include_filters[geo][top_left][lon]',
+      'include_filters[geo][bottom_right][lat]',
+      'include_filters[geo][bottom_right][lon]',
+    ];
+    
+    geoParams.forEach((key) => {
+      const value = currentUrl.searchParams.get(key);
+      if (value) {
+        url.searchParams.set(key, value);
+      }
+    });
+  }
+
   if (sort && sort !== 'relevance') {
     url.searchParams.set('sort', sort);
   }
@@ -369,7 +390,15 @@ export async function fetchFacetValues({
     url.searchParams.set('q_facet', qFacet);
   }
 
-  return unifiedFetch<FacetValuesResponse>(url.toString(), options);
+  console.log('🔗 fetchFacetValues URL:', url.toString());
+  const response = await unifiedFetch<FacetValuesResponse>(url.toString(), options);
+  console.log('📦 fetchFacetValues response:', {
+    hasData: !!response.data,
+    dataLength: response.data?.length || 0,
+    hasMeta: !!response.meta,
+    metaTotalCount: response.meta?.totalCount,
+  });
+  return response;
 }
 
 export async function fetchResourceDetails(

@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import { fetchSuggestions } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface SearchFieldProps {
   onSearch?: (query: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  showAdvancedButton?: boolean;
+  onAdvancedSearchClick?: () => void;
 }
 
 export function SearchField({
   onSearch,
   placeholder = 'Search...',
   autoFocus,
+  showAdvancedButton = false,
+  onAdvancedSearchClick,
 }: SearchFieldProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<
@@ -23,6 +27,7 @@ export function SearchField({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchSuggestionsDebounced = setTimeout(async () => {
@@ -77,12 +82,46 @@ export function SearchField({
     } else if (e.key === 'Enter' && selectedIndex >= 0) {
       e.preventDefault();
       const suggestion = suggestions[selectedIndex];
-      navigate(`/search?q=${encodeURIComponent(suggestion.text)}`);
+      const newParams = new URLSearchParams();
+      newParams.set('q', suggestion.text);
+      
+      // Preserve category filters from current URL
+      const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
+      const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');
+      
+      if (categoryFilters.length > 0) {
+        categoryFilters.forEach(value => {
+          newParams.append('include_filters[gbl_resourceClass_sm][]', value);
+        });
+      } else if (legacyCategoryFilters.length > 0) {
+        legacyCategoryFilters.forEach(value => {
+          newParams.append('include_filters[gbl_resourceClass_sm][]', value);
+        });
+      }
+      
+      navigate(`/search?${newParams.toString()}`);
       setShowSuggestions(false);
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
     }
   };
+
+  const handleAdvancedSearchClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onAdvancedSearchClick) {
+      onAdvancedSearchClick();
+    } else {
+      // Default behavior: navigate to search page and trigger advanced search
+      const currentQuery = query.trim();
+      if (currentQuery) {
+        navigate(`/search?q=${encodeURIComponent(currentQuery)}&showAdvanced=true`);
+      } else {
+        navigate('/search?showAdvanced=true');
+      }
+    }
+  };
+
+  const rightPadding = showAdvancedButton ? 'pr-24' : 'pr-12';
 
   return (
     <div className="relative">
@@ -102,11 +141,22 @@ export function SearchField({
           autoFocus={autoFocus}
           aria-label="Search input"
           aria-describedby="search-description"
-          className="w-full px-4 py-2 pl-10 pr-12 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className={`w-full px-4 py-2 pl-10 ${rightPadding} text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
         />
         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
           <Search className="w-5 h-5 text-gray-400" aria-hidden="true" />
         </div>
+        {showAdvancedButton && (
+          <button
+            type="button"
+            onClick={handleAdvancedSearchClick}
+            className="absolute inset-y-0 right-12 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+            aria-label="Advanced search"
+            title="Advanced search"
+          >
+            <Settings className="w-5 h-5" aria-hidden="true" />
+          </button>
+        )}
         <button
           type="submit"
           className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-r-lg"
@@ -132,7 +182,24 @@ export function SearchField({
                 index === selectedIndex ? 'bg-gray-50' : ''
               }`}
               onClick={() => {
-                navigate(`/search?q=${encodeURIComponent(suggestion.text)}`);
+                const newParams = new URLSearchParams();
+                newParams.set('q', suggestion.text);
+                
+                // Preserve category filters from current URL
+                const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
+                const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');
+                
+                if (categoryFilters.length > 0) {
+                  categoryFilters.forEach(value => {
+                    newParams.append('include_filters[gbl_resourceClass_sm][]', value);
+                  });
+                } else if (legacyCategoryFilters.length > 0) {
+                  legacyCategoryFilters.forEach(value => {
+                    newParams.append('include_filters[gbl_resourceClass_sm][]', value);
+                  });
+                }
+                
+                navigate(`/search?${newParams.toString()}`);
                 setShowSuggestions(false);
               }}
               onMouseEnter={() => setSelectedIndex(index)}

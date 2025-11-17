@@ -28,11 +28,52 @@ export function SearchConstraints({
   onClearAll,
 }: SearchConstraintsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check for geo filter (bbox)
+  const geoType = searchParams.get('include_filters[geo][type]');
+  const hasGeoFilter = geoType === 'bbox';
+  
+  // Parse bbox coordinates
+  const getBBoxDisplay = (): string | null => {
+    if (!hasGeoFilter) return null;
+    
+    const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
+    const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
+    const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
+    const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
+    
+    if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
+      // Format as N E S W (North, East, South, West)
+      // top_left is northwest (N, W)
+      // bottom_right is southeast (S, E)
+      const n = parseFloat(topLeftLat).toFixed(2);
+      const e = parseFloat(bottomRightLon).toFixed(2);
+      const s = parseFloat(bottomRightLat).toFixed(2);
+      const w = parseFloat(topLeftLon).toFixed(2);
+      
+      return `bbox: ${n}°N ${e}°E ${s}°S ${w}°W`;
+    }
+    return null;
+  };
+
+  const handleRemoveGeoFilter = () => {
+    const newParams = new URLSearchParams(searchParams);
+    // Remove all geo filter params
+    Array.from(newParams.keys())
+      .filter((key) => key.startsWith('include_filters[geo]'))
+      .forEach((key) => newParams.delete(key));
+    newParams.delete('page');
+    setSearchParams(newParams);
+  };
+
+  const bboxDisplay = getBBoxDisplay();
+
   if (
     facets.length === 0 &&
     excludeFacets.length === 0 &&
     !query &&
-    advancedClauses.length === 0
+    advancedClauses.length === 0 &&
+    !hasGeoFilter
   ) {
     return null;
   }
@@ -51,18 +92,30 @@ export function SearchConstraints({
             <X size={14} className="text-blue-500" />
           </button>
         )}
-        {facets.map((facet, index) => (
+        {hasGeoFilter && bboxDisplay && (
           <button
-            key={`${facet.field}-${index}`}
-            onClick={() => onRemoveFacet(facet)}
+            onClick={handleRemoveGeoFilter}
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+            title="Remove location filter"
           >
-            <span className="text-sm">
-              {getFacetLabel(facet.field)}: {facet.value}
-            </span>
+            <span className="text-sm">{bboxDisplay}</span>
             <X size={14} className="text-blue-500" />
           </button>
-        ))}
+        )}
+        {facets
+          .filter((facet) => !facet.field.startsWith('geo')) // Filter out geo-related facets
+          .map((facet, index) => (
+            <button
+              key={`${facet.field}-${index}`}
+              onClick={() => onRemoveFacet(facet)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+            >
+              <span className="text-sm">
+                {getFacetLabel(facet.field)}: {facet.value}
+              </span>
+              <X size={14} className="text-blue-500" />
+            </button>
+          ))}
         {excludeFacets.map((facet, index) => (
           <button
             key={`exclude-${facet.field}-${index}`}

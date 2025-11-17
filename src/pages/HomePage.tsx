@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { SearchField } from '../components/SearchField';
+import { ResourceClassFilterTabs } from '../components/search/ResourceClassFilterTabs';
 import {
   Database,
   Map,
@@ -17,6 +18,7 @@ import { fetchSearchResults } from '../services/api';
 
 export function HomePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [resourceCounts, setResourceCounts] = useState<Record<string, number>>(
     {}
   );
@@ -105,8 +107,31 @@ export function HomePage() {
 
   const handleSearch = (query: string) => {
     if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
+      const newParams = new URLSearchParams();
+      newParams.set('q', query);
+      
+      // Preserve category filters from current URL (if any)
+      const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
+      const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');
+      
+      // Use include_filters format (preferred)
+      if (categoryFilters.length > 0) {
+        categoryFilters.forEach(value => {
+          newParams.append('include_filters[gbl_resourceClass_sm][]', value);
+        });
+      } else if (legacyCategoryFilters.length > 0) {
+        // Fall back to legacy format if present
+        legacyCategoryFilters.forEach(value => {
+          newParams.append('include_filters[gbl_resourceClass_sm][]', value);
+        });
+      }
+      
+      navigate(`/search?${newParams.toString()}`);
     }
+  };
+
+  const handleAdvancedSearchClick = () => {
+    navigate('/search?showAdvanced=true');
   };
 
   const handleResourceClassClick = (aggValue: string) => {
@@ -141,7 +166,12 @@ export function HomePage() {
                   onSearch={handleSearch}
                   placeholder="Search for maps, data, imagery..."
                   autoFocus
+                  showAdvancedButton={true}
+                  onAdvancedSearchClick={handleAdvancedSearchClick}
                 />
+                <div className="mt-1">
+                  <ResourceClassFilterTabs />
+                </div>
               </div>
 
               <div className="text-sm text-gray-500">
