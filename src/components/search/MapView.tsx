@@ -1,18 +1,53 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GeoDocument } from '../../types/api';
 import { useMap } from '../../context/MapContext';
+import { useSearchParams } from 'react-router-dom';
 
 interface MapViewProps {
   results: GeoDocument[];
+}
+
+interface BBox {
+  topLeft: { lat: number; lon: number };
+  bottomRight: { lat: number; lon: number };
 }
 
 export function MapView({ results }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const highlightLayerRef = useRef<L.GeoJSON | null>(null);
+  const filterRectRef = useRef<L.Rectangle | null>(null);
+  const resultLayerRef = useRef<L.GeoJSON | null>(null);
   const { hoveredGeometry } = useMap();
+  const [searchParams] = useSearchParams();
+  const isUpdatingFromParamsRef = useRef(false);
+
+  // Parse bbox from URL params
+  const getBBoxFromParams = useCallback((): BBox | null => {
+    const type = searchParams.get('include_filters[geo][type]');
+    if (type !== 'bbox') return null;
+
+    const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
+    const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
+    const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
+    const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
+
+    if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
+      return {
+        topLeft: {
+          lat: parseFloat(topLeftLat),
+          lon: parseFloat(topLeftLon),
+        },
+        bottomRight: {
+          lat: parseFloat(bottomRightLat),
+          lon: parseFloat(bottomRightLon),
+        },
+      };
+    }
+    return null;
+  }, [searchParams]);
 
   useEffect(() => {
     const startTime = performance.now();
@@ -41,16 +76,15 @@ export function MapView({ results }: MapViewProps) {
       console.log('✅ Map initialized');
     }
 
+    // Clear existing result layer (but preserve filter rectangle)
+    if (resultLayerRef.current) {
+      mapRef.current.removeLayer(resultLayerRef.current);
+      resultLayerRef.current = null;
+    }
+
     // Always render if we have results
     if (results && results.length > 0) {
       console.log('🎯 Rendering map with', results.length, 'results');
-
-      // Clear existing layers
-      mapRef.current.eachLayer((layer) => {
-        if (layer instanceof L.GeoJSON) {
-          mapRef.current?.removeLayer(layer);
-        }
-      });
 
       // Add GeoJSON features for each result
       const features = results
@@ -84,8 +118,21 @@ export function MapView({ results }: MapViewProps) {
           }
         ).addTo(mapRef.current);
 
-        // Fit bounds to show all features
-        mapRef.current.fitBounds(geoJsonLayer.getBounds());
+        resultLayerRef.current = geoJsonLayer;
+
+        // Fit bounds to show all features or geo filter, whichever is more appropriate
+        const bbox = getBBoxFromParams();
+        if (bbox && filterRectRef.current) {
+          // If there's a geo filter, show both the filter area and the results
+          const resultBounds = geoJsonLayer.getBounds();
+          const filterBounds = filterRectRef.current.getBounds();
+          // Fit to the union of both bounds
+          const combinedBounds = resultBounds.extend(filterBounds);
+          mapRef.current.fitBounds(combinedBounds, { padding: [20, 20] });
+        } else {
+          // No filter, just fit to results
+          mapRef.current.fitBounds(geoJsonLayer.getBounds());
+        }
 
         const endTime = performance.now();
         console.log(
@@ -103,7 +150,62 @@ export function MapView({ results }: MapViewProps) {
         mapRef.current = null;
       }
     };
-  }, [results.length, JSON.stringify(results.map((r) => r.id))]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [results.length, JSON.stringify(results.map((r) => r.id)), getBBoxFromParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Display geo filter bbox on map and pan/zoom to it
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const bbox = getBBoxFromParams();
+    
+    // Clear existing filter rectangle
+    if (filterRectRef.current) {
+      mapRef.current.removeLayer(filterRectRef.current);
+      filterRectRef.current = null;
+    }
+
+    // Add filter bbox as a rectangle if it exists
+    if (bbox) {
+      try {
+        isUpdatingFromParamsRef.current = true;
+        const filterBounds = L.latLngBounds(
+          [bbox.bottomRight.lat, bbox.topLeft.lon], // Southwest
+          [bbox.topLeft.lat, bbox.bottomRight.lon]  // Northeast
+        );
+
+        // Create a rectangle for the filter area
+        const filterRect = L.rectangle(filterBounds, {
+          color: '#ef4444',
+          weight: 2,
+          opacity: 0.8,
+          fillColor: '#ef4444',
+          fillOpacity: 0.1,
+          dashArray: '10, 5',
+        }).addTo(mapRef.current);
+
+        filterRectRef.current = filterRect;
+
+        // Pan and zoom to show the filter area
+        // If we have results, show both; otherwise just show the filter
+        if (resultLayerRef.current) {
+          // Combine filter bounds with result bounds
+          const resultBounds = resultLayerRef.current.getBounds();
+          const combinedBounds = filterBounds.extend(resultBounds);
+          mapRef.current.fitBounds(combinedBounds, { padding: [20, 20] });
+        } else {
+          // No results, just show the filter area
+          mapRef.current.fitBounds(filterBounds, { padding: [20, 20] });
+        }
+
+        setTimeout(() => {
+          isUpdatingFromParamsRef.current = false;
+        }, 100);
+      } catch (error) {
+        console.error('Error displaying geo filter:', error);
+        isUpdatingFromParamsRef.current = false;
+      }
+    }
+  }, [getBBoxFromParams]);
 
   useEffect(() => {
     if (!mapRef.current) return;

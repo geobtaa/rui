@@ -8,6 +8,9 @@ export const FACET_LABELS: Record<string, string> = {
   dct_accessRights_s: 'Access',
   gbl_indexyear_im: 'Year',
   dct_language_sm: 'Language',
+  dct_subject_sm: 'Subject',
+  dct_subjects_sm: 'Subject',
+  dcat_theme_sm: 'Theme',
 };
 
 // Backward-compat mapping for legacy *_agg IDs to new field IDs

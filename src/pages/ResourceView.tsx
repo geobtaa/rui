@@ -19,6 +19,7 @@ import { FullDetailsTable } from '../components/resource/FullDetailsTable';
 import { LocationMap } from '../components/resource/LocationMap';
 import { DownloadsTable } from '../components/resource/DownloadsTable';
 import { LinksTable } from '../components/resource/LinksTable';
+import { SimilarItemsCarousel } from '../components/resource/SimilarItemsCarousel';
 
 // Define types for search results
 interface SearchResult {
@@ -58,6 +59,21 @@ interface ResourceData extends GeoDocument {
       thumbnail_url?: string;
       links?: Record<string, Array<{ label: string; url: string }>>;
       relationships?: Record<string, unknown>;
+      similar_items?: Array<{
+        id: string;
+        attributes: {
+          dct_title_s: string;
+          schema_provider_s?: string;
+          gbl_resourceClass_sm?: string[];
+          [key: string]: unknown;
+        };
+        meta?: {
+          ui?: {
+            thumbnail_url?: string;
+            [key: string]: unknown;
+          };
+        };
+      }>;
     };
   };
 }
@@ -519,6 +535,15 @@ export function ResourceView() {
               </div>
             </>
           )}
+
+          {/* Similar Items Carousel - Full width above footer */}
+          {data?.meta?.ui?.similar_items &&
+            Array.isArray(data.meta.ui.similar_items) &&
+            data.meta.ui.similar_items.length > 0 && (
+              <SimilarItemsCarousel
+                similarItems={data.meta.ui.similar_items as unknown as GeoDocument[]}
+              />
+            )}
         </div>
       </main>
 

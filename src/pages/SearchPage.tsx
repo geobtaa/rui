@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SearchResults } from '../components/SearchResults';
 import { Pagination } from '../components/Pagination';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -8,16 +9,30 @@ import { Footer } from '../components/layout/Footer';
 import { useSearch } from '../hooks/useSearch';
 import type { AdvancedClause, FacetFilter } from '../types/search';
 import { FacetList } from '../components/FacetList';
-import { MapView } from '../components/search/MapView';
+// import { MapView } from '../components/search/MapView';
 import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
 import { AdvancedSearchBuilder } from '../components/search/AdvancedSearchBuilder';
+import { GeospatialFilterMap } from '../components/search/GeospatialFilterMap';
 
 // Create a separate component for the search content
 function SearchContent() {
   console.log('🔄 SearchContent rendering...');
 
-  const [showAdvancedBuilder, setShowAdvancedBuilder] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showAdvancedParam = searchParams.get('showAdvanced') === 'true';
+  const [showAdvancedBuilder, setShowAdvancedBuilder] = useState(showAdvancedParam);
+
+  // Update showAdvancedBuilder when URL param changes
+  useEffect(() => {
+    if (showAdvancedParam) {
+      setShowAdvancedBuilder(true);
+      // Remove the showAdvanced param after using it
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('showAdvanced');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [showAdvancedParam, searchParams, setSearchParams]);
 
   const {
     query,
@@ -84,6 +99,9 @@ function SearchContent() {
   };
 
   const handleClearAll = () => {
+    const newParams = new URLSearchParams();
+    // Clear all search params including geo filters
+    setSearchParams(newParams);
     updateSearch({
       query: '',
       facets: [],
@@ -190,11 +208,12 @@ function SearchContent() {
           {/* Responsive grid layout */}
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Facets - Collapsible on mobile */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-3">
               <details className="lg:hidden mb-4">
                 <summary className="text-lg font-semibold cursor-pointer py-2">
                   Filter Results
                 </summary>
+                <GeospatialFilterMap />
                 {searchResults?.included ? (
                   <FacetList
                     facets={searchResults.included.filter(
@@ -206,6 +225,7 @@ function SearchContent() {
                 )}
               </details>
               <div className="hidden lg:block">
+                <GeospatialFilterMap />
                 {searchResults?.included ? (
                   <FacetList
                     facets={searchResults.included.filter(
@@ -219,7 +239,7 @@ function SearchContent() {
             </div>
 
             {/* Results - Full width on mobile */}
-            <div className="lg:col-span-6">
+            <div className="lg:col-span-9">
               {error ? (
                 <ErrorMessage message={error} />
               ) : (
@@ -267,12 +287,6 @@ function SearchContent() {
               )}
             </div>
 
-            {/* Map - Hidden by default on mobile, toggleable */}
-            <div className="lg:col-span-4">
-              <div className="lg:sticky lg:top-[88px]">
-                <MapView results={searchResults?.data || []} />
-              </div>
-            </div>
           </div>
         </div>
       </main>

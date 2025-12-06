@@ -38,7 +38,13 @@ export function useFacetModal({
   const lastParamsRef = useRef<string>('');
 
   useEffect(() => {
-    if (!isOpen || !facetId) return;
+    if (!isOpen || !facetId) {
+      // Reset when modal closes
+      if (!isOpen) {
+        lastParamsRef.current = '';
+      }
+      return;
+    }
     setItems([]);
     setMeta(null);
     setHasLoaded(false);
@@ -67,6 +73,15 @@ export function useFacetModal({
       setError(null);
 
       try {
+        console.log('🔍 Loading facet values:', {
+          facetId,
+          page: nextPage,
+          perPage: nextPerPage,
+          sort: nextSort,
+          qFacet: nextQFacet,
+          searchParams: searchParams.toString(),
+        });
+        
         const response = await fetchFacetValues({
           facetName: facetId,
           searchParams: new URLSearchParams(searchParams),
@@ -76,7 +91,13 @@ export function useFacetModal({
           qFacet: nextQFacet || undefined,
         });
 
-        setItems(response.data);
+        console.log('✅ Facet values response:', {
+          dataLength: response.data?.length || 0,
+          meta: response.meta,
+          totalCount: response.meta?.totalCount || 0,
+        });
+
+        setItems(response.data || []);
         setMeta(response.meta);
         setPageState(nextPage);
         setPerPageState(nextPerPage);
@@ -85,6 +106,7 @@ export function useFacetModal({
         setHasLoaded(true);
         lastParamsRef.current = paramsSignature;
       } catch (err) {
+        console.error('❌ Error loading facet values:', err);
         setError(err instanceof Error ? err.message : 'Failed to load facet values');
       } finally {
         setIsLoading(false);
@@ -104,13 +126,16 @@ export function useFacetModal({
 
     const paramsChanged = lastParamsRef.current !== paramsSignature;
 
-    if (paramsChanged) {
+    // Always load when modal opens
+    // If params changed or we haven't loaded yet, reset to page 1
+    if (paramsChanged || !hasLoaded) {
       lastParamsRef.current = paramsSignature;
       loadFacetValuesRef.current({ nextPage: 1 });
     } else {
+      // Params unchanged and already loaded, just refetch with current state
       loadFacetValuesRef.current();
     }
-  }, [facetId, isOpen, paramsSignature]);
+  }, [facetId, isOpen, paramsSignature, hasLoaded]);
 
   const setPage = useCallback(
     (value: number) => {
