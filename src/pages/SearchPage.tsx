@@ -287,12 +287,6 @@ function SearchContent() {
               )}
             </div>
 
-            {/* Map - Temporarily disabled, will be re-enabled with new functionality */}
-            {/* <div className="lg:col-span-4">
-              <div className="lg:sticky lg:top-[88px]">
-                <MapView results={searchResults?.data || []} />
-              </div>
-            </div> */}
           </div>
         </div>
       </main>

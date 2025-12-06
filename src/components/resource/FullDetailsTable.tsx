@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   humanizeFieldName,
@@ -25,11 +25,13 @@ interface FullDetailsTableProps {
 
 const relationshipLabels: { [key: string]: string } = {
   memberOf: 'Belongs to collection...',
+  'pcdm:memberOf': 'Belongs to collection...',
   hasMember: 'Collection records...',
   isPartOf: 'Is part of...',
   'dct:isPartOf': 'Is part of...',
   hasPart: 'Has part...',
   relation: 'Related records...',
+  'dct:relation': 'Related records...',
   replaces: 'Replaces...',
   isReplacedBy: 'Is replaced by...',
   isSourceOf: 'Source records...',
@@ -43,6 +45,12 @@ const relationshipLabels: { [key: string]: string } = {
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
   const attributes = data?.attributes || {};
   const uiRelationships = data?.meta?.ui?.relationships || {};
+  const [isPlaceExpanded, setIsPlaceExpanded] = useState(false);
+
+  // Reset expanded state when data changes
+  useEffect(() => {
+    setIsPlaceExpanded(false);
+  }, [data]);
 
   // Define the fields for the Document Metadata table - BTAA schema only
   const documentMetadataFields = [
@@ -150,11 +158,11 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     gbl_resourceType_sm: 'Resource Type',
     dct_source_sm: 'Source',
     dct_isPartOf_sm: 'Is Part Of',
-    pcdm_memberOf_sm: 'Member Of',
+    pcdm_memberOf_sm: 'Belongs to collection...',
     dct_replaces_sm: 'Replaces',
     dct_isReplacedBy_sm: 'Is Replaced By',
     dct_isVersionOf_sm: 'Is Version Of',
-    dct_relation_sm: 'Relation',
+    dct_relation_sm: 'Related records...',
     dct_issued_s: 'Date Issued',
     dct_temporal_sm: 'Temporal Coverage',
     dct_spatial_sm: 'Spatial Coverage',
@@ -214,6 +222,72 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     return { documentMetadata, metadataFacets, relationshipFacets };
   };
 
+  const renderPlaceValues = (
+    value: string | string[] | null | undefined,
+    shouldLink: boolean = false
+  ) => {
+    // Return empty string for null or undefined values
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const placeArray = Array.isArray(value) ? value : [value.toString()];
+    const facetField = getFacetField('dct_spatial_sm');
+    const maxInitial = 15;
+    const hasMore = placeArray.length > maxInitial;
+    const displayPlaces = isPlaceExpanded
+      ? placeArray
+      : placeArray.slice(0, maxInitial);
+
+    return (
+      <>
+        {displayPlaces.map((place, i) => (
+          <React.Fragment key={place}>
+            {i > 0 && ', '}
+            {facetField && shouldLink ? (
+              <Link
+                to={`/search?fq[${facetField}][]=${encodeURIComponent(place)}`}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                {place}
+              </Link>
+            ) : (
+              <span>{place}</span>
+            )}
+          </React.Fragment>
+        ))}
+        {hasMore && (
+          <>
+            {!isPlaceExpanded && (
+              <>
+                {' '}
+                <button
+                  onClick={() => setIsPlaceExpanded(true)}
+                  className="text-blue-600 hover:text-blue-800 underline text-sm ml-1"
+                  aria-label={`Show ${placeArray.length - maxInitial} more places`}
+                >
+                  Show {placeArray.length - maxInitial} more
+                </button>
+              </>
+            )}
+            {isPlaceExpanded && (
+              <>
+                {' '}
+                <button
+                  onClick={() => setIsPlaceExpanded(false)}
+                  className="text-blue-600 hover:text-blue-800 underline text-sm ml-1"
+                  aria-label="Show fewer places"
+                >
+                  Show less
+                </button>
+              </>
+            )}
+          </>
+        )}
+      </>
+    );
+  };
+
   const renderValue = (
     key: string,
     value: string | string[] | null | undefined,
@@ -222,6 +296,11 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
     // Return empty string for null or undefined values
     if (value === null || value === undefined) {
       return '';
+    }
+
+    // Special handling for Place values (dct_spatial_sm) with collapse/expand
+    if (key === 'dct_spatial_sm' && Array.isArray(value) && value.length > 15) {
+      return renderPlaceValues(value, shouldLink);
     }
 
     // Special formatting for specific fields
@@ -421,7 +500,11 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
-                      {renderValue(key, value, false)}
+                      {renderValue(
+                        key,
+                        value as string | string[] | null | undefined,
+                        false
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -443,7 +526,20 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                 </h5>
                 <ul className="list-none">
                   <li className="text-sm text-gray-900">
-                    {renderValue(key, value, true)}
+                    {key === 'dct_spatial_sm' &&
+                    Array.isArray(value) &&
+                    value.length > 15 ? (
+                      renderPlaceValues(
+                        value as string | string[] | null | undefined,
+                        true
+                      )
+                    ) : (
+                      renderValue(
+                        key,
+                        value as string | string[] | null | undefined,
+                        true
+                      )
+                    )}
                   </li>
                 </ul>
               </div>

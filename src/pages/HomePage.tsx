@@ -110,6 +110,24 @@ export function HomePage() {
       const newParams = new URLSearchParams();
       newParams.set('q', query);
       
+      // Preserve geo filters from current URL
+      const geoType = searchParams.get('include_filters[geo][type]');
+      if (geoType === 'bbox') {
+        const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
+        const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
+        const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
+        const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
+        
+        if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
+          newParams.set('include_filters[geo][type]', 'bbox');
+          newParams.set('include_filters[geo][field]', 'dcat_bbox');
+          newParams.set('include_filters[geo][top_left][lat]', topLeftLat);
+          newParams.set('include_filters[geo][top_left][lon]', topLeftLon);
+          newParams.set('include_filters[geo][bottom_right][lat]', bottomRightLat);
+          newParams.set('include_filters[geo][bottom_right][lon]', bottomRightLon);
+        }
+      }
+      
       // Preserve category filters from current URL (if any)
       const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
       const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');

@@ -3,6 +3,8 @@ import {
   GeoDocumentDetails,
   FacetValuesResponse,
   FacetValuesSort,
+  GazetteerResponse,
+  GazetteerPlace,
 } from '../types/api';
 import { AdvancedClause, FacetFilter } from '../types/search';
 
@@ -235,25 +237,39 @@ export async function fetchSearchResults(
   url.searchParams.set('page', page.toString());
   url.searchParams.set('per_page', perPage.toString());
 
-  // Preserve geo filters from current URL if they exist
-  // These are set by the GeospatialFilterMap component via URL params
-  const currentUrl = typeof window !== 'undefined' ? new URL(window.location.href) : null;
-  if (currentUrl) {
-    const geoParams = [
-      'include_filters[geo][type]',
-      'include_filters[geo][field]',
-      'include_filters[geo][top_left][lat]',
-      'include_filters[geo][top_left][lon]',
-      'include_filters[geo][bottom_right][lat]',
-      'include_filters[geo][bottom_right][lon]',
-    ];
+  // Read geo filters from current URL if they exist
+  // Only apply them if all required geo filter parameters are present
+  // This ensures we don't apply partial or stale geo filters
+  if (typeof window !== 'undefined') {
+    const currentUrl = new URL(window.location.href);
+    const geoType = currentUrl.searchParams.get('include_filters[geo][type]');
     
-    geoParams.forEach((key) => {
-      const value = currentUrl.searchParams.get(key);
-      if (value) {
-        url.searchParams.set(key, value);
+    // Only apply geo filters if type is 'bbox' and all required params are present
+    if (geoType === 'bbox') {
+      const geoParams = [
+        'include_filters[geo][type]',
+        'include_filters[geo][field]',
+        'include_filters[geo][top_left][lat]',
+        'include_filters[geo][top_left][lon]',
+        'include_filters[geo][bottom_right][lat]',
+        'include_filters[geo][bottom_right][lon]',
+      ];
+      
+      // Check if all required geo params are present
+      const allGeoParamsPresent = geoParams.every(
+        (key) => currentUrl.searchParams.get(key) !== null
+      );
+      
+      // Only apply geo filters if all params are present
+      if (allGeoParamsPresent) {
+        geoParams.forEach((key) => {
+          const value = currentUrl.searchParams.get(key);
+          if (value) {
+            url.searchParams.set(key, value);
+          }
+        });
       }
-    });
+    }
   }
 
   if (sort && sort !== 'relevance') {
@@ -524,5 +540,225 @@ export async function fetchBookmarkedResources(
       );
     }
     throw new ApiError('Failed to fetch bookmarked resources');
+  }
+}
+
+export async function fetchGazetteerSearch(
+  query: string,
+  limit: number = 10,
+  offset: number = 0,
+  options: FetchOptions = defaultFetchOptions
+): Promise<GazetteerResponse> {
+  if (!query.trim()) {
+    return {
+      jsonapi: { version: '1.1', profile: [] },
+      links: { self: '' },
+      meta: {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        perPage: limit,
+        query: '',
+        offset: 0,
+        gazetteer: 'wof',
+      },
+      data: [],
+    };
+  }
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL
+    ? `${import.meta.env.VITE_API_BASE_URL}/gazetteers/wof/search`
+    : 'https://geo.btaa.org/api/v1/gazetteers/wof/search';
+
+  const url = createApiUrl(baseUrl);
+  url.searchParams.set('q', query);
+  url.searchParams.set('limit', limit.toString());
+  url.searchParams.set('offset', offset.toString());
+
+  try {
+    const data = await unifiedFetch<GazetteerResponse>(url.toString(), options);
+    return data;
+  } catch (error) {
+    console.error('Error fetching gazetteer search:', error);
+    throw new ApiError('Failed to fetch gazetteer search results');
+  }
+}
+
+// Rate limiting for Nominatim (1 request per second as per usage policy)
+let lastNominatimRequest = 0;
+const NOMINATIM_RATE_LIMIT_MS = 1000;
+
+// Nominatim API function
+export async function fetchNominatimSearch(
+  query: string,
+  limit: number = 10
+): Promise<GazetteerResponse> {
+  if (!query.trim()) {
+    return {
+      jsonapi: { version: '1.1', profile: [] },
+      links: { self: '' },
+      meta: {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        perPage: limit,
+        query: '',
+        offset: 0,
+        gazetteer: 'nominatim',
+      },
+      data: [],
+    };
+  }
+
+  // Rate limiting: ensure at least 1 second between requests
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastNominatimRequest;
+  if (timeSinceLastRequest < NOMINATIM_RATE_LIMIT_MS) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, NOMINATIM_RATE_LIMIT_MS - timeSinceLastRequest)
+    );
+  }
+  lastNominatimRequest = Date.now();
+
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('q', query.trim());
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('limit', limit.toString());
+  url.searchParams.set('addressdetails', '1');
+  url.searchParams.set('extratags', '1');
+  url.searchParams.set('namedetails', '1');
+
+  try {
+    // Nominatim requires a User-Agent header per their usage policy
+    const response = await fetch(url.toString(), {
+      headers: {
+        'User-Agent': 'BTAA-GeoBlacklight-Client/1.0 (https://geo.btaa.org)',
+        Accept: 'application/json',
+      },
+      mode: 'cors',
+    });
+
+    if (!response.ok) {
+      throw new ApiError(
+        `Nominatim API error: ${response.status}`,
+        response.status
+      );
+    }
+
+    const nominatimResults = (await response.json()) as Array<{
+      place_id: number;
+      lat: string;
+      lon: string;
+      name: string;
+      display_name: string;
+      boundingbox: [string, string, string, string];
+      class: string;
+      type: string;
+      importance: number;
+      [key: string]: unknown;
+    }>;
+
+    // Filter and sort results to prefer administrative boundaries over natural features
+    // This helps avoid selecting rivers, mountains, etc. when searching for places
+    const filteredResults = nominatimResults
+      .filter((result) => {
+        // Prefer administrative boundaries (states, counties, cities, etc.)
+        // Exclude natural features like rivers, mountains, etc. unless they're the only result
+        const isNaturalFeature = result.class === 'waterway' ||
+                                 result.class === 'natural' ||
+                                 result.class === 'water';
+        
+        // If we have administrative results, filter out natural features
+        const hasAdministrative = nominatimResults.some(r => 
+          r.class === 'boundary' || r.class === 'place' || r.type === 'administrative'
+        );
+        
+        if (hasAdministrative && isNaturalFeature) {
+          return false;
+        }
+        
+        return true;
+      })
+      .sort((a, b) => {
+        // Sort by: administrative boundaries first, then by importance
+        const aIsAdmin = a.class === 'boundary' || a.class === 'place' || a.type === 'administrative';
+        const bIsAdmin = b.class === 'boundary' || b.class === 'place' || b.type === 'administrative';
+        
+        if (aIsAdmin && !bIsAdmin) return -1;
+        if (!aIsAdmin && bIsAdmin) return 1;
+        
+        // Both same type, sort by importance (higher is better)
+        return (b.importance || 0) - (a.importance || 0);
+      });
+
+    // Transform Nominatim results to GazetteerPlace format
+    const data: GazetteerPlace[] = filteredResults.map((result) => {
+      // Nominatim bbox format: [min_lat, max_lat, min_lon, max_lon]
+      const [minLat, maxLat, minLon, maxLon] = result.boundingbox.map(Number);
+      const lat = Number(result.lat);
+      const lon = Number(result.lon);
+
+      // Debug logging for Colorado specifically
+      if (result.name === 'Colorado' && result.type === 'administrative') {
+        console.log('🗺️ Colorado bbox from Nominatim:', {
+          raw_bbox: result.boundingbox,
+          parsed: { minLat, maxLat, minLon, maxLon },
+          name: result.name,
+          type: result.type,
+        });
+      }
+
+      return {
+        id: `nominatim-${result.place_id}`,
+        type: 'gazetteer_place',
+        attributes: {
+          id: result.place_id,
+          wok_id: result.place_id,
+          parent_id: 0,
+          name: result.name || result.display_name,
+          placetype: result.type || result.class || 'place',
+          country: '', // Nominatim doesn't always provide this directly
+          repo: 'nominatim',
+          latitude: lat,
+          longitude: lon,
+          min_latitude: minLat,
+          min_longitude: minLon,
+          max_latitude: maxLat,
+          max_longitude: maxLon,
+          is_current: 1,
+          is_deprecated: 0,
+          is_ceased: 0,
+          is_superseded: 0,
+          is_superseding: 0,
+          superseded_by: null,
+          supersedes: null,
+          lastmodified: Date.now(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          display_name: result.display_name,
+        },
+      };
+    });
+
+    return {
+      jsonapi: { version: '1.1', profile: [] },
+      links: { self: url.toString() },
+      meta: {
+        totalCount: data.length,
+        totalPages: 1,
+        currentPage: 1,
+        perPage: limit,
+        query: query.trim(),
+        offset: 0,
+        gazetteer: 'nominatim',
+      },
+      data,
+    };
+  } catch (error) {
+    console.error('Error fetching Nominatim search:', error);
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError('Failed to fetch Nominatim search results');
   }
 }

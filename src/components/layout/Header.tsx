@@ -13,6 +13,24 @@ export function Header() {
     const newParams = new URLSearchParams();
     newParams.set('q', query);
     
+    // Preserve geo filters from current URL
+    const geoType = searchParams.get('include_filters[geo][type]');
+    if (geoType === 'bbox') {
+      const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
+      const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
+      const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
+      const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
+      
+      if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
+        newParams.set('include_filters[geo][type]', 'bbox');
+        newParams.set('include_filters[geo][field]', 'dcat_bbox');
+        newParams.set('include_filters[geo][top_left][lat]', topLeftLat);
+        newParams.set('include_filters[geo][top_left][lon]', topLeftLon);
+        newParams.set('include_filters[geo][bottom_right][lat]', bottomRightLat);
+        newParams.set('include_filters[geo][bottom_right][lon]', bottomRightLon);
+      }
+    }
+    
     // Preserve category filters from current URL
     const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
     const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');
@@ -51,19 +69,16 @@ export function Header() {
           </div>
 
           {/* Search Field - matches results column width */}
-          <div className="col-span-6">
+          <div className="col-span-6 flex items-center">
             {!isHomePage && (
-              <>
+              <div className="w-full">
                 <SearchField
                   placeholder="Search for maps, data, imagery..."
                   onSearch={handleSearch}
                   showAdvancedButton={true}
                   onAdvancedSearchClick={handleAdvancedSearchClick}
                 />
-                <div className="mt-1">
-                  <ResourceClassFilterTabs />
-                </div>
-              </>
+              </div>
             )}
           </div>
 
@@ -89,6 +104,16 @@ export function Header() {
             </Link>
           </nav>
         </div>
+        {/* Resource Class Filter Tabs - positioned below search input, aligned with col-span-6 */}
+        {!isHomePage && (
+          <div className="grid grid-cols-12 gap-8 pb-0">
+            <div className="col-span-2"></div>
+            <div className="col-span-6">
+              <ResourceClassFilterTabs />
+            </div>
+            <div className="col-span-4"></div>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -206,3 +206,91 @@ export interface FacetGroup {
     url: string;
   }>;
 }
+
+export interface GazetteerHierarchyItem {
+  id: number;
+  wok_id: number;
+  ancestor_id: number;
+  ancestor_placetype: string;
+  lastmodified: number;
+  created_at: string;
+  updated_at: string;
+  name: string | null;
+}
+
+export interface GazetteerPlaceAttributes {
+  id: number;
+  wok_id: number;
+  parent_id: number;
+  name: string;
+  placetype: string;
+  country: string;
+  repo: string;
+  latitude: number;
+  longitude: number;
+  min_latitude: number;
+  min_longitude: number;
+  max_latitude: number;
+  max_longitude: number;
+  is_current: number;
+  is_deprecated: number;
+  is_ceased: number;
+  is_superseded: number;
+  is_superseding: number;
+  superseded_by: number | null;
+  supersedes: number | null;
+  lastmodified: number;
+  created_at: string;
+  updated_at: string;
+  display_name?: string;
+  hierarchy?: GazetteerHierarchyItem[];
+  geojson?: GeoJSON.Feature;
+}
+
+export interface GazetteerPlace {
+  id: string;
+  type: string;
+  attributes: GazetteerPlaceAttributes;
+}
+
+export interface GazetteerResponse {
+  jsonapi: {
+    version: string;
+    profile: string[];
+  };
+  links: {
+    self: string;
+    next?: string;
+    prev?: string;
+    first?: string;
+    last?: string;
+  };
+  meta: {
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+    perPage: number;
+    query: string;
+    offset: number;
+    gazetteer: string;
+  };
+  data: GazetteerPlace[];
+}
+
+// Nominatim API types
+export interface NominatimResult {
+  place_id: number;
+  licence: string;
+  osm_type: string;
+  osm_id: number;
+  lat: string;
+  lon: string;
+  class: string;
+  type: string;
+  place_rank: number;
+  importance: number;
+  addresstype?: string;
+  name: string;
+  display_name: string;
+  boundingbox: [string, string, string, string]; // [min_lat, max_lat, min_lon, max_lon]
+}
