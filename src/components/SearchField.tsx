@@ -191,11 +191,15 @@ export function SearchField({
     // Reset to page 1 when bbox changes
     newParams.delete('page');
     
-    // Navigate to search with both constraints
-    navigate(`/search?${newParams.toString()}`);
+    // Update URL params without navigating (this prevents auto-submit)
+    // The search will only happen when the user explicitly submits the form
+    setSearchParams(newParams);
     
-    // Focus back on keyword input
-    inputRef.current?.focus();
+    // Focus back on keyword input so user can enter their search query
+    // Use setTimeout to ensure state updates complete before focusing
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   const handleClearPlace = (e: React.MouseEvent) => {
@@ -309,10 +313,18 @@ export function SearchField({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setPlaceSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
-    } else if (e.key === 'Enter' && placeSelectedIndex >= 0) {
-      e.preventDefault();
-      handleSelectPlace(placeSuggestions[placeSelectedIndex]);
+    } else if (e.key === 'Enter') {
+      e.preventDefault(); // Always prevent form submission from place input
+      if (placeSelectedIndex >= 0) {
+        // Select the highlighted suggestion
+        handleSelectPlace(placeSuggestions[placeSelectedIndex]);
+      } else {
+        // No suggestion selected - just move focus to keyword input
+        setIsPlaceInputFocused(false);
+        inputRef.current?.focus();
+      }
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       setShowPlaceSuggestions(false);
       setIsPlaceInputFocused(false);
       inputRef.current?.focus();
@@ -332,6 +344,15 @@ export function SearchField({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      // Back-tab: move focus to place input for accessibility
+      e.preventDefault();
+      setIsKeywordInputFocused(false);
+      setIsPlaceInputFocused(true);
+      setPlaceQuery('');
+      setTimeout(() => {
+        placeInputRef.current?.focus();
+      }, 0);
     } else if (e.key === 'Enter' && selectedIndex >= 0) {
       e.preventDefault();
       const suggestion = suggestions[selectedIndex];
@@ -393,17 +414,31 @@ export function SearchField({
     if (onAdvancedSearchClick) {
       onAdvancedSearchClick();
     } else {
-      // Default behavior: navigate to search page and trigger advanced search
+      // Default behavior: navigate to search page and toggle advanced search
       const currentQuery = query.trim();
-      if (currentQuery) {
-        navigate(`/search?q=${encodeURIComponent(currentQuery)}&showAdvanced=true`);
+      const newParams = new URLSearchParams(searchParams);
+      
+      // Check if we're on search page and toggle accordingly
+      if (window.location.pathname === '/search') {
+        const currentShowAdvanced = newParams.get('showAdvanced') === 'true';
+        if (currentShowAdvanced) {
+          newParams.delete('showAdvanced');
+        } else {
+          newParams.set('showAdvanced', 'true');
+        }
       } else {
-        navigate('/search?showAdvanced=true');
+        newParams.set('showAdvanced', 'true');
       }
+      
+      if (currentQuery) {
+        newParams.set('q', currentQuery);
+      }
+      
+      navigate(`/search?${newParams.toString()}`);
     }
   };
 
-  const rightPadding = showAdvancedButton ? 'pr-24' : 'pr-12';
+  const rightPadding = showAdvancedButton ? 'pr-32' : 'pr-24';
   
   // Determine place name to display
   const hasGeoFilter = searchParams.get('include_filters[geo][type]') === 'bbox';
@@ -532,6 +567,13 @@ export function SearchField({
             }}
             onBlur={() => {
               setIsKeywordInputFocused(false);
+              // Close suggestions when focus leaves the input
+              // Delay to allow click events on suggestions
+              setTimeout(() => {
+                if (!suggestionsRef.current?.contains(document.activeElement)) {
+                  setShowSuggestions(false);
+                }
+              }, 200);
             }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
@@ -550,7 +592,7 @@ export function SearchField({
           <button
             type="button"
             onClick={handleAdvancedSearchClick}
-            className="absolute inset-y-0 right-12 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+            className="absolute inset-y-0 right-24 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
             aria-label="Advanced search"
             title="Advanced search"
           >
@@ -559,10 +601,10 @@ export function SearchField({
         )}
         <button
           type="submit"
-          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-r-lg"
+          className={`absolute inset-y-1 ${showAdvancedButton ? 'right-1' : 'right-1'} flex items-center px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
           aria-label="Submit search"
         >
-          <Search className="w-5 h-5" aria-hidden="true" />
+          Search
         </button>
         <span id="search-description" className="sr-only">
           Press Enter or click the search button to submit your search

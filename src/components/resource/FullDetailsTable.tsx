@@ -14,7 +14,10 @@ interface Attributes {
 
 interface FullDetailsTableProps {
   data: {
-    attributes: Attributes;
+    attributes: {
+      ogm: Attributes;
+      b1g?: Attributes;
+    };
     meta?: {
       ui?: {
         relationships?: Record<string, unknown>;
@@ -43,7 +46,11 @@ const relationshipLabels: { [key: string]: string } = {
 };
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
-  const attributes = data?.attributes || {};
+  // Merge ogm and b1g attributes for display
+  const attributes = {
+    ...(data?.attributes?.ogm || {}),
+    ...(data?.attributes?.b1g || {}),
+  };
   const uiRelationships = data?.meta?.ui?.relationships || {};
   const [isPlaceExpanded, setIsPlaceExpanded] = useState(false);
 

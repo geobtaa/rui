@@ -301,7 +301,7 @@ export function ResourceView() {
               {/* Title section */}
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {data.data.attributes.dct_title_s}
+                  {data.data.attributes.ogm.dct_title_s}
                 </h1>
                 <ResourceSubtitle item={data.data} />
               </div>

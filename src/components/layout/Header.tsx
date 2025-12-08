@@ -52,7 +52,22 @@ export function Header() {
 
   const handleAdvancedSearchClick = () => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('showAdvanced', 'true');
+    
+    // If we're on the search page, toggle the showAdvanced param
+    if (location.pathname === '/search') {
+      const currentShowAdvanced = newParams.get('showAdvanced') === 'true';
+      if (currentShowAdvanced) {
+        // If it's open, close it by removing the param
+        newParams.delete('showAdvanced');
+      } else {
+        // If it's closed, open it by setting the param
+        newParams.set('showAdvanced', 'true');
+      }
+    } else {
+      // Not on search page - navigate to search with advanced open
+      newParams.set('showAdvanced', 'true');
+    }
+    
     navigate(`/search?${newParams.toString()}`);
   };
 

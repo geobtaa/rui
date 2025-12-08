@@ -141,7 +141,7 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
             data-leaflet-viewer-layer-id-value={
-              data.attributes.gbl_wxsIdentifier_s || ''
+              data.attributes.ogm.gbl_wxsIdentifier_s || ''
             }
             data-leaflet-viewer-options-value={JSON.stringify(
               leafletViewerOptions

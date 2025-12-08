@@ -22,60 +22,60 @@ export function ResourceBreadcrumbs({ item }: ResourceBreadcrumbsProps) {
   let accumulatedFacets: Array<{ field: string; value: string }> = [];
 
   // Resource Class (e.g., "Maps")
-  if (item.attributes.gbl_resourceClass_sm?.[0]) {
+  if (item.attributes.ogm.gbl_resourceClass_sm?.[0]) {
     accumulatedFacets = [
       {
         field: 'gbl_resourceClass_sm',
-        value: item.attributes.gbl_resourceClass_sm[0],
+        value: item.attributes.ogm.gbl_resourceClass_sm[0],
       },
     ];
     breadcrumbs.push({
-      label: item.attributes.gbl_resourceClass_sm[0],
+      label: item.attributes.ogm.gbl_resourceClass_sm[0],
       facets: [...accumulatedFacets],
     });
   }
 
   // Resource Type (e.g., "Aerial Photography")
-  if (item.attributes.gbl_resourceType_sm?.[0]) {
+  if (item.attributes.ogm.gbl_resourceType_sm?.[0]) {
     accumulatedFacets = [
       ...accumulatedFacets,
       {
         field: 'gbl_resourceType_sm',
-        value: item.attributes.gbl_resourceType_sm[0],
+        value: item.attributes.ogm.gbl_resourceType_sm[0],
       },
     ];
     breadcrumbs.push({
-      label: item.attributes.gbl_resourceType_sm[0],
+      label: item.attributes.ogm.gbl_resourceType_sm[0],
       facets: [...accumulatedFacets],
     });
   }
 
   // Geographic Coverage (e.g., "Minnesota")
-  if (item.attributes.dct_spatial_sm?.[0]) {
+  if (item.attributes.ogm.dct_spatial_sm?.[0]) {
     accumulatedFacets = [
       ...accumulatedFacets,
       {
         field: 'dct_spatial_sm',
-        value: item.attributes.dct_spatial_sm[0],
+        value: item.attributes.ogm.dct_spatial_sm[0],
       },
     ];
     breadcrumbs.push({
-      label: item.attributes.dct_spatial_sm[0],
+      label: item.attributes.ogm.dct_spatial_sm[0],
       facets: [...accumulatedFacets],
     });
   }
 
   // Date Issued (e.g., "1857")
-  if (item.attributes.dct_issued_s) {
+  if (item.attributes.ogm.dct_issued_s) {
     accumulatedFacets = [
       ...accumulatedFacets,
       {
         field: 'dct_issued_s',
-        value: item.attributes.dct_issued_s,
+        value: item.attributes.ogm.dct_issued_s,
       },
     ];
     breadcrumbs.push({
-      label: item.attributes.dct_issued_s,
+      label: item.attributes.ogm.dct_issued_s,
       facets: [...accumulatedFacets],
     });
   }

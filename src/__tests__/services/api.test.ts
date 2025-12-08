@@ -901,8 +901,8 @@ describe('API Service', () => {
       const result = await fetchSearchResults('MIT');
 
       expect(result.data[0].id).toBe('mit-001145244');
-      expect(result.data[0].attributes.dct_title_s).toBe('Nondigitized paper map with library catalog link');
-      expect(result.data[0].attributes.dc_publisher_sm).toEqual(['MIT Libraries']);
+      expect(result.data[0].attributes.ogm.dct_title_s).toBe('Nondigitized paper map with library catalog link');
+      expect(result.data[0].attributes.ogm.dc_publisher_sm).toEqual(['MIT Libraries']);
     });
 
     it('handles NYU Libraries fixture data in resource details', async () => {
@@ -910,11 +910,14 @@ describe('API Service', () => {
         id: 'nyu-2451-34564',
         type: 'document',
         attributes: {
-          dct_title_s: 'Point dataset with WMS and WFS',
-          dct_description_sm: ['A point dataset with web mapping services'],
-          dct_temporal_sm: ['2020'],
-          dc_publisher_sm: ['NYU Libraries'],
-          gbl_resourceClass_sm: ['Point Data'],
+          ogm: {
+            id: 'nyu-2451-34564',
+            dct_title_s: 'Point dataset with WMS and WFS',
+            dct_description_sm: ['A point dataset with web mapping services'],
+            dct_temporal_sm: ['2020'],
+            dc_publisher_sm: ['NYU Libraries'],
+            gbl_resourceClass_sm: ['Point Data'],
+          },
         },
         meta: {
           ui: {
@@ -941,8 +944,8 @@ describe('API Service', () => {
       const result = await fetchResourceDetails('nyu-2451-34564');
 
       expect(result.id).toBe('nyu-2451-34564');
-      expect(result.attributes.dct_title_s).toBe('Point dataset with WMS and WFS');
-      expect(result.attributes.dc_publisher_sm).toEqual(['NYU Libraries']);
+      expect(result.attributes.ogm.dct_title_s).toBe('Point dataset with WMS and WFS');
+      expect(result.attributes.ogm.dc_publisher_sm).toEqual(['NYU Libraries']);
     });
 
     it('handles Tufts University fixture data in bookmarked resources', async () => {
@@ -961,11 +964,14 @@ describe('API Service', () => {
             id: 'tufts-cambridgegrid100-04',
             type: 'document',
             attributes: {
-              dct_title_s: 'Polygon dataset with WFS, WMS, and FGDC metadata',
-              dct_description_sm: ['A comprehensive polygon dataset'],
-              dct_temporal_sm: ['2019', '2020'],
-              dc_publisher_sm: ['Tufts University', 'Cambridge Grid'],
-              gbl_resourceClass_sm: ['Polygon Data'],
+              ogm: {
+                id: 'tufts-cambridgegrid100-04',
+                dct_title_s: 'Polygon dataset with WFS, WMS, and FGDC metadata',
+                dct_description_sm: ['A comprehensive polygon dataset'],
+                dct_temporal_sm: ['2019', '2020'],
+                dc_publisher_sm: ['Tufts University', 'Cambridge Grid'],
+                gbl_resourceClass_sm: ['Polygon Data'],
+              },
             },
             meta: {
               ui: {
@@ -991,8 +997,8 @@ describe('API Service', () => {
       const result = await fetchBookmarkedResources(['tufts-cambridgegrid100-04']);
 
       expect(result.data[0].id).toBe('tufts-cambridgegrid100-04');
-      expect(result.data[0].attributes.dct_title_s).toBe('Polygon dataset with WFS, WMS, and FGDC metadata');
-      expect(result.data[0].attributes.dc_publisher_sm).toEqual(['Tufts University', 'Cambridge Grid']);
+      expect(result.data[0].attributes.ogm.dct_title_s).toBe('Polygon dataset with WFS, WMS, and FGDC metadata');
+      expect(result.data[0].attributes.ogm.dc_publisher_sm).toEqual(['Tufts University', 'Cambridge Grid']);
     });
 
     it('handles Stanford University fixture data in suggestions', async () => {

@@ -22,7 +22,7 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
 
   // Safely extract values with fallbacks
   const title =
-    item.attributes?.dct_title_s ||
+    item.attributes?.ogm?.dct_title_s ||
     (item as unknown as { title?: string }).title ||
     'Untitled';
   
@@ -32,13 +32,8 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
     (item as unknown as { thumbnail_url?: string }).thumbnail_url ||
     (item as unknown as { meta?: { thumbnail_url?: string } }).meta?.thumbnail_url;
   
-  const resourceClass = item.attributes?.gbl_resourceClass_sm?.[0];
-  const provider = item.attributes?.schema_provider_s;
-
-  // Reset image error when item or thumbnail URL changes
-  useEffect(() => {
-    setImageError(false);
-  }, [item.id, thumbnailUrl]);
+  const resourceClass = item.attributes?.ogm?.gbl_resourceClass_sm?.[0];
+  const provider = item.attributes?.ogm?.schema_provider_s;
 
   // Debug logging for thumbnail URLs
   useEffect(() => {
@@ -47,7 +42,7 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
         'item.meta?.ui?.thumbnail_url': item.meta?.ui?.thumbnail_url,
         'final thumbnailUrl': thumbnailUrl,
         'imageError': imageError,
-        'hasThumbnail': !!thumbnailUrl && thumbnailUrl.trim() !== '',
+        'full item structure': item,
       });
     }
   }, [item.id, thumbnailUrl, imageError]);

@@ -94,7 +94,7 @@ export function MapView({ results }: MapViewProps) {
           geometry: result.meta!.ui!.viewer!.geometry,
           properties: {
             id: result.id,
-            title: result.attributes.dct_title_s,
+            title: result.attributes.ogm.dct_title_s,
           },
         }));
 

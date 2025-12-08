@@ -25,14 +25,8 @@ function SearchContent() {
 
   // Update showAdvancedBuilder when URL param changes
   useEffect(() => {
-    if (showAdvancedParam) {
-      setShowAdvancedBuilder(true);
-      // Remove the showAdvanced param after using it
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('showAdvanced');
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [showAdvancedParam, searchParams, setSearchParams]);
+    setShowAdvancedBuilder(showAdvancedParam);
+  }, [showAdvancedParam]);
 
   const {
     query,
@@ -124,7 +118,7 @@ function SearchContent() {
   };
 
   // Extract spelling suggestions from meta
-  const spellingSuggestions = searchResults?.meta?.spelling_suggestions || [];
+  const spellingSuggestions = searchResults?.meta?.spellingSuggestions || [];
 
   // Type guard to check if suggestion is a SpellingSuggestion object
   const isSpellingSuggestion = (

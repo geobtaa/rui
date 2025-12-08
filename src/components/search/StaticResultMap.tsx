@@ -46,7 +46,7 @@ export function StaticResultMap({ result }: StaticResultMapProps) {
       )}
       <img
         src={getStaticMapUrl()}
-        alt={`Map for ${result.attributes.dct_title_s}`}
+        alt={`Map for ${result.attributes.ogm.dct_title_s}`}
         className="h-full w-full object-cover"
         onLoad={() => setIsLoading(false)}
         onError={() => {

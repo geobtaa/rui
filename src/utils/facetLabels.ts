@@ -1,6 +1,7 @@
 // Labels keyed by field-named facet IDs (new API)
 export const FACET_LABELS: Record<string, string> = {
   dct_spatial_sm: 'Place',
+  time_period: 'Time Period',
   gbl_resourceClass_sm: 'Resource Class',
   gbl_resourceType_sm: 'Resource Type',
   schema_provider_s: 'Provider',
@@ -11,6 +12,7 @@ export const FACET_LABELS: Record<string, string> = {
   dct_subject_sm: 'Subject',
   dct_subjects_sm: 'Subject',
   dcat_theme_sm: 'Theme',
+  gbl_georeferenced_b: 'Georeferenced',
 };
 
 // Backward-compat mapping for legacy *_agg IDs to new field IDs

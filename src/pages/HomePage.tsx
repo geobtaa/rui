@@ -149,6 +149,7 @@ export function HomePage() {
   };
 
   const handleAdvancedSearchClick = () => {
+    // Always open advanced search when coming from home page
     navigate('/search?showAdvanced=true');
   };
 

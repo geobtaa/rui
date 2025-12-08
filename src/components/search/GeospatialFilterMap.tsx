@@ -342,6 +342,7 @@ export function GeospatialFilterMap() {
     }
   }, [getBBoxFromParams]);
 
+
   const hasBBox = getBBoxFromParams() !== null;
 
   return (
