@@ -17,7 +17,7 @@ function getCachedResourceClasses(): ResourceClassItem[] | null {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-    
+
     if (cached && timestamp) {
       const age = Date.now() - parseInt(timestamp, 10);
       if (age < CACHE_DURATION) {
@@ -41,17 +41,21 @@ function setCachedResourceClasses(items: ResourceClassItem[]): void {
 
 function sortResourceClasses(items: ResourceClassItem[]): ResourceClassItem[] {
   // Separate "Other" from the rest
-  const otherItem = items.find(item => 
-    item.value.toLowerCase() === 'other' || item.label.toLowerCase() === 'other'
+  const otherItem = items.find(
+    (item) =>
+      item.value.toLowerCase() === 'other' ||
+      item.label.toLowerCase() === 'other'
   );
   const otherItems = otherItem ? [otherItem] : [];
-  const regularItems = items.filter(item => 
-    item.value.toLowerCase() !== 'other' && item.label.toLowerCase() !== 'other'
+  const regularItems = items.filter(
+    (item) =>
+      item.value.toLowerCase() !== 'other' &&
+      item.label.toLowerCase() !== 'other'
   );
-  
+
   // Sort regular items by hits (descending)
   regularItems.sort((a, b) => b.hits - a.hits);
-  
+
   // Return regular items first, then "Other" at the end
   return [...regularItems, ...otherItems];
 }
@@ -59,14 +63,17 @@ function sortResourceClasses(items: ResourceClassItem[]): ResourceClassItem[] {
 export function ResourceClassFilterTabs() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [resourceClasses, setResourceClasses] = useState<ResourceClassItem[]>([]);
+  const [resourceClasses, setResourceClasses] = useState<ResourceClassItem[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   // Get current query and Resource Class filter from URL
   const currentQuery = searchParams.get('q') || '';
-  const currentResourceClass = searchParams.getAll('include_filters[gbl_resourceClass_sm][]')[0] || 
-                               searchParams.getAll('fq[gbl_resourceClass_sm][]')[0] || 
-                               null;
+  const currentResourceClass =
+    searchParams.getAll('include_filters[gbl_resourceClass_sm][]')[0] ||
+    searchParams.getAll('fq[gbl_resourceClass_sm][]')[0] ||
+    null;
 
   useEffect(() => {
     const fetchResourceClasses = async () => {
@@ -82,17 +89,23 @@ export function ResourceClassFilterTabs() {
         // Fetch a minimal search to get Resource Class facets
         const results = await fetchSearchResults('', 1, 1);
         const resourceClassFacet = results.included?.find(
-          (item) => item.type === 'facet' && 
-                   (normalizeFacetId(item.id) === 'gbl_resourceClass_sm' || item.id === 'resource_class_agg')
+          (item) =>
+            item.type === 'facet' &&
+            (normalizeFacetId(item.id) === 'gbl_resourceClass_sm' ||
+              item.id === 'resource_class_agg')
         );
 
-        if (resourceClassFacet?.attributes && 'items' in resourceClassFacet.attributes) {
-          const items: ResourceClassItem[] = resourceClassFacet.attributes.items?.map((item) => ({
-            value: item.attributes.value as string,
-            label: item.attributes.label || (item.attributes.value as string),
-            hits: item.attributes.hits,
-          })) || [];
-          
+        if (
+          resourceClassFacet?.attributes &&
+          'items' in resourceClassFacet.attributes
+        ) {
+          const items: ResourceClassItem[] =
+            resourceClassFacet.attributes.items?.map((item) => ({
+              value: item.attributes.value as string,
+              label: item.attributes.label || (item.attributes.value as string),
+              hits: item.attributes.hits,
+            })) || [];
+
           // Sort by hits (descending), with "Other" placed last
           const sortedItems = sortResourceClasses(items);
           setResourceClasses(sortedItems);
@@ -110,20 +123,25 @@ export function ResourceClassFilterTabs() {
 
   const handleTabClick = (resourceClassValue: string | null) => {
     const newParams = new URLSearchParams(searchParams);
-    
+
     // Remove all Resource Class filters (both new and legacy format)
     const keysToRemove: string[] = [];
     newParams.forEach((_, key) => {
-      if (key.startsWith('include_filters[gbl_resourceClass_sm]') || 
-          key.startsWith('fq[gbl_resourceClass_sm]')) {
+      if (
+        key.startsWith('include_filters[gbl_resourceClass_sm]') ||
+        key.startsWith('fq[gbl_resourceClass_sm]')
+      ) {
         keysToRemove.push(key);
       }
     });
-    keysToRemove.forEach(key => newParams.delete(key));
+    keysToRemove.forEach((key) => newParams.delete(key));
 
     // If a specific Resource Class is selected, add it
     if (resourceClassValue) {
-      newParams.append('include_filters[gbl_resourceClass_sm][]', resourceClassValue);
+      newParams.append(
+        'include_filters[gbl_resourceClass_sm][]',
+        resourceClassValue
+      );
     }
 
     // Ensure we have a query parameter (even if empty) to trigger search
@@ -184,4 +202,3 @@ export function ResourceClassFilterTabs() {
     </div>
   );
 }
-

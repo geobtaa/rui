@@ -43,7 +43,9 @@ export function parseSearchParams(searchParams: URLSearchParams) {
 
   // Get all facet parameters (now using fq instead of f)
   const facets = Array.from(searchParams.entries())
-    .filter(([key]) => key.startsWith('fq[') || key.startsWith('include_filters['))
+    .filter(
+      ([key]) => key.startsWith('fq[') || key.startsWith('include_filters[')
+    )
     .map(([key, value]) => {
       const field = key.match(/(?:fq|include_filters)\[(.*?)\]/)?.[1] || '';
       return { field, value };

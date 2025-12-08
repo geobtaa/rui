@@ -27,8 +27,10 @@ interface ResourceViewerProps {
 export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
   // Load Geoblacklight only when needed (for viewer controllers)
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(window as any).Geoblacklight) {
       import('@geoblacklight/frontend').then((Geoblacklight) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).Geoblacklight = Geoblacklight;
         console.log('Geoblacklight loaded for viewer');
       });

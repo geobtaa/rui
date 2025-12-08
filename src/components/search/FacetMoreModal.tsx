@@ -78,8 +78,10 @@ export function FacetMoreModal({
       const parsed = JSON.parse(advQValue);
       if (Array.isArray(parsed) && parsed.length > clauseIndex) {
         // Remove the clause at the specified index
-        const updated = parsed.filter((_: unknown, index: number) => index !== clauseIndex);
-        
+        const updated = parsed.filter(
+          (_: unknown, index: number) => index !== clauseIndex
+        );
+
         if (updated.length > 0) {
           params.set('adv_q', JSON.stringify(updated));
         } else {
@@ -227,14 +229,10 @@ export function FacetMoreModal({
     'query' | 'include' | 'exclude' | 'advanced',
     string
   > = {
-    query:
-      'bg-blue-50 text-blue-700 border border-blue-200',
-    include:
-      'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    exclude:
-      'bg-rose-50 text-rose-700 border border-rose-200',
-    advanced:
-      'bg-indigo-50 text-indigo-700 border border-indigo-200',
+    query: 'bg-blue-50 text-blue-700 border border-blue-200',
+    include: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    exclude: 'bg-rose-50 text-rose-700 border border-rose-200',
+    advanced: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
   };
 
   if (!isOpen) return null;
@@ -298,7 +296,9 @@ export function FacetMoreModal({
             <span className="text-gray-500">Sort by</span>
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value as FacetValuesSort)}
+              onChange={(event) =>
+                setSort(event.target.value as FacetValuesSort)
+              }
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {SORT_OPTIONS.map((option) => (
@@ -356,7 +356,10 @@ export function FacetMoreModal({
                 }
 
                 // Handle advanced clauses as removable buttons
-                if (entry.type === 'advanced' && entry.clauseIndex !== undefined) {
+                if (
+                  entry.type === 'advanced' &&
+                  entry.clauseIndex !== undefined
+                ) {
                   const handleRemoveAdvanced = () => {
                     handleRemoveAdvancedClause(entry.clauseIndex!);
                   };
@@ -521,5 +524,3 @@ export function FacetMoreModal({
     </div>
   );
 }
-
-

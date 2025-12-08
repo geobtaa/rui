@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Plus, X, Sparkles } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import type { AdvancedClause, AdvancedOperator } from '../../types/search';
-import { FIELD_LABELS, isFieldFacetable, getFacetNameForField } from '../../constants/fieldLabels';
+import {
+  FIELD_LABELS,
+  isFieldFacetable,
+  getFacetNameForField,
+} from '../../constants/fieldLabels';
 import { fetchFacetValues } from '../../services/api';
 import type { FacetValue } from '../../types/api';
 
@@ -29,7 +33,10 @@ const COMMON_FIELD_OPTIONS: Array<{ value: string; label: string }> = [
 ];
 
 const generateRowId = () => {
-  const globalCrypto = typeof globalThis !== 'undefined' ? (globalThis.crypto as Crypto | undefined) : undefined;
+  const globalCrypto =
+    typeof globalThis !== 'undefined'
+      ? (globalThis.crypto as Crypto | undefined)
+      : undefined;
   if (globalCrypto?.randomUUID) {
     return globalCrypto.randomUUID();
   }
@@ -59,12 +66,18 @@ export function AdvancedSearchBuilder({
   onCancel,
   onReset,
 }: AdvancedSearchBuilderProps) {
-  const [searchParams] = useSearchParams();
+  // Note: searchParams is available but not currently used in this component
+  // Keeping useSearchParams call for potential future use
+  useSearchParams();
   const [rows, setRows] = useState<BuilderRow[]>(() =>
-    clauses.length > 0 ? clauses.map((clause) => createRow(clause)) : [createRow()]
+    clauses.length > 0
+      ? clauses.map((clause) => createRow(clause))
+      : [createRow()]
   );
   const [error, setError] = useState<string | null>(null);
-  const [autocomplete, setAutocomplete] = useState<AutocompleteState | null>(null);
+  const [autocomplete, setAutocomplete] = useState<AutocompleteState | null>(
+    null
+  );
   const autocompleteTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const fieldSelectRefs = useRef<Record<string, HTMLSelectElement | null>>({});
@@ -73,7 +86,11 @@ export function AdvancedSearchBuilder({
   const focusAttemptRef = useRef(0);
 
   useEffect(() => {
-    setRows(clauses.length > 0 ? clauses.map((clause) => createRow(clause)) : [createRow()]);
+    setRows(
+      clauses.length > 0
+        ? clauses.map((clause) => createRow(clause))
+        : [createRow()]
+    );
     // Reset focus flag when component mounts/remounts
     hasFocusedInitial.current = false;
     focusAttemptRef.current = 0;
@@ -82,7 +99,7 @@ export function AdvancedSearchBuilder({
   // Focus the first field select when component mounts or becomes visible
   useEffect(() => {
     if (hasFocusedInitial.current) return;
-    
+
     const attemptFocus = () => {
       const firstRowId = rows[0]?.id;
       if (firstRowId && fieldSelectRefs.current[firstRowId]) {
@@ -100,33 +117,40 @@ export function AdvancedSearchBuilder({
     // Use multiple attempts with increasing delays to ensure it works
     // This handles cases where the component is conditionally rendered
     const timeouts: NodeJS.Timeout[] = [];
-    
+
     // First attempt: after current event loop completes
-    timeouts.push(setTimeout(() => {
-      if (!hasFocusedInitial.current && !attemptFocus()) {
-        // Second attempt: after a short delay
-        timeouts.push(setTimeout(() => {
-          if (!hasFocusedInitial.current && !attemptFocus()) {
-            // Third attempt: after a longer delay
-            timeouts.push(setTimeout(() => {
-              if (!hasFocusedInitial.current) {
-                attemptFocus();
+    timeouts.push(
+      setTimeout(() => {
+        if (!hasFocusedInitial.current && !attemptFocus()) {
+          // Second attempt: after a short delay
+          timeouts.push(
+            setTimeout(() => {
+              if (!hasFocusedInitial.current && !attemptFocus()) {
+                // Third attempt: after a longer delay
+                timeouts.push(
+                  setTimeout(() => {
+                    if (!hasFocusedInitial.current) {
+                      attemptFocus();
+                    }
+                  }, 150)
+                );
               }
-            }, 150));
-          }
-        }, 100));
-      }
-    }, 0));
+            }, 100)
+          );
+        }
+      }, 0)
+    );
 
     return () => {
       timeouts.forEach(clearTimeout);
     };
-  }, [rows.length]); // Run when rows change (including initial mount)
+  }, [rows]); // Run when rows change (including initial mount)
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    const timeoutRef = autocompleteTimeoutRef;
     return () => {
-      Object.values(autocompleteTimeoutRef.current).forEach((timeout) => {
+      Object.values(timeoutRef.current).forEach((timeout) => {
         clearTimeout(timeout);
       });
     };
@@ -138,7 +162,9 @@ export function AdvancedSearchBuilder({
       if (
         suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target as Node) &&
-        !Object.values(inputRefs.current).some((ref) => ref?.contains(event.target as Node))
+        !Object.values(inputRefs.current).some((ref) =>
+          ref?.contains(event.target as Node)
+        )
       ) {
         setAutocomplete((prev) => (prev ? { ...prev, isOpen: false } : null));
       }
@@ -152,23 +178,29 @@ export function AdvancedSearchBuilder({
   const buildSearchContext = useCallback(
     (excludeRowId: string): URLSearchParams => {
       const contextParams = new URLSearchParams();
-      
+
       // Get all rows except the one being edited
-      const contextRows = rows.filter((row) => row.id !== excludeRowId && row.q.trim().length > 0);
-      
+      const contextRows = rows.filter(
+        (row) => row.id !== excludeRowId && row.q.trim().length > 0
+      );
+
       if (contextRows.length === 0) {
         // No context rows, return empty params (will search all)
         return contextParams;
       }
 
       // Check if there's a basic query (all_fields)
-      const basicQueryRow = contextRows.find((row) => row.field === 'all_fields');
+      const basicQueryRow = contextRows.find(
+        (row) => row.field === 'all_fields'
+      );
       if (basicQueryRow) {
         contextParams.set('q', basicQueryRow.q.trim());
       }
 
       // Build advanced query from non-basic rows
-      const advancedRows = contextRows.filter((row) => row.field !== 'all_fields');
+      const advancedRows = contextRows.filter(
+        (row) => row.field !== 'all_fields'
+      );
       if (advancedRows.length > 0) {
         const serialized = advancedRows.map(({ op, field, q }) => ({
           op,
@@ -203,7 +235,7 @@ export function AdvancedSearchBuilder({
       try {
         // Build search context from current form rows (excluding the row being edited)
         const contextParams = buildSearchContext(rowId);
-        
+
         console.log('Fetching facet suggestions for:', {
           fieldName,
           facetName,
@@ -262,10 +294,10 @@ export function AdvancedSearchBuilder({
       clearTimeout(autocompleteTimeoutRef.current[rowId]);
       delete autocompleteTimeoutRef.current[rowId];
     }
-    
+
     // Always close/reset autocomplete when field changes
     setAutocomplete((prev) => (prev?.rowId === rowId ? null : prev));
-    
+
     updateRow(rowId, 'field', fieldName);
     // Clear the value when field changes
     updateRow(rowId, 'q', '');
@@ -274,7 +306,7 @@ export function AdvancedSearchBuilder({
   const handleValueChange = (rowId: string, value: string) => {
     updateRow(rowId, 'q', value);
     const row = rows.find((r) => r.id === rowId);
-    
+
     // If this row has autocomplete open, refetch its suggestions
     if (row && isFieldFacetable(row.field)) {
       // Clear existing timeout
@@ -344,14 +376,17 @@ export function AdvancedSearchBuilder({
 
   const handleSuggestionSelect = (rowId: string, value: string) => {
     updateRow(rowId, 'q', value);
-    setAutocomplete((prev) => (prev?.rowId === rowId ? { ...prev, isOpen: false } : prev));
+    setAutocomplete((prev) =>
+      prev?.rowId === rowId ? { ...prev, isOpen: false } : prev
+    );
   };
 
   const handleKeyDown = (
     rowId: string,
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
-    if (!autocomplete || autocomplete.rowId !== rowId || !autocomplete.isOpen) return;
+    if (!autocomplete || autocomplete.rowId !== rowId || !autocomplete.isOpen)
+      return;
 
     const { selectedIndex, suggestions } = autocomplete;
 
@@ -361,7 +396,10 @@ export function AdvancedSearchBuilder({
         prev?.rowId === rowId
           ? {
               ...prev,
-              selectedIndex: Math.min(selectedIndex + 1, suggestions.length - 1),
+              selectedIndex: Math.min(
+                selectedIndex + 1,
+                suggestions.length - 1
+              ),
             }
           : prev
       );
@@ -375,7 +413,11 @@ export function AdvancedSearchBuilder({
             }
           : prev
       );
-    } else if (event.key === 'Enter' && selectedIndex >= 0 && suggestions[selectedIndex]) {
+    } else if (
+      event.key === 'Enter' &&
+      selectedIndex >= 0 &&
+      suggestions[selectedIndex]
+    ) {
       event.preventDefault();
       const selected = suggestions[selectedIndex];
       const value = String(selected.attributes.value);
@@ -436,7 +478,9 @@ export function AdvancedSearchBuilder({
     setAutocomplete((prev) => (prev?.rowId === id ? null : prev));
     delete inputRefs.current[id];
     delete fieldSelectRefs.current[id];
-    setRows((prev) => (prev.length === 1 ? prev : prev.filter((row) => row.id !== id)));
+    setRows((prev) =>
+      prev.length === 1 ? prev : prev.filter((row) => row.id !== id)
+    );
   };
 
   const handleAddRow = () => {
@@ -473,9 +517,12 @@ export function AdvancedSearchBuilder({
     <div className="bg-white border border-blue-200 rounded-lg shadow-sm p-4 space-y-4">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-blue-800">Advanced Search Builder</h3>
+          <h3 className="text-lg font-semibold text-blue-800">
+            Advanced Search Builder
+          </h3>
           <p className="text-sm text-blue-600">
-            Combine multiple fields and boolean operators to refine your results.
+            Combine multiple fields and boolean operators to refine your
+            results.
           </p>
         </div>
         <button
@@ -496,7 +543,9 @@ export function AdvancedSearchBuilder({
             className="flex flex-col gap-3 md:grid md:grid-cols-12 md:items-center md:gap-4"
           >
             <label className="flex flex-col gap-1 md:col-span-4">
-              <span className="text-xs font-semibold text-blue-700 uppercase">Field</span>
+              <span className="text-xs font-semibold text-blue-700 uppercase">
+                Field
+              </span>
               <select
                 ref={(el) => {
                   fieldSelectRefs.current[row.id] = el;
@@ -512,7 +561,10 @@ export function AdvancedSearchBuilder({
                     } else {
                       // Element not yet visible, wait a bit
                       setTimeout(() => {
-                        if (el.offsetParent !== null && !hasFocusedInitial.current) {
+                        if (
+                          el.offsetParent !== null &&
+                          !hasFocusedInitial.current
+                        ) {
                           el.focus();
                           hasFocusedInitial.current = true;
                         }
@@ -521,7 +573,9 @@ export function AdvancedSearchBuilder({
                   }
                 }}
                 value={row.field}
-                onChange={(event) => handleFieldChange(row.id, event.target.value)}
+                onChange={(event) =>
+                  handleFieldChange(row.id, event.target.value)
+                }
                 className="rounded-md border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 {fieldOptions.map((option) => (
@@ -536,7 +590,10 @@ export function AdvancedSearchBuilder({
               <span className="text-xs font-semibold text-blue-700 uppercase flex items-center gap-1">
                 Value
                 {isFieldFacetable(row.field) && (
-                  <Sparkles className="h-3 w-3 text-blue-500" aria-label="Autocomplete available" />
+                  <Sparkles
+                    className="h-3 w-3 text-blue-500"
+                    aria-label="Autocomplete available"
+                  />
                 )}
               </span>
               <div className="relative">
@@ -546,7 +603,9 @@ export function AdvancedSearchBuilder({
                   }}
                   type="text"
                   value={row.q}
-                  onChange={(event) => handleValueChange(row.id, event.target.value)}
+                  onChange={(event) =>
+                    handleValueChange(row.id, event.target.value)
+                  }
                   onFocus={() => handleValueFocus(row.id)}
                   onBlur={() => handleValueBlur(row.id)}
                   onKeyDown={(event) => handleKeyDown(row.id, event)}
@@ -565,7 +624,9 @@ export function AdvancedSearchBuilder({
                       className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-blue-200 max-h-60 overflow-auto"
                     >
                       {autocomplete.isLoading ? (
-                        <div className="px-4 py-2 text-sm text-gray-500">Loading suggestions...</div>
+                        <div className="px-4 py-2 text-sm text-gray-500">
+                          Loading suggestions...
+                        </div>
                       ) : autocomplete.suggestions.length === 0 ? (
                         <div className="px-4 py-2 text-sm text-gray-500">
                           No suggestions found
@@ -575,13 +636,16 @@ export function AdvancedSearchBuilder({
                           const value = String(suggestion.attributes.value);
                           const label = suggestion.attributes.label;
                           const hits = suggestion.attributes.hits;
-                          const isSelected = index === autocomplete.selectedIndex;
+                          const isSelected =
+                            index === autocomplete.selectedIndex;
 
                           return (
                             <button
                               key={suggestion.id || index}
                               type="button"
-                              onClick={() => handleSuggestionSelect(row.id, value)}
+                              onClick={() =>
+                                handleSuggestionSelect(row.id, value)
+                              }
                               className={`w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors ${
                                 isSelected ? 'bg-blue-50' : ''
                               }`}
@@ -593,7 +657,9 @@ export function AdvancedSearchBuilder({
                                 )
                               }
                             >
-                              <div className="text-sm text-gray-900">{label}</div>
+                              <div className="text-sm text-gray-900">
+                                {label}
+                              </div>
                               {hits !== undefined && (
                                 <div className="text-xs text-gray-500">
                                   {hits} {hits === 1 ? 'result' : 'results'}
@@ -609,10 +675,14 @@ export function AdvancedSearchBuilder({
             </label>
 
             <label className="flex flex-col gap-1 md:col-span-2">
-              <span className="text-xs font-semibold text-blue-700 uppercase">Operator</span>
+              <span className="text-xs font-semibold text-blue-700 uppercase">
+                Operator
+              </span>
               <select
                 value={row.op}
-                onChange={(event) => updateRow(row.id, 'op', event.target.value)}
+                onChange={(event) =>
+                  updateRow(row.id, 'op', event.target.value)
+                }
                 className="rounded-md border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 {OPERATORS.map((operator) => (
@@ -629,7 +699,11 @@ export function AdvancedSearchBuilder({
                 onClick={() => removeRow(row.id)}
                 className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors disabled:text-blue-300"
                 disabled={rows.length === 1}
-                aria-label={rows.length === 1 ? 'Cannot remove the last row' : 'Remove condition'}
+                aria-label={
+                  rows.length === 1
+                    ? 'Cannot remove the last row'
+                    : 'Remove condition'
+                }
               >
                 <X className="h-4 w-4" />
                 {index === 0 ? 'Clear' : 'Remove'}
@@ -670,4 +744,3 @@ export function AdvancedSearchBuilder({
     </div>
   );
 }
-

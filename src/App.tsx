@@ -27,7 +27,7 @@ function App() {
   });
   const [searchParams] = useSearchParams();
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
-  
+
   // Build search string from URLSearchParams to avoid window.location issues
   const searchString = hasSearchParams ? `?${searchParams.toString()}` : '';
 

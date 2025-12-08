@@ -243,7 +243,7 @@ export async function fetchSearchResults(
   if (typeof window !== 'undefined') {
     const currentUrl = new URL(window.location.href);
     const geoType = currentUrl.searchParams.get('include_filters[geo][type]');
-    
+
     // Only apply geo filters if type is 'bbox' and all required params are present
     if (geoType === 'bbox') {
       const geoParams = [
@@ -254,12 +254,12 @@ export async function fetchSearchResults(
         'include_filters[geo][bottom_right][lat]',
         'include_filters[geo][bottom_right][lon]',
       ];
-      
+
       // Check if all required geo params are present
       const allGeoParamsPresent = geoParams.every(
         (key) => currentUrl.searchParams.get(key) !== null
       );
-      
+
       // Only apply geo filters if all params are present
       if (allGeoParamsPresent) {
         geoParams.forEach((key) => {
@@ -396,7 +396,10 @@ export async function fetchFacetValues({
     });
 
   url.searchParams.set('page', Math.max(1, page).toString());
-  url.searchParams.set('per_page', Math.max(1, Math.min(100, perPage)).toString());
+  url.searchParams.set(
+    'per_page',
+    Math.max(1, Math.min(100, perPage)).toString()
+  );
 
   if (sort) {
     url.searchParams.set('sort', sort);
@@ -407,7 +410,10 @@ export async function fetchFacetValues({
   }
 
   console.log('🔗 fetchFacetValues URL:', url.toString());
-  const response = await unifiedFetch<FacetValuesResponse>(url.toString(), options);
+  const response = await unifiedFetch<FacetValuesResponse>(
+    url.toString(),
+    options
+  );
   console.log('📦 fetchFacetValues response:', {
     hasData: !!response.data,
     dataLength: response.data?.length || 0,
@@ -664,29 +670,39 @@ export async function fetchNominatimSearch(
       .filter((result) => {
         // Prefer administrative boundaries (states, counties, cities, etc.)
         // Exclude natural features like rivers, mountains, etc. unless they're the only result
-        const isNaturalFeature = result.class === 'waterway' ||
-                                 result.class === 'natural' ||
-                                 result.class === 'water';
-        
+        const isNaturalFeature =
+          result.class === 'waterway' ||
+          result.class === 'natural' ||
+          result.class === 'water';
+
         // If we have administrative results, filter out natural features
-        const hasAdministrative = nominatimResults.some(r => 
-          r.class === 'boundary' || r.class === 'place' || r.type === 'administrative'
+        const hasAdministrative = nominatimResults.some(
+          (r) =>
+            r.class === 'boundary' ||
+            r.class === 'place' ||
+            r.type === 'administrative'
         );
-        
+
         if (hasAdministrative && isNaturalFeature) {
           return false;
         }
-        
+
         return true;
       })
       .sort((a, b) => {
         // Sort by: administrative boundaries first, then by importance
-        const aIsAdmin = a.class === 'boundary' || a.class === 'place' || a.type === 'administrative';
-        const bIsAdmin = b.class === 'boundary' || b.class === 'place' || b.type === 'administrative';
-        
+        const aIsAdmin =
+          a.class === 'boundary' ||
+          a.class === 'place' ||
+          a.type === 'administrative';
+        const bIsAdmin =
+          b.class === 'boundary' ||
+          b.class === 'place' ||
+          b.type === 'administrative';
+
         if (aIsAdmin && !bIsAdmin) return -1;
         if (!aIsAdmin && bIsAdmin) return 1;
-        
+
         // Both same type, sort by importance (higher is better)
         return (b.importance || 0) - (a.importance || 0);
       });

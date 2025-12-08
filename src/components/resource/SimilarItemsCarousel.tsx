@@ -15,37 +15,38 @@ interface SimilarItemCardProps {
 function SimilarItemCard({ item }: SimilarItemCardProps) {
   const [imageError, setImageError] = useState(false);
 
-  // Safety checks
-  if (!item || !item.id) {
-    return null;
-  }
-
   // Safely extract values with fallbacks
   const title =
-    item.attributes?.ogm?.dct_title_s ||
-    (item as unknown as { title?: string }).title ||
+    item?.attributes?.ogm?.dct_title_s ||
+    (item as unknown as { title?: string })?.title ||
     'Untitled';
-  
+
   // Try multiple possible paths for thumbnail URL
   const thumbnailUrl =
-    item.meta?.ui?.thumbnail_url ||
-    (item as unknown as { thumbnail_url?: string }).thumbnail_url ||
-    (item as unknown as { meta?: { thumbnail_url?: string } }).meta?.thumbnail_url;
-  
-  const resourceClass = item.attributes?.ogm?.gbl_resourceClass_sm?.[0];
-  const provider = item.attributes?.ogm?.schema_provider_s;
+    item?.meta?.ui?.thumbnail_url ||
+    (item as unknown as { thumbnail_url?: string })?.thumbnail_url ||
+    (item as unknown as { meta?: { thumbnail_url?: string } })?.meta
+      ?.thumbnail_url;
 
-  // Debug logging for thumbnail URLs
+  const resourceClass = item?.attributes?.ogm?.gbl_resourceClass_sm?.[0];
+  const provider = item?.attributes?.ogm?.schema_provider_s;
+
+  // Debug logging for thumbnail URLs - must be before early return
   useEffect(() => {
-    if (item.id) {
+    if (item?.id) {
       console.log(`SimilarItemCard [${item.id}] thumbnail check:`, {
         'item.meta?.ui?.thumbnail_url': item.meta?.ui?.thumbnail_url,
         'final thumbnailUrl': thumbnailUrl,
-        'imageError': imageError,
+        imageError: imageError,
         'full item structure': item,
       });
     }
-  }, [item.id, thumbnailUrl, imageError]);
+  }, [item, thumbnailUrl, imageError]);
+
+  // Safety checks - after hooks
+  if (!item || !item.id) {
+    return null;
+  }
 
   try {
     return (
@@ -55,17 +56,27 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
       >
         {/* Image Container */}
         <div className="aspect-video w-full bg-gray-50 relative overflow-hidden">
-          {thumbnailUrl && typeof thumbnailUrl === 'string' && thumbnailUrl.trim() !== '' && !imageError ? (
+          {thumbnailUrl &&
+          typeof thumbnailUrl === 'string' &&
+          thumbnailUrl.trim() !== '' &&
+          !imageError ? (
             <img
               src={thumbnailUrl}
               alt={title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onError={(e) => {
-                console.error(`Failed to load thumbnail for ${item.id}:`, thumbnailUrl, e);
+                console.error(
+                  `Failed to load thumbnail for ${item.id}:`,
+                  thumbnailUrl,
+                  e
+                );
                 setImageError(true);
               }}
               onLoad={() => {
-                console.log(`Successfully loaded thumbnail for ${item.id}:`, thumbnailUrl);
+                console.log(
+                  `Successfully loaded thumbnail for ${item.id}:`,
+                  thumbnailUrl
+                );
               }}
             />
           ) : (
@@ -94,7 +105,9 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
   }
 }
 
-export function SimilarItemsCarousel({ similarItems }: SimilarItemsCarouselProps) {
+export function SimilarItemsCarousel({
+  similarItems,
+}: SimilarItemsCarouselProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
 
@@ -115,7 +128,11 @@ export function SimilarItemsCarousel({ similarItems }: SimilarItemsCarouselProps
     }
   }, [similarItems]);
 
-  if (!similarItems || !Array.isArray(similarItems) || similarItems.length === 0) {
+  if (
+    !similarItems ||
+    !Array.isArray(similarItems) ||
+    similarItems.length === 0
+  ) {
     return null;
   }
 
@@ -147,7 +164,7 @@ export function SimilarItemsCarousel({ similarItems }: SimilarItemsCarouselProps
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900">Similar Items</h2>
       </div>
-      
+
       <div className="relative px-6 py-6">
         {/* Carousel Container */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -202,4 +219,3 @@ export function SimilarItemsCarousel({ similarItems }: SimilarItemsCarouselProps
     </div>
   );
 }
-

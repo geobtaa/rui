@@ -1,19 +1,29 @@
 import { useEffect, useState } from 'react';
 import { GeoJSON, useMap } from 'react-leaflet';
-import type { ChoroplethData } from '../../types/map';
+import type {
+  ChoroplethData,
+  GeoJsonData,
+  MapFeatureClickPayload,
+} from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
 import { getCountyHitsFromFeature } from '../../utils/geoCounty';
 import { useCountyAutoFit } from '../../hooks/useCountyAutoFit';
 
 // Shared color scale
 function getColor(intensity: number): string {
-  return intensity > 0.8 ? '#800026' :
-         intensity > 0.6 ? '#BD0026' :
-         intensity > 0.4 ? '#E31A1C' :
-         intensity > 0.2 ? '#FC4E2A' :
-         intensity > 0.1 ? '#FD8D3C' :
-         intensity > 0   ? '#FEB24C' :
-                           '#FED976';
+  return intensity > 0.8
+    ? '#800026'
+    : intensity > 0.6
+      ? '#BD0026'
+      : intensity > 0.4
+        ? '#E31A1C'
+        : intensity > 0.2
+          ? '#FC4E2A'
+          : intensity > 0.1
+            ? '#FD8D3C'
+            : intensity > 0
+              ? '#FEB24C'
+              : '#FED976';
 }
 
 export function MapUpdaterCounty({
@@ -22,15 +32,17 @@ export function MapUpdaterCounty({
   searchQuery,
 }: {
   data: ChoroplethData;
-  onFeatureClick: (feature: any) => void;
+  onFeatureClick: (feature: MapFeatureClickPayload) => void;
   searchQuery: string;
 }) {
   const map = useMap();
   // Load county GeoJSON (FIPS-coded) locally
-  const [geoJson, setGeoJson] = useState<any>(null);
+  const [geoJson, setGeoJson] = useState<GeoJsonData | null>(null);
 
   useEffect(() => {
-    fetchGeoJsonForLevel('county').then(setGeoJson).catch(() => setGeoJson(null));
+    fetchGeoJsonForLevel('county')
+      .then(setGeoJson)
+      .catch(() => setGeoJson(null));
   }, []);
 
   // Auto-pan/zoom: without query -> default US; with query -> top county bounds
@@ -68,7 +80,11 @@ export function MapUpdaterCounty({
         };
       }}
       onEachFeature={(feature, layer) => {
-        const name = feature?.properties?.NAME || feature?.properties?.name || feature?.properties?.county || 'Unknown County';
+        const name =
+          feature?.properties?.NAME ||
+          feature?.properties?.name ||
+          feature?.properties?.county ||
+          'Unknown County';
         const hits = getCountyHitsFromFeature(feature, data.county);
         layer.bindPopup(`
           <div>
@@ -82,5 +98,3 @@ export function MapUpdaterCounty({
     />
   );
 }
-
-

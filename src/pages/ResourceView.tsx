@@ -541,7 +541,9 @@ export function ResourceView() {
             Array.isArray(data.meta.ui.similar_items) &&
             data.meta.ui.similar_items.length > 0 && (
               <SimilarItemsCarousel
-                similarItems={data.meta.ui.similar_items as unknown as GeoDocument[]}
+                similarItems={
+                  data.meta.ui.similar_items as unknown as GeoDocument[]
+                }
               />
             )}
         </div>

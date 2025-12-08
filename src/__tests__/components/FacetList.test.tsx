@@ -19,10 +19,10 @@ vi.mock('react-router-dom', async () => {
 // Mock the facet labels and configured facets
 vi.mock('../../utils/facetLabels', () => ({
   FACET_LABELS: {
-    'resource_class_agg': 'Resource Type',
-    'dc_publisher_sm': 'Publisher',
-    'dct_temporal_sm': 'Year',
-    'dct_spatial_sm': 'Location',
+    resource_class_agg: 'Resource Type',
+    dc_publisher_sm: 'Publisher',
+    dct_temporal_sm: 'Year',
+    dct_spatial_sm: 'Location',
   },
 }));
 
@@ -182,7 +182,13 @@ const buildFacetItems = (count: number) =>
   }));
 
 // Test wrapper component
-const TestWrapper = ({ children, initialSearchParams = '' }: { children: React.ReactNode; initialSearchParams?: string }) => {
+const TestWrapper = ({
+  children,
+  initialSearchParams = '',
+}: {
+  children: React.ReactNode;
+  initialSearchParams?: string;
+}) => {
   return (
     <BrowserRouter>
       <div data-testid="search-params" data-params={initialSearchParams}>
@@ -290,7 +296,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText('No facets available for this search')).toBeInTheDocument();
+      expect(
+        screen.getByText('No facets available for this search')
+      ).toBeInTheDocument();
     });
 
     it('filters out facets with no items', () => {
@@ -345,10 +353,14 @@ describe('FacetList Component', () => {
 
       const facetButtons = screen.getAllByRole('button');
       expect(facetButtons.length).toBeGreaterThan(0);
-      
+
       // Check that buttons contain facet labels
-      expect(screen.getByRole('button', { name: /Paper Maps/ })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /MIT Libraries/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Paper Maps/ })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /MIT Libraries/ })
+      ).toBeInTheDocument();
     });
 
     it('applies correct styling to inactive facets', () => {
@@ -358,7 +370,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
       expect(paperMapsButton).toHaveClass('text-gray-600');
       expect(paperMapsButton).not.toHaveClass('text-blue-600');
     });
@@ -366,28 +380,36 @@ describe('FacetList Component', () => {
     it('applies correct styling to active facets', () => {
       // Set up mock search params to simulate active facet
       mockSearchParams.set('fq[resource_class_agg][]', 'Paper Maps');
-      
+
       render(
         <TestWrapper>
           <FacetList facets={mockFacetData} />
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
-      expect(paperMapsButton).toHaveClass('text-blue-600', 'font-medium', 'bg-blue-50');
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
+      expect(paperMapsButton).toHaveClass(
+        'text-blue-600',
+        'font-medium',
+        'bg-blue-50'
+      );
     });
 
     it('shows remove indicator (×) for active facets', () => {
       // Set up mock search params to simulate active facet
       mockSearchParams.set('fq[resource_class_agg][]', 'Paper Maps');
-      
+
       render(
         <TestWrapper>
           <FacetList facets={mockFacetData} />
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
       expect(paperMapsButton).toHaveTextContent('×');
     });
 
@@ -398,7 +420,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
       expect(paperMapsButton).not.toHaveTextContent('×');
     });
   });
@@ -422,7 +446,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByRole('button', { name: /More »/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /More »/i })
+      ).toBeInTheDocument();
     });
 
     it('does not render "More »" button when there are 10 or fewer items', () => {
@@ -443,7 +469,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.queryByRole('button', { name: /More »/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /More »/i })
+      ).not.toBeInTheDocument();
     });
 
     it('opens the facet modal when "More »" is clicked', async () => {
@@ -528,7 +556,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText('No facets available for this search')).toBeInTheDocument();
+      expect(
+        screen.getByText('No facets available for this search')
+      ).toBeInTheDocument();
     });
   });
 
@@ -537,16 +567,22 @@ describe('FacetList Component', () => {
       // Set up mock search params to simulate multiple active facets
       mockSearchParams.set('fq[resource_class_agg][]', 'Paper Maps');
       mockSearchParams.set('fq[dc_publisher_sm][]', 'MIT Libraries');
-      
+
       render(
         <TestWrapper>
           <FacetList facets={mockFacetData} />
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
-      const mitLibrariesButton = screen.getByRole('button', { name: /MIT Libraries/ });
-      const pointDataButton = screen.getByRole('button', { name: /Point Data/ });
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
+      const mitLibrariesButton = screen.getByRole('button', {
+        name: /MIT Libraries/,
+      });
+      const pointDataButton = screen.getByRole('button', {
+        name: /Point Data/,
+      });
 
       expect(paperMapsButton).toHaveClass('text-blue-600');
       expect(mitLibrariesButton).toHaveClass('text-blue-600');
@@ -557,15 +593,19 @@ describe('FacetList Component', () => {
       // Set up mock search params to simulate multiple values for same facet
       mockSearchParams.append('fq[resource_class_agg][]', 'Paper Maps');
       mockSearchParams.append('fq[resource_class_agg][]', 'Point Data');
-      
+
       render(
         <TestWrapper>
           <FacetList facets={mockFacetData} />
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
-      const pointDataButton = screen.getByRole('button', { name: /Point Data/ });
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
+      const pointDataButton = screen.getByRole('button', {
+        name: /Point Data/,
+      });
 
       expect(paperMapsButton).toHaveClass('text-blue-600');
       expect(pointDataButton).toHaveClass('text-blue-600');
@@ -630,9 +670,9 @@ describe('FacetList Component', () => {
 
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
-      
+
       // Each button should have accessible text
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         expect(button).toHaveTextContent(/.+/);
       });
     });
@@ -644,7 +684,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      const paperMapsButton = screen.getByRole('button', { name: /Paper Maps/ });
+      const paperMapsButton = screen.getByRole('button', {
+        name: /Paper Maps/,
+      });
       expect(paperMapsButton).toHaveClass('hover:bg-gray-100');
     });
   });
@@ -692,8 +734,10 @@ describe('FacetList Component', () => {
             items: [
               {
                 attributes: {
-                  label: 'Very Long Publisher Name That Might Cause Layout Issues In The UI',
-                  value: 'Very Long Publisher Name That Might Cause Layout Issues In The UI',
+                  label:
+                    'Very Long Publisher Name That Might Cause Layout Issues In The UI',
+                  value:
+                    'Very Long Publisher Name That Might Cause Layout Issues In The UI',
                   hits: 1,
                 },
                 links: {
@@ -711,7 +755,11 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText('Very Long Publisher Name That Might Cause Layout Issues In The UI')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Very Long Publisher Name That Might Cause Layout Issues In The UI'
+        )
+      ).toBeInTheDocument();
     });
 
     it('handles facets with zero hits', () => {
@@ -816,7 +864,7 @@ describe('FacetList Component', () => {
     it('applies correct active facet styling', () => {
       // Set up mock search params to simulate active facet
       mockSearchParams.set('fq[resource_class_agg][]', 'Paper Maps');
-      
+
       render(
         <TestWrapper>
           <FacetList facets={mockFacetData} />
@@ -824,7 +872,12 @@ describe('FacetList Component', () => {
       );
 
       const activeButton = screen.getByRole('button', { name: /Paper Maps/ });
-      expect(activeButton).toHaveClass('text-blue-600', 'font-medium', 'bg-blue-50', 'hover:bg-blue-100');
+      expect(activeButton).toHaveClass(
+        'text-blue-600',
+        'font-medium',
+        'bg-blue-50',
+        'hover:bg-blue-100'
+      );
     });
 
     it('applies correct inactive facet styling', () => {
@@ -835,7 +888,10 @@ describe('FacetList Component', () => {
       );
 
       const inactiveButton = screen.getByRole('button', { name: /Paper Maps/ });
-      expect(inactiveButton).toHaveClass('text-gray-600', 'hover:text-gray-900');
+      expect(inactiveButton).toHaveClass(
+        'text-gray-600',
+        'hover:text-gray-900'
+      );
     });
   });
 });

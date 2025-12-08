@@ -58,4 +58,3 @@ export function StaticResultMap({ result }: StaticResultMapProps) {
     </div>
   );
 }
-

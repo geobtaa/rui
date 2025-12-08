@@ -18,13 +18,17 @@ const consoleSpy = {
 };
 
 // Test wrapper component
-const TestWrapper = ({ children, initialSearchParams = '' }: { children: React.ReactNode; initialSearchParams?: string }) => {
+const TestWrapper = ({
+  children,
+  initialSearchParams: _initialSearchParams = '', // eslint-disable-line @typescript-eslint/no-unused-vars
+}: {
+  children: React.ReactNode;
+  initialSearchParams?: string;
+}) => {
   return (
     <BrowserRouter>
       <ApiProvider>
-        <DebugProvider>
-          {children}
-        </DebugProvider>
+        <DebugProvider>{children}</DebugProvider>
       </ApiProvider>
     </BrowserRouter>
   );
@@ -55,7 +59,7 @@ describe('useSearch', () => {
     vi.clearAllMocks();
     consoleSpy.log.mockClear();
     consoleSpy.error.mockClear();
-    
+
     // Mock successful API response
     mockFetchSearchResults.mockResolvedValue({
       data: [
@@ -67,7 +71,7 @@ describe('useSearch', () => {
             dct_description_sm: ['A historical paper map from MIT collections'],
             dct_temporal_sm: ['1950'],
             dc_publisher_sm: ['MIT Libraries'],
-            gbl_resourceClass_sm: ['Paper Maps']
+            gbl_resourceClass_sm: ['Paper Maps'],
           },
           meta: {
             ui: {
@@ -75,19 +79,19 @@ describe('useSearch', () => {
               viewer: {
                 geometry: {
                   type: 'Point',
-                  coordinates: [-71.0935, 42.3601]
-                }
-              }
-            }
-          }
-        }
+                  coordinates: [-71.0935, 42.3601],
+                },
+              },
+            },
+          },
+        },
       ],
       meta: {
         totalCount: 1,
         page: 1,
-        perPage: 10
+        perPage: 10,
       },
-      included: []
+      included: [],
     });
   });
 
@@ -111,7 +115,9 @@ describe('useSearch', () => {
     });
 
     it('parses search parameters correctly', () => {
-      const { result } = renderUseSearch('q=geospatial%20data&page=2&sort=date');
+      const { result } = renderUseSearch(
+        'q=geospatial%20data&page=2&sort=date'
+      );
 
       expect(result.current.query).toBe('geospatial data');
       expect(result.current.page).toBe(2);
@@ -119,36 +125,43 @@ describe('useSearch', () => {
     });
 
     it('parses facet parameters correctly', () => {
-      const { result } = renderUseSearch('q=test&fq[dc_publisher_sm][]=MIT%20Libraries&fq[gbl_resourceClass_sm][]=Dataset');
+      const { result } = renderUseSearch(
+        'q=test&fq[dc_publisher_sm][]=MIT%20Libraries&fq[gbl_resourceClass_sm][]=Dataset'
+      );
 
       expect(result.current.query).toBe('test');
       expect(result.current.facets).toEqual([
         { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-        { field: 'gbl_resourceClass_sm', value: 'Dataset' }
+        { field: 'gbl_resourceClass_sm', value: 'Dataset' },
       ]);
     });
 
     it('handles multiple facets for same field', () => {
-      const { result } = renderUseSearch('q=test&fq[dc_publisher_sm][]=MIT%20Libraries&fq[dc_publisher_sm][]=Harvard%20University');
+      const { result } = renderUseSearch(
+        'q=test&fq[dc_publisher_sm][]=MIT%20Libraries&fq[dc_publisher_sm][]=Harvard%20University'
+      );
 
       expect(result.current.facets).toEqual([
         { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-        { field: 'dc_publisher_sm', value: 'Harvard University' }
+        { field: 'dc_publisher_sm', value: 'Harvard University' },
       ]);
     });
 
     it('logs debug information during initialization', () => {
       renderUseSearch('q=test&page=2');
 
-      expect(consoleSpy.log).toHaveBeenCalledWith('🔍 useSearch useEffect triggered with:', {
-        query: 'test',
-        page: 2,
-        facetsLength: 0,
-        excludeLength: 0,
-        sort: 'relevance',
-        advancedClauses: 0,
-        setLastApiUrl: 'function'
-      });
+      expect(consoleSpy.log).toHaveBeenCalledWith(
+        '🔍 useSearch useEffect triggered with:',
+        {
+          query: 'test',
+          page: 2,
+          facetsLength: 0,
+          excludeLength: 0,
+          sort: 'relevance',
+          advancedClauses: 0,
+          setLastApiUrl: 'function',
+        }
+      );
     });
   });
 
@@ -178,7 +191,9 @@ describe('useSearch', () => {
     });
 
     it('performs search when facets are provided without query', async () => {
-      const { result } = renderUseSearch('fq[dc_publisher_sm][]=MIT%20Libraries');
+      const { result } = renderUseSearch(
+        'fq[dc_publisher_sm][]=MIT%20Libraries'
+      );
 
       await waitFor(() => {
         expect(mockFetchSearchResults).toHaveBeenCalledWith(
@@ -335,7 +350,7 @@ describe('useSearch', () => {
       mockFetchSearchResults.mockResolvedValueOnce({
         data: [],
         meta: { totalCount: 0, page: 1, perPage: 10 },
-        included: []
+        included: [],
       });
 
       act(() => {
@@ -416,7 +431,7 @@ describe('useSearch', () => {
 
       const newFacets = [
         { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-        { field: 'gbl_resourceClass_sm', value: 'Dataset' }
+        { field: 'gbl_resourceClass_sm', value: 'Dataset' },
       ];
 
       act(() => {
@@ -427,18 +442,21 @@ describe('useSearch', () => {
     });
 
     it('clears existing facets when updating', async () => {
-      const { result } = renderUseSearch('q=test&fq[dc_publisher_sm][]=Old%20Publisher');
+      const { result } = renderUseSearch(
+        'q=test&fq[dc_publisher_sm][]=Old%20Publisher'
+      );
 
-      const newFacets = [
-        { field: 'gbl_resourceClass_sm', value: 'Dataset' }
-      ];
+      const newFacets = [{ field: 'gbl_resourceClass_sm', value: 'Dataset' }];
 
       act(() => {
         result.current.updateSearch({ facets: newFacets });
       });
 
       expect(result.current.facets).toEqual(newFacets);
-      expect(result.current.facets).not.toContainEqual({ field: 'dc_publisher_sm', value: 'Old Publisher' });
+      expect(result.current.facets).not.toContainEqual({
+        field: 'dc_publisher_sm',
+        value: 'Old Publisher',
+      });
     });
 
     it('updates advanced query parameter', async () => {
@@ -521,7 +539,7 @@ describe('useSearch', () => {
       mockFetchSearchResults.mockResolvedValueOnce({
         data: [],
         meta: { totalCount: 0, page: 1, perPage: 25 },
-        included: []
+        included: [],
       });
 
       const { result } = renderUseSearch('q=test');
@@ -541,7 +559,7 @@ describe('useSearch', () => {
       mockFetchSearchResults.mockResolvedValueOnce({
         data: [],
         meta: { totalCount: 42, page: 1, perPage: 10 },
-        included: []
+        included: [],
       });
 
       const { result } = renderUseSearch('q=test');
@@ -580,7 +598,9 @@ describe('useSearch', () => {
     });
 
     it('handles special characters in query', async () => {
-      const { result } = renderUseSearch('q=geographic%20information%20systems%20%26%20remote%20sensing');
+      renderUseSearch(
+        'q=geographic%20information%20systems%20%26%20remote%20sensing'
+      );
 
       await waitFor(() => {
         expect(mockFetchSearchResults).toHaveBeenCalledWith(
@@ -597,7 +617,9 @@ describe('useSearch', () => {
     });
 
     it('handles complex facet combinations', async () => {
-      const { result } = renderUseSearch('q=test&fq[dc_publisher_sm][]=MIT%20Libraries&fq[dc_publisher_sm][]=Harvard%20University&fq[gbl_resourceClass_sm][]=Dataset&fq[dct_temporal_sm][]=2020');
+      renderUseSearch(
+        'q=test&fq[dc_publisher_sm][]=MIT%20Libraries&fq[dc_publisher_sm][]=Harvard%20University&fq[gbl_resourceClass_sm][]=Dataset&fq[dct_temporal_sm][]=2020'
+      );
 
       await waitFor(() => {
         expect(mockFetchSearchResults).toHaveBeenCalledWith(
@@ -608,7 +630,7 @@ describe('useSearch', () => {
             { field: 'dc_publisher_sm', value: 'MIT Libraries' },
             { field: 'dc_publisher_sm', value: 'Harvard University' },
             { field: 'gbl_resourceClass_sm', value: 'Dataset' },
-            { field: 'dct_temporal_sm', value: '2020' }
+            { field: 'dct_temporal_sm', value: '2020' },
           ],
           expect.any(Function),
           'relevance',
@@ -629,8 +651,9 @@ describe('useSearch', () => {
     });
 
     it('handles very long queries', async () => {
-      const longQuery = 'This is a very long search query with many words that should be properly handled by the search hook';
-      const { result } = renderUseSearch(`q=${encodeURIComponent(longQuery)}`);
+      const longQuery =
+        'This is a very long search query with many words that should be properly handled by the search hook';
+      renderUseSearch(`q=${encodeURIComponent(longQuery)}`);
 
       await waitFor(() => {
         expect(mockFetchSearchResults).toHaveBeenCalledWith(
@@ -673,7 +696,9 @@ describe('useSearch', () => {
 
   describe('Integration with Real Data', () => {
     it('works with real fixture data patterns', async () => {
-      const { result } = renderUseSearch('q=geospatial%20data&fq[dc_publisher_sm][]=MIT%20Libraries&fq[gbl_resourceClass_sm][]=Dataset&sort=date&page=2');
+      const { result } = renderUseSearch(
+        'q=geospatial%20data&fq[dc_publisher_sm][]=MIT%20Libraries&fq[gbl_resourceClass_sm][]=Dataset&sort=date&page=2'
+      );
 
       await waitFor(() => {
         expect(mockFetchSearchResults).toHaveBeenCalledWith(
@@ -682,7 +707,7 @@ describe('useSearch', () => {
           10,
           [
             { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-            { field: 'gbl_resourceClass_sm', value: 'Dataset' }
+            { field: 'gbl_resourceClass_sm', value: 'Dataset' },
           ],
           expect.any(Function),
           'date',
@@ -696,7 +721,7 @@ describe('useSearch', () => {
       expect(result.current.sort).toBe('date');
       expect(result.current.facets).toEqual([
         { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-        { field: 'gbl_resourceClass_sm', value: 'Dataset' }
+        { field: 'gbl_resourceClass_sm', value: 'Dataset' },
       ]);
     });
 
@@ -705,21 +730,24 @@ describe('useSearch', () => {
         {
           params: 'q=maps',
           expectedQuery: 'maps',
-          expectedFacets: []
+          expectedFacets: [],
         },
         {
           params: 'q=geospatial%20data&fq[dc_publisher_sm][]=MIT%20Libraries',
           expectedQuery: 'geospatial data',
-          expectedFacets: [{ field: 'dc_publisher_sm', value: 'MIT Libraries' }]
+          expectedFacets: [
+            { field: 'dc_publisher_sm', value: 'MIT Libraries' },
+          ],
         },
         {
-          params: 'fq[gbl_resourceClass_sm][]=Dataset&fq[dct_temporal_sm][]=2020',
+          params:
+            'fq[gbl_resourceClass_sm][]=Dataset&fq[dct_temporal_sm][]=2020',
           expectedQuery: '',
           expectedFacets: [
             { field: 'gbl_resourceClass_sm', value: 'Dataset' },
-            { field: 'dct_temporal_sm', value: '2020' }
-          ]
-        }
+            { field: 'dct_temporal_sm', value: '2020' },
+          ],
+        },
       ];
 
       for (const testCase of testCases) {

@@ -1,4 +1,9 @@
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import { Globe2 } from 'lucide-react';
 import { SearchField } from '../SearchField';
 import { ResourceClassFilterTabs } from '../search/ResourceClassFilterTabs';
@@ -12,47 +17,65 @@ export function Header() {
   const handleSearch = (query: string) => {
     const newParams = new URLSearchParams();
     newParams.set('q', query);
-    
+
     // Preserve geo filters from current URL
     const geoType = searchParams.get('include_filters[geo][type]');
     if (geoType === 'bbox') {
-      const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
-      const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
-      const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
-      const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
-      
+      const topLeftLat = searchParams.get(
+        'include_filters[geo][top_left][lat]'
+      );
+      const topLeftLon = searchParams.get(
+        'include_filters[geo][top_left][lon]'
+      );
+      const bottomRightLat = searchParams.get(
+        'include_filters[geo][bottom_right][lat]'
+      );
+      const bottomRightLon = searchParams.get(
+        'include_filters[geo][bottom_right][lon]'
+      );
+
       if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
         newParams.set('include_filters[geo][type]', 'bbox');
         newParams.set('include_filters[geo][field]', 'dcat_bbox');
         newParams.set('include_filters[geo][top_left][lat]', topLeftLat);
         newParams.set('include_filters[geo][top_left][lon]', topLeftLon);
-        newParams.set('include_filters[geo][bottom_right][lat]', bottomRightLat);
-        newParams.set('include_filters[geo][bottom_right][lon]', bottomRightLon);
+        newParams.set(
+          'include_filters[geo][bottom_right][lat]',
+          bottomRightLat
+        );
+        newParams.set(
+          'include_filters[geo][bottom_right][lon]',
+          bottomRightLon
+        );
       }
     }
-    
+
     // Preserve category filters from current URL
-    const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
-    const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');
-    
+    const categoryFilters = searchParams.getAll(
+      'include_filters[gbl_resourceClass_sm][]'
+    );
+    const legacyCategoryFilters = searchParams.getAll(
+      'fq[gbl_resourceClass_sm][]'
+    );
+
     // Use include_filters format (preferred)
     if (categoryFilters.length > 0) {
-      categoryFilters.forEach(value => {
+      categoryFilters.forEach((value) => {
         newParams.append('include_filters[gbl_resourceClass_sm][]', value);
       });
     } else if (legacyCategoryFilters.length > 0) {
       // Fall back to legacy format if present
-      legacyCategoryFilters.forEach(value => {
+      legacyCategoryFilters.forEach((value) => {
         newParams.append('include_filters[gbl_resourceClass_sm][]', value);
       });
     }
-    
+
     navigate(`/search?${newParams.toString()}`);
   };
 
   const handleAdvancedSearchClick = () => {
     const newParams = new URLSearchParams(searchParams);
-    
+
     // If we're on the search page, toggle the showAdvanced param
     if (location.pathname === '/search') {
       const currentShowAdvanced = newParams.get('showAdvanced') === 'true';
@@ -67,7 +90,7 @@ export function Header() {
       // Not on search page - navigate to search with advanced open
       newParams.set('showAdvanced', 'true');
     }
-    
+
     navigate(`/search?${newParams.toString()}`);
   };
 
@@ -99,12 +122,12 @@ export function Header() {
 
           {/* Navigation - matches map column width */}
           <nav className="col-span-4 flex items-center justify-end space-x-4">
-                <Link
-                  to="/map"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Map
-                </Link>
+            <Link
+              to="/map"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Map
+            </Link>
             <Link
               to="/bookmarks"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"

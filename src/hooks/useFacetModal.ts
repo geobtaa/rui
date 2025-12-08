@@ -34,7 +34,10 @@ export function useFacetModal({
   const [sort, setSortState] = useState<FacetValuesSort>(defaultSort);
   const [qFacet, setQFacetState] = useState('');
 
-  const paramsSignature = useMemo(() => searchParams.toString(), [searchParams]);
+  const paramsSignature = useMemo(
+    () => searchParams.toString(),
+    [searchParams]
+  );
   const lastParamsRef = useRef<string>('');
 
   useEffect(() => {
@@ -81,7 +84,7 @@ export function useFacetModal({
           qFacet: nextQFacet,
           searchParams: searchParams.toString(),
         });
-        
+
         const response = await fetchFacetValues({
           facetName: facetId,
           searchParams: new URLSearchParams(searchParams),
@@ -107,12 +110,23 @@ export function useFacetModal({
         lastParamsRef.current = paramsSignature;
       } catch (err) {
         console.error('❌ Error loading facet values:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load facet values');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load facet values'
+        );
       } finally {
         setIsLoading(false);
       }
     },
-    [facetId, isOpen, page, perPageState, sort, qFacet, paramsSignature, searchParams]
+    [
+      facetId,
+      isOpen,
+      page,
+      perPageState,
+      sort,
+      qFacet,
+      paramsSignature,
+      searchParams,
+    ]
   );
 
   const loadFacetValuesRef = useRef(loadFacetValues);
@@ -198,5 +212,3 @@ export function useFacetModal({
     refetch,
   };
 }
-
-

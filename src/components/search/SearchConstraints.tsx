@@ -32,16 +32,20 @@ export function SearchConstraints({
   // Check for geo filter (bbox)
   const geoType = searchParams.get('include_filters[geo][type]');
   const hasGeoFilter = geoType === 'bbox';
-  
+
   // Parse bbox coordinates
   const getBBoxDisplay = (): string | null => {
     if (!hasGeoFilter) return null;
-    
+
     const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
     const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
-    const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
-    const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
-    
+    const bottomRightLat = searchParams.get(
+      'include_filters[geo][bottom_right][lat]'
+    );
+    const bottomRightLon = searchParams.get(
+      'include_filters[geo][bottom_right][lon]'
+    );
+
     // Debug logging
     console.log('🔍 SearchConstraints reading bbox from URL:', {
       topLeftLat,
@@ -49,7 +53,7 @@ export function SearchConstraints({
       bottomRightLat,
       bottomRightLon,
     });
-    
+
     if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
       // Format as N E S W (North, East, South, West)
       // top_left is northwest (N, W)
@@ -58,10 +62,10 @@ export function SearchConstraints({
       const e = parseFloat(bottomRightLon).toFixed(2);
       const s = parseFloat(bottomRightLat).toFixed(2);
       const w = parseFloat(topLeftLon).toFixed(2);
-      
+
       const display = `BBox: ${n}°N ${e}°E ${s}°S ${w}°W`;
       console.log('📊 Bbox display string:', display);
-      
+
       return display;
     }
     return null;
@@ -167,10 +171,14 @@ export function SearchConstraints({
             title={`${clause.op} ${clause.field}`}
           >
             <span className="text-sm">
-              {clause.op}{' '}
-              {humanizeFieldName(clause.field)}: {clause.q}
+              {clause.op} {humanizeFieldName(clause.field)}: {clause.q}
             </span>
-            <X size={14} className={clause.op === 'NOT' ? 'text-red-500' : 'text-purple-500'} />
+            <X
+              size={14}
+              className={
+                clause.op === 'NOT' ? 'text-red-500' : 'text-purple-500'
+              }
+            />
           </button>
         ))}
         <button

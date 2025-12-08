@@ -4,7 +4,9 @@ export function NotFoundPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Page not found</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Page not found
+        </h1>
         <p className="text-gray-600 mb-8">
           The page you’re looking for doesn’t exist or has been moved.
         </p>
@@ -18,5 +20,3 @@ export function NotFoundPage() {
     </div>
   );
 }
-
-

@@ -7,33 +7,33 @@ const mockSortOptions = [
   {
     id: 'relevance',
     label: 'Relevance',
-    url: '/search?sort=relevance'
+    url: '/search?sort=relevance',
   },
   {
     id: 'title_asc',
     label: 'Title (A-Z)',
-    url: '/search?sort=title_asc'
+    url: '/search?sort=title_asc',
   },
   {
     id: 'title_desc',
     label: 'Title (Z-A)',
-    url: '/search?sort=title_desc'
+    url: '/search?sort=title_desc',
   },
   {
     id: 'date_asc',
     label: 'Date (Oldest First)',
-    url: '/search?sort=date_asc'
+    url: '/search?sort=date_asc',
   },
   {
     id: 'date_desc',
     label: 'Date (Newest First)',
-    url: '/search?sort=date_desc'
+    url: '/search?sort=date_desc',
   },
   {
     id: 'publisher_asc',
     label: 'Publisher (A-Z)',
-    url: '/search?sort=publisher_asc'
-  }
+    url: '/search?sort=publisher_asc',
+  },
 ];
 
 describe('SortControl', () => {
@@ -55,15 +55,17 @@ describe('SortControl', () => {
 
       // Check for the label
       expect(screen.getByText('Sort by:')).toBeInTheDocument();
-      
+
       // Check for the select element
       const select = screen.getByRole('combobox');
       expect(select).toBeInTheDocument();
       expect(select).toHaveValue('relevance');
-      
+
       // Check for all options
-      mockSortOptions.forEach(option => {
-        expect(screen.getByRole('option', { name: option.label })).toBeInTheDocument();
+      mockSortOptions.forEach((option) => {
+        expect(
+          screen.getByRole('option', { name: option.label })
+        ).toBeInTheDocument();
       });
     });
 
@@ -136,7 +138,7 @@ describe('SortControl', () => {
   describe('User Interactions', () => {
     it('calls onSortChange when user selects a different option', async () => {
       const user = userEvent.setup();
-      
+
       render(
         <SortControl
           options={mockSortOptions}
@@ -154,7 +156,7 @@ describe('SortControl', () => {
 
     it('calls onSortChange with correct value for each option', async () => {
       const user = userEvent.setup();
-      
+
       render(
         <SortControl
           options={mockSortOptions}
@@ -212,7 +214,7 @@ describe('SortControl', () => {
 
       const label = screen.getByText('Sort by:');
       const select = screen.getByRole('combobox');
-      
+
       expect(label).toHaveAttribute('for', 'sort-select');
       expect(select).toHaveAttribute('id', 'sort-select');
     });
@@ -227,8 +229,10 @@ describe('SortControl', () => {
       );
 
       // Check that each option has the correct accessible name
-      mockSortOptions.forEach(option => {
-        const optionElement = screen.getByRole('option', { name: option.label });
+      mockSortOptions.forEach((option) => {
+        const optionElement = screen.getByRole('option', {
+          name: option.label,
+        });
         expect(optionElement).toHaveValue(option.id);
         expect(optionElement).toHaveTextContent(option.label);
       });
@@ -329,7 +333,7 @@ describe('SortControl', () => {
   describe('Edge Cases', () => {
     it('handles single option correctly', () => {
       const singleOption = [mockSortOptions[0]];
-      
+
       render(
         <SortControl
           options={singleOption}
@@ -340,7 +344,9 @@ describe('SortControl', () => {
 
       const select = screen.getByRole('combobox');
       expect(select).toHaveValue('relevance');
-      expect(screen.getByRole('option', { name: 'Relevance' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: 'Relevance' })
+      ).toBeInTheDocument();
     });
 
     it('handles currentSort not matching any option', () => {
@@ -362,13 +368,13 @@ describe('SortControl', () => {
         {
           id: 'special_sort',
           label: 'Special Sort (with parentheses)',
-          url: '/search?sort=special_sort'
+          url: '/search?sort=special_sort',
         },
         {
           id: 'another_sort',
           label: 'Another Sort & More',
-          url: '/search?sort=another_sort'
-        }
+          url: '/search?sort=another_sort',
+        },
       ];
 
       render(
@@ -379,17 +385,22 @@ describe('SortControl', () => {
         />
       );
 
-      expect(screen.getByRole('option', { name: 'Special Sort (with parentheses)' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'Another Sort & More' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: 'Special Sort (with parentheses)' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: 'Another Sort & More' })
+      ).toBeInTheDocument();
     });
 
     it('handles very long option labels', () => {
       const longLabelOptions = [
         {
           id: 'long_sort',
-          label: 'This is a very long sort option label that might wrap or cause layout issues',
-          url: '/search?sort=long_sort'
-        }
+          label:
+            'This is a very long sort option label that might wrap or cause layout issues',
+          url: '/search?sort=long_sort',
+        },
       ];
 
       render(
@@ -400,7 +411,9 @@ describe('SortControl', () => {
         />
       );
 
-      expect(screen.getByRole('option', { name: longLabelOptions[0].label })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: longLabelOptions[0].label })
+      ).toBeInTheDocument();
     });
   });
 
@@ -411,7 +424,7 @@ describe('SortControl', () => {
         { currentSort: 'title_asc', expectedValue: 'title_asc' },
         { currentSort: 'date_desc', expectedValue: 'date_desc' },
         { currentSort: '', expectedValue: 'relevance' }, // Empty string defaults to first option
-        { currentSort: '0', expectedValue: 'relevance' } // Non-existent option defaults to first option
+        { currentSort: '0', expectedValue: 'relevance' }, // Non-existent option defaults to first option
       ];
 
       testCases.forEach(({ currentSort, expectedValue }) => {
@@ -425,14 +438,14 @@ describe('SortControl', () => {
 
         const select = screen.getByRole('combobox');
         expect(select).toHaveValue(expectedValue);
-        
+
         unmount();
       });
     });
 
     it('maintains focus behavior during interactions', async () => {
       const user = userEvent.setup();
-      
+
       render(
         <SortControl
           options={mockSortOptions}
@@ -442,14 +455,14 @@ describe('SortControl', () => {
       );
 
       const select = screen.getByRole('combobox');
-      
+
       // Focus the select
       await user.click(select);
       expect(select).toHaveFocus();
-      
+
       // Change selection
       await user.selectOptions(select, 'title_asc');
-      
+
       // Select should still be focused
       expect(select).toHaveFocus();
       expect(mockOnSortChange).toHaveBeenCalledWith('title_asc');

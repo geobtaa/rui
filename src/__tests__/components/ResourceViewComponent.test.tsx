@@ -44,7 +44,8 @@ const realFixtureData: GeoDocument[] = [
             type: 'application/pdf',
           },
         ],
-        citation: 'MIT Libraries (1950). Nondigitized paper map with library catalog link.',
+        citation:
+          'MIT Libraries (1950). Nondigitized paper map with library catalog link.',
         links: {
           'Library Catalog': [
             {
@@ -79,7 +80,7 @@ const realFixtureData: GeoDocument[] = [
           endpoint: 'https://example.com/arcgis',
           geometry: {
             type: 'Point',
-            coordinates: [-74.0060, 40.7128],
+            coordinates: [-74.006, 40.7128],
           },
         },
         downloads: [
@@ -110,13 +111,16 @@ const realFixtureData: GeoDocument[] = [
     type: 'document',
     attributes: {
       dct_title_s: 'Polygon dataset with WFS, WMS, and FGDC metadata',
-      dct_description_sm: ['A polygon dataset from Tufts with comprehensive metadata'],
+      dct_description_sm: [
+        'A polygon dataset from Tufts with comprehensive metadata',
+      ],
       dct_temporal_sm: ['2019'],
       dc_publisher_sm: ['Tufts University'],
       gbl_resourceClass_sm: ['Polygon Data'],
       dct_accessrights_s: 'Public',
       gbl_wxsidentifier_s: 'tufts-cambridgegrid100-04',
-      locn_geometry_original: 'POLYGON((-71.1 42.3, -71.0 42.3, -71.0 42.4, -71.1 42.4, -71.1 42.3))',
+      locn_geometry_original:
+        'POLYGON((-71.1 42.3, -71.0 42.3, -71.0 42.4, -71.1 42.4, -71.1 42.3))',
       ui_viewer_protocol: 'open_index_map',
       ui_viewer_endpoint: 'https://example.com/indexmap',
     },
@@ -128,7 +132,15 @@ const realFixtureData: GeoDocument[] = [
           endpoint: 'https://example.com/indexmap',
           geometry: {
             type: 'Polygon',
-            coordinates: [[[-71.1, 42.3], [-71.0, 42.3], [-71.0, 42.4], [-71.1, 42.4], [-71.1, 42.3]]],
+            coordinates: [
+              [
+                [-71.1, 42.3],
+                [-71.0, 42.3],
+                [-71.0, 42.4],
+                [-71.1, 42.4],
+                [-71.1, 42.3],
+              ],
+            ],
           },
         },
         downloads: [
@@ -138,7 +150,8 @@ const realFixtureData: GeoDocument[] = [
             type: 'application/geojson',
           },
         ],
-        citation: 'Tufts University (2019). Polygon dataset with WFS, WMS, and FGDC metadata.',
+        citation:
+          'Tufts University (2019). Polygon dataset with WFS, WMS, and FGDC metadata.',
         links: {
           'Web Services': [
             {
@@ -194,9 +207,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <ApiProvider>
       <DebugProvider>
         <MapProvider>
-          <BookmarkProvider>
-            {children}
-          </BookmarkProvider>
+          <BookmarkProvider>{children}</BookmarkProvider>
         </MapProvider>
       </DebugProvider>
     </ApiProvider>
@@ -209,12 +220,12 @@ describe('ResourceView Component', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Import the mocked functions
     const apiModule = await import('../../services/api');
     fetchResourceDetails = apiModule.fetchResourceDetails;
     fetchSearchResults = apiModule.fetchSearchResults;
-    
+
     // Mock successful API response
     (fetchResourceDetails as any).mockResolvedValue({
       data: realFixtureData[0],
@@ -247,7 +258,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
 
       const spinner = document.querySelector('.animate-spin');
@@ -266,13 +279,19 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('An unexpected error occurred while fetching item details')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'An unexpected error occurred while fetching item details'
+          )
+        ).toBeInTheDocument();
       });
     });
 
     it('displays ApiError message when API returns specific error', async () => {
       const { ApiError } = await import('../../services/api');
-      (fetchResourceDetails as any).mockRejectedValue(new ApiError('Resource not found'));
+      (fetchResourceDetails as any).mockRejectedValue(
+        new ApiError('Resource not found')
+      );
 
       render(
         <TestWrapper>
@@ -295,7 +314,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
     });
 
@@ -310,7 +333,10 @@ describe('ResourceView Component', () => {
         // Check for breadcrumb link specifically
         const breadcrumbLink = screen.getByRole('link', { name: 'Paper Maps' });
         expect(breadcrumbLink).toBeInTheDocument();
-        expect(breadcrumbLink).toHaveAttribute('href', '/search?fq%5Bresource_class_agg%5D%5B%5D=Paper+Maps');
+        expect(breadcrumbLink).toHaveAttribute(
+          'href',
+          '/search?fq%5Bresource_class_agg%5D%5B%5D=Paper+Maps'
+        );
       });
     });
 
@@ -335,7 +361,7 @@ describe('ResourceView Component', () => {
   describe('Navigation', () => {
     it('displays navigation controls when search state is available', async () => {
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 0,
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -358,7 +384,7 @@ describe('ResourceView Component', () => {
 
     it('shows next button when more results are available', async () => {
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 0,
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -380,7 +406,7 @@ describe('ResourceView Component', () => {
 
     it('shows previous button when previous results are available', async () => {
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 1,
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -403,7 +429,7 @@ describe('ResourceView Component', () => {
     it('handles next navigation within current page', async () => {
       const user = userEvent.setup();
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 0,
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -436,7 +462,7 @@ describe('ResourceView Component', () => {
     it('handles previous navigation within current page', async () => {
       const user = userEvent.setup();
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 1,
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -469,7 +495,9 @@ describe('ResourceView Component', () => {
     it('handles next navigation to new page', async () => {
       const user = userEvent.setup();
       const searchState = {
-        searchResults: realFixtureData.slice(0, 2).map(item => ({ id: item.id })),
+        searchResults: realFixtureData
+          .slice(0, 2)
+          .map((item) => ({ id: item.id })),
         currentIndex: 1,
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -491,13 +519,21 @@ describe('ResourceView Component', () => {
       const nextButton = screen.getByTitle('Next');
       await user.click(nextButton);
 
-      expect(fetchSearchResults).toHaveBeenCalledWith('', 2, 10, [], expect.any(Function));
+      expect(fetchSearchResults).toHaveBeenCalledWith(
+        '',
+        2,
+        10,
+        [],
+        expect.any(Function)
+      );
     });
 
     it('handles previous navigation to previous page', async () => {
       const user = userEvent.setup();
       const searchState = {
-        searchResults: realFixtureData.slice(1, 3).map(item => ({ id: item.id })),
+        searchResults: realFixtureData
+          .slice(1, 3)
+          .map((item) => ({ id: item.id })),
         currentIndex: 1, // Set to 1 so hasPreviousResults is true
         totalResults: 3,
         searchUrl: '/search?q=test',
@@ -539,11 +575,15 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
 
       // ResourceViewer should be rendered when protocol is available
-      expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+      expect(
+        screen.getByText('Nondigitized paper map with library catalog link')
+      ).toBeInTheDocument();
     });
 
     it('renders AttributeTable when protocol is wms', async () => {
@@ -556,7 +596,9 @@ describe('ResourceView Component', () => {
       await waitFor(() => {
         expect(screen.getByText('Attribute')).toBeInTheDocument();
         expect(screen.getByText('Value')).toBeInTheDocument();
-        expect(screen.getByText('Click on map to inspect values')).toBeInTheDocument();
+        expect(
+          screen.getByText('Click on map to inspect values')
+        ).toBeInTheDocument();
       });
     });
 
@@ -573,11 +615,15 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Polygon dataset with WFS, WMS, and FGDC metadata')).toBeInTheDocument();
+        expect(
+          screen.getByText('Polygon dataset with WFS, WMS, and FGDC metadata')
+        ).toBeInTheDocument();
       });
 
       // IndexMap should be rendered
-      expect(screen.getByText('Polygon dataset with WFS, WMS, and FGDC metadata')).toBeInTheDocument();
+      expect(
+        screen.getByText('Polygon dataset with WFS, WMS, and FGDC metadata')
+      ).toBeInTheDocument();
     });
 
     it('renders FullDetailsTable', async () => {
@@ -588,11 +634,15 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
 
       // FullDetailsTable should be rendered
-      expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+      expect(
+        screen.getByText('Nondigitized paper map with library catalog link')
+      ).toBeInTheDocument();
     });
 
     it('renders MetadataTable', async () => {
@@ -615,11 +665,15 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
 
       // CitationTable should be rendered when citation is available
-      expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+      expect(
+        screen.getByText('Nondigitized paper map with library catalog link')
+      ).toBeInTheDocument();
     });
   });
 
@@ -634,7 +688,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
 
       // Should still render the resource with navigation controls (they default to home)
@@ -654,7 +710,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Point dataset with WMS and WFS')).toBeInTheDocument();
+        expect(
+          screen.getByText('Point dataset with WMS and WFS')
+        ).toBeInTheDocument();
       });
     });
 
@@ -671,7 +729,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Polygon dataset with WFS, WMS, and FGDC metadata')).toBeInTheDocument();
+        expect(
+          screen.getByText('Polygon dataset with WFS, WMS, and FGDC metadata')
+        ).toBeInTheDocument();
       });
     });
 
@@ -695,7 +755,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
     });
   });
@@ -703,7 +765,7 @@ describe('ResourceView Component', () => {
   describe('URL Parameter Handling', () => {
     it('extracts search parameters correctly for pagination', async () => {
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 0,
         totalResults: 3,
         searchUrl: '/search?q=test&facet=type:Dataset',
@@ -719,7 +781,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Nondigitized paper map with library catalog link')).toBeInTheDocument();
+        expect(
+          screen.getByText('Nondigitized paper map with library catalog link')
+        ).toBeInTheDocument();
       });
 
       // Should display current position
@@ -736,7 +800,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // Check for proper table structure (there are multiple tables)
@@ -746,7 +814,7 @@ describe('ResourceView Component', () => {
 
     it('has proper button titles for navigation', async () => {
       const searchState = {
-        searchResults: realFixtureData.map(item => ({ id: item.id })),
+        searchResults: realFixtureData.map((item) => ({ id: item.id })),
         currentIndex: 1,
         totalResults: 3,
         searchUrl: '/search?q=test',

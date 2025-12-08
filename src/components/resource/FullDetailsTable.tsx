@@ -535,18 +535,16 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                   <li className="text-sm text-gray-900">
                     {key === 'dct_spatial_sm' &&
                     Array.isArray(value) &&
-                    value.length > 15 ? (
-                      renderPlaceValues(
-                        value as string | string[] | null | undefined,
-                        true
-                      )
-                    ) : (
-                      renderValue(
-                        key,
-                        value as string | string[] | null | undefined,
-                        true
-                      )
-                    )}
+                    value.length > 15
+                      ? renderPlaceValues(
+                          value as string | string[] | null | undefined,
+                          true
+                        )
+                      : renderValue(
+                          key,
+                          value as string | string[] | null | undefined,
+                          true
+                        )}
                   </li>
                 </ul>
               </div>

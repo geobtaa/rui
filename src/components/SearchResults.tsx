@@ -102,10 +102,10 @@ export function SearchResults({
             <div className="flex">
               {/* Thumbnail */}
               <div className="w-48 flex-shrink-0">
-                {result.meta?.ui?.thumbnail_url && 
-                 typeof result.meta.ui.thumbnail_url === 'string' &&
-                 result.meta.ui.thumbnail_url.trim() !== '' &&
-                 !imageErrors.has(result.id) ? (
+                {result.meta?.ui?.thumbnail_url &&
+                typeof result.meta.ui.thumbnail_url === 'string' &&
+                result.meta.ui.thumbnail_url.trim() !== '' &&
+                !imageErrors.has(result.id) ? (
                   <div className="h-48 w-48 rounded-l-lg">
                     <img
                       src={result.meta.ui.thumbnail_url}
@@ -185,8 +185,7 @@ export function SearchResults({
                             .map((item) =>
                               typeof item === 'string' ? item : String(item)
                             )
-                            .join(', ')}
-                          {' '}
+                            .join(', ')}{' '}
                         </span>
                       )}
                     {result.attributes.ogm.dct_description_sm &&
@@ -204,15 +203,15 @@ export function SearchResults({
                   // Get subjects from dct_subjects_sm or dct_subject_sm
                   const subjects =
                     (result.attributes.ogm.dct_subjects_sm &&
-                      Array.isArray(result.attributes.ogm.dct_subjects_sm) &&
-                      result.attributes.ogm.dct_subjects_sm.length > 0
-                        ? result.attributes.ogm.dct_subjects_sm
-                        : null) ||
+                    Array.isArray(result.attributes.ogm.dct_subjects_sm) &&
+                    result.attributes.ogm.dct_subjects_sm.length > 0
+                      ? result.attributes.ogm.dct_subjects_sm
+                      : null) ||
                     (result.attributes.ogm.dct_subject_sm &&
-                      Array.isArray(result.attributes.ogm.dct_subject_sm) &&
-                      result.attributes.ogm.dct_subject_sm.length > 0
-                        ? result.attributes.ogm.dct_subject_sm
-                        : null);
+                    Array.isArray(result.attributes.ogm.dct_subject_sm) &&
+                    result.attributes.ogm.dct_subject_sm.length > 0
+                      ? result.attributes.ogm.dct_subject_sm
+                      : null);
 
                   // Get themes from dcat_theme_sm
                   const themes =
@@ -223,9 +222,15 @@ export function SearchResults({
                       : null;
 
                   // Helper to create search URL for a tag
-                  const createTagSearchUrl = (field: string, value: string | number) => {
+                  const createTagSearchUrl = (
+                    field: string,
+                    value: string | number
+                  ) => {
                     const params = new URLSearchParams();
-                    params.append(`include_filters[${field}][]`, value.toString());
+                    params.append(
+                      `include_filters[${field}][]`,
+                      value.toString()
+                    );
                     return `/search?${params.toString()}`;
                   };
 
@@ -239,7 +244,9 @@ export function SearchResults({
                     <div className="flex flex-wrap gap-2 mb-4">
                       {subjects?.map((subject, index) => {
                         const subjectValue =
-                          typeof subject === 'string' ? subject : String(subject);
+                          typeof subject === 'string'
+                            ? subject
+                            : String(subject);
                         return (
                           <Link
                             key={`subject-${index}`}

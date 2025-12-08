@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GeoDocument } from '../../types/api';
@@ -31,8 +31,12 @@ export function MapView({ results }: MapViewProps) {
 
     const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
     const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
-    const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
-    const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
+    const bottomRightLat = searchParams.get(
+      'include_filters[geo][bottom_right][lat]'
+    );
+    const bottomRightLon = searchParams.get(
+      'include_filters[geo][bottom_right][lon]'
+    );
 
     if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
       return {
@@ -104,7 +108,7 @@ export function MapView({ results }: MapViewProps) {
           {
             type: 'FeatureCollection' as const,
             features: features,
-          } as L.GeoJSON.FeatureCollection, // Proper Leaflet GeoJSON typing
+          } as unknown as GeoJSON.GeoJsonObject,
           {
             style: {
               color: '#2563eb',
@@ -150,14 +154,14 @@ export function MapView({ results }: MapViewProps) {
         mapRef.current = null;
       }
     };
-  }, [results.length, JSON.stringify(results.map((r) => r.id)), getBBoxFromParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [results, getBBoxFromParams]);
 
   // Display geo filter bbox on map and pan/zoom to it
   useEffect(() => {
     if (!mapRef.current) return;
 
     const bbox = getBBoxFromParams();
-    
+
     // Clear existing filter rectangle
     if (filterRectRef.current) {
       mapRef.current.removeLayer(filterRectRef.current);
@@ -170,7 +174,7 @@ export function MapView({ results }: MapViewProps) {
         isUpdatingFromParamsRef.current = true;
         const filterBounds = L.latLngBounds(
           [bbox.bottomRight.lat, bbox.topLeft.lon], // Southwest
-          [bbox.topLeft.lat, bbox.bottomRight.lon]  // Northeast
+          [bbox.topLeft.lat, bbox.bottomRight.lon] // Northeast
         );
 
         // Create a rectangle for the filter area
@@ -219,7 +223,8 @@ export function MapView({ results }: MapViewProps) {
     // Add new highlight if there's a hovered geometry
     if (hoveredGeometry) {
       try {
-        highlightLayerRef.current = L.geoJSON(hoveredGeometry, {
+        const parsedGeometry = JSON.parse(hoveredGeometry);
+        highlightLayerRef.current = L.geoJSON(parsedGeometry, {
           style: {
             color: '#2563eb',
             weight: 3,
