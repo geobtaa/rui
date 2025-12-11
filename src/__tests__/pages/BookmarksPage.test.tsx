@@ -40,17 +40,13 @@ vi.mock('../../components/SearchResults', () => ({
 
 vi.mock('../../components/FacetList', () => ({
   FacetList: ({ facets }: any) => (
-    <div data-testid="facet-list">
-      Facets: {facets.length}
-    </div>
+    <div data-testid="facet-list">Facets: {facets.length}</div>
   ),
 }));
 
 vi.mock('../../components/search/MapView', () => ({
   MapView: ({ results }: any) => (
-    <div data-testid="map-view">
-      Map with {results.length} results
-    </div>
+    <div data-testid="map-view">Map with {results.length} results</div>
   ),
 }));
 
@@ -59,10 +55,7 @@ vi.mock('../../components/search/SortControl', () => ({
     <div data-testid="sort-control">
       <div data-testid="current-sort">{currentSort}</div>
       <div data-testid="sort-options">{options.length} options</div>
-      <button 
-        onClick={() => onSortChange('title')}
-        data-testid="sort-button"
-      >
+      <button onClick={() => onSortChange('title')} data-testid="sort-button">
         Change Sort
       </button>
     </div>
@@ -77,9 +70,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
     <BrowserRouter>
       <ApiProvider>
         <BookmarkProvider>
-          <DebugProvider>
-            {children}
-          </DebugProvider>
+          <DebugProvider>{children}</DebugProvider>
         </BookmarkProvider>
       </ApiProvider>
     </BrowserRouter>
@@ -126,27 +117,29 @@ describe('BookmarksPage', () => {
           perPage: 10,
           query: '',
         },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+            meta: {
+              ui: {
+                thumbnail_url: null,
+                viewer: {
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [-71.0935, 42.3601],
+                  },
+                },
+              },
+            },
           },
-          meta: {
-            ui: {
-              thumbnail_url: null,
-              viewer: {
-                geometry: {
-                  type: 'Point',
-                  coordinates: [-71.0935, 42.3601]
-                }
-              }
-            }
-          }
-        }],
-        included: []
+        ],
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -158,7 +151,9 @@ describe('BookmarksPage', () => {
       });
 
       expect(screen.getByTestId('total-results')).toHaveTextContent('Total: 1');
-      expect(screen.getByTestId('results-count')).toHaveTextContent('Results: 1');
+      expect(screen.getByTestId('results-count')).toHaveTextContent(
+        'Results: 1'
+      );
     });
   });
 
@@ -167,17 +162,29 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
 
-      renderWithBookmarks(['mit-001145244', 'nyu-2451-34564', 'tufts-cambridgegrid100-04']);
+      renderWithBookmarks([
+        'mit-001145244',
+        'nyu-2451-34564',
+        'tufts-cambridgegrid100-04',
+      ]);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (3)')).toBeInTheDocument();
+        expect(
+          screen.getByText('Bookmarked Resources (3)')
+        ).toBeInTheDocument();
       });
     });
 
@@ -185,9 +192,15 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -195,7 +208,9 @@ describe('BookmarksPage', () => {
       renderWithBookmarks([]);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (0)')).toBeInTheDocument();
+        expect(
+          screen.getByText('Bookmarked Resources (0)')
+        ).toBeInTheDocument();
       });
     });
   });
@@ -205,15 +220,21 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
 
       const bookmarks = ['mit-001145244', 'nyu-2451-34564'];
-      
+
       renderWithBookmarks(bookmarks);
 
       await waitFor(() => {
@@ -225,19 +246,24 @@ describe('BookmarksPage', () => {
     });
 
     it('handles API errors gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
       mockFetchBookmarkedResources.mockRejectedValue(new Error('API Error'));
 
       renderWithBookmarks(['mit-001145244']);
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Error fetching bookmarks:', expect.any(Error));
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Error fetching bookmarks:',
+          expect.any(Error)
+        );
       });
 
       // Should still show the page structure even with errors
       expect(screen.getByText('Bookmarked Resources (1)')).toBeInTheDocument();
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -247,30 +273,38 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
         included: [
           {
             type: 'sort',
             id: 'relevance',
             attributes: { label: 'Relevance' },
-            links: { self: '/sort/relevance' }
+            links: { self: '/sort/relevance' },
           },
           {
             type: 'sort',
             id: 'title',
             attributes: { label: 'Title' },
-            links: { self: '/sort/title' }
-          }
-        ]
+            links: { self: '/sort/title' },
+          },
+        ],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -279,8 +313,12 @@ describe('BookmarksPage', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('sort-control')).toBeInTheDocument();
-        expect(screen.getByTestId('current-sort')).toHaveTextContent('relevance');
-        expect(screen.getByTestId('sort-options')).toHaveTextContent('2 options');
+        expect(screen.getByTestId('current-sort')).toHaveTextContent(
+          'relevance'
+        );
+        expect(screen.getByTestId('sort-options')).toHaveTextContent(
+          '2 options'
+        );
       });
     });
 
@@ -288,17 +326,25 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
-        included: [] // No sort options
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
+        included: [], // No sort options
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -314,30 +360,38 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
         included: [
           {
             type: 'sort',
             id: 'relevance',
             attributes: { label: 'Relevance' },
-            links: { self: '/sort/relevance' }
+            links: { self: '/sort/relevance' },
           },
           {
             type: 'sort',
             id: 'title',
             attributes: { label: 'Title' },
-            links: { self: '/sort/title' }
-          }
-        ]
+            links: { self: '/sort/title' },
+          },
+        ],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -363,28 +417,36 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
         included: [
           {
             type: 'facet',
             id: 'resource_class_agg',
-            attributes: { label: 'Resource Class' }
+            attributes: { label: 'Resource Class' },
           },
           {
             type: 'facet',
             id: 'provider_agg',
-            attributes: { label: 'Provider' }
-          }
-        ]
+            attributes: { label: 'Provider' },
+          },
+        ],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -402,17 +464,25 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
-        included: [] // No facets
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
+        included: [], // No facets
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -428,28 +498,36 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
         included: [
           {
             type: 'facet',
             id: 'resource_class_agg', // This should be included (configured facet)
-            attributes: { label: 'Resource Class' }
+            attributes: { label: 'Resource Class' },
           },
           {
             type: 'facet',
             id: 'unconfigured_facet', // This should be filtered out
-            attributes: { label: 'Unconfigured Facet' }
-          }
-        ]
+            attributes: { label: 'Unconfigured Facet' },
+          },
+        ],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -470,7 +548,13 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 2, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 2,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [
           {
             id: 'mit-001145244',
@@ -478,7 +562,7 @@ describe('BookmarksPage', () => {
             attributes: {
               dct_title_s: 'MIT Paper Map',
               dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps']
+              gbl_resourceClass_sm: ['Paper Maps'],
             },
             meta: {
               ui: {
@@ -486,11 +570,11 @@ describe('BookmarksPage', () => {
                 viewer: {
                   geometry: {
                     type: 'Point',
-                    coordinates: [-71.0935, 42.3601]
-                  }
-                }
-              }
-            }
+                    coordinates: [-71.0935, 42.3601],
+                  },
+                },
+              },
+            },
           },
           {
             id: 'nyu-2451-34564',
@@ -498,7 +582,7 @@ describe('BookmarksPage', () => {
             attributes: {
               dct_title_s: 'NYU Point Data',
               dct_description_sm: ['Point dataset from NYU'],
-              gbl_resourceClass_sm: ['Point Data']
+              gbl_resourceClass_sm: ['Point Data'],
             },
             meta: {
               ui: {
@@ -506,14 +590,14 @@ describe('BookmarksPage', () => {
                 viewer: {
                   geometry: {
                     type: 'Point',
-                    coordinates: [-74.006, 40.7128]
-                  }
-                }
-              }
-            }
-          }
+                    coordinates: [-74.006, 40.7128],
+                  },
+                },
+              },
+            },
+          },
         ],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -522,7 +606,9 @@ describe('BookmarksPage', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('map-view')).toBeInTheDocument();
-        expect(screen.getByTestId('map-view')).toHaveTextContent('Map with 2 results');
+        expect(screen.getByTestId('map-view')).toHaveTextContent(
+          'Map with 2 results'
+        );
       });
     });
 
@@ -530,9 +616,15 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -541,7 +633,9 @@ describe('BookmarksPage', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('map-view')).toBeInTheDocument();
-        expect(screen.getByTestId('map-view')).toHaveTextContent('Map with 0 results');
+        expect(screen.getByTestId('map-view')).toHaveTextContent(
+          'Map with 0 results'
+        );
       });
     });
   });
@@ -551,9 +645,15 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -572,23 +672,31 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'MIT Paper Map',
-            dct_description_sm: ['A paper map from MIT'],
-            gbl_resourceClass_sm: ['Paper Maps']
-          }
-        }],
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'MIT Paper Map',
+              dct_description_sm: ['A paper map from MIT'],
+              gbl_resourceClass_sm: ['Paper Maps'],
+            },
+          },
+        ],
         included: [
           {
             type: 'facet',
             id: 'resource_class_agg',
-            attributes: { label: 'Resource Class' }
-          }
-        ]
+            attributes: { label: 'Resource Class' },
+          },
+        ],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -606,29 +714,39 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'mit-001145244',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'actual-papermap1',
-            dct_description_sm: ['Nondigitized paper map with library catalog link'],
-            gbl_resourceClass_sm: ['Paper Maps'],
-            dc_publisher_sm: ['MIT Libraries']
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'mit-001145244',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'actual-papermap1',
+              dct_description_sm: [
+                'Nondigitized paper map with library catalog link',
+              ],
+              gbl_resourceClass_sm: ['Paper Maps'],
+              dc_publisher_sm: ['MIT Libraries'],
+            },
+            meta: {
+              ui: {
+                thumbnail_url: null,
+                viewer: {
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [-71.0935, 42.3601],
+                  },
+                },
+              },
+            },
           },
-          meta: {
-            ui: {
-              thumbnail_url: null,
-              viewer: {
-                geometry: {
-                  type: 'Point',
-                  coordinates: [-71.0935, 42.3601]
-                }
-              }
-            }
-          }
-        }],
-        included: []
+        ],
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -636,8 +754,12 @@ describe('BookmarksPage', () => {
       renderWithBookmarks(['mit-001145244']);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (1)')).toBeInTheDocument();
-        expect(screen.getByTestId('total-results')).toHaveTextContent('Total: 1');
+        expect(
+          screen.getByText('Bookmarked Resources (1)')
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('total-results')).toHaveTextContent(
+          'Total: 1'
+        );
       });
     });
 
@@ -645,29 +767,37 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'nyu-2451-34564',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'actual-point1',
-            dct_description_sm: ['Point dataset with WMS and WFS'],
-            gbl_resourceClass_sm: ['Point Data'],
-            dc_publisher_sm: ['NYU Libraries']
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'nyu-2451-34564',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'actual-point1',
+              dct_description_sm: ['Point dataset with WMS and WFS'],
+              gbl_resourceClass_sm: ['Point Data'],
+              dc_publisher_sm: ['NYU Libraries'],
+            },
+            meta: {
+              ui: {
+                thumbnail_url: null,
+                viewer: {
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [-74.006, 40.7128],
+                  },
+                },
+              },
+            },
           },
-          meta: {
-            ui: {
-              thumbnail_url: null,
-              viewer: {
-                geometry: {
-                  type: 'Point',
-                  coordinates: [-74.006, 40.7128]
-                }
-              }
-            }
-          }
-        }],
-        included: []
+        ],
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -675,8 +805,12 @@ describe('BookmarksPage', () => {
       renderWithBookmarks(['nyu-2451-34564']);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (1)')).toBeInTheDocument();
-        expect(screen.getByTestId('map-view')).toHaveTextContent('Map with 1 results');
+        expect(
+          screen.getByText('Bookmarked Resources (1)')
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('map-view')).toHaveTextContent(
+          'Map with 1 results'
+        );
       });
     });
 
@@ -684,29 +818,47 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 1, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
-        data: [{
-          id: 'tufts-cambridgegrid100-04',
-          type: 'document',
-          attributes: {
-            dct_title_s: 'actual-polygon1',
-            dct_description_sm: ['Polygon dataset with WFS, WMS, and FGDC metadata'],
-            gbl_resourceClass_sm: ['Polygon Data'],
-            dc_publisher_sm: ['Tufts University']
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
+        data: [
+          {
+            id: 'tufts-cambridgegrid100-04',
+            type: 'document',
+            attributes: {
+              dct_title_s: 'actual-polygon1',
+              dct_description_sm: [
+                'Polygon dataset with WFS, WMS, and FGDC metadata',
+              ],
+              gbl_resourceClass_sm: ['Polygon Data'],
+              dc_publisher_sm: ['Tufts University'],
+            },
+            meta: {
+              ui: {
+                thumbnail_url: null,
+                viewer: {
+                  geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                      [
+                        [-71.1, 42.3],
+                        [-71.0, 42.3],
+                        [-71.0, 42.4],
+                        [-71.1, 42.4],
+                        [-71.1, 42.3],
+                      ],
+                    ],
+                  },
+                },
+              },
+            },
           },
-          meta: {
-            ui: {
-              thumbnail_url: null,
-              viewer: {
-                geometry: {
-                  type: 'Polygon',
-                  coordinates: [[[-71.1, 42.3], [-71.0, 42.3], [-71.0, 42.4], [-71.1, 42.4], [-71.1, 42.3]]]
-                }
-              }
-            }
-          }
-        }],
-        included: []
+        ],
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -714,8 +866,12 @@ describe('BookmarksPage', () => {
       renderWithBookmarks(['tufts-cambridgegrid100-04']);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (1)')).toBeInTheDocument();
-        expect(screen.getByTestId('results-count')).toHaveTextContent('Results: 1');
+        expect(
+          screen.getByText('Bookmarked Resources (1)')
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('results-count')).toHaveTextContent(
+          'Results: 1'
+        );
       });
     });
   });
@@ -725,9 +881,15 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -735,9 +897,15 @@ describe('BookmarksPage', () => {
       renderWithBookmarks([]);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (0)')).toBeInTheDocument();
-        expect(screen.getByTestId('total-results')).toHaveTextContent('Total: 0');
-        expect(screen.getByTestId('results-count')).toHaveTextContent('Results: 0');
+        expect(
+          screen.getByText('Bookmarked Resources (0)')
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('total-results')).toHaveTextContent(
+          'Total: 0'
+        );
+        expect(screen.getByTestId('results-count')).toHaveTextContent(
+          'Results: 0'
+        );
       });
     });
 
@@ -745,9 +913,15 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: null,
-        included: null
+        included: null,
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -755,9 +929,15 @@ describe('BookmarksPage', () => {
       renderWithBookmarks(['test-id']);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (1)')).toBeInTheDocument();
-        expect(screen.getByTestId('total-results')).toHaveTextContent('Total: 0');
-        expect(screen.getByTestId('results-count')).toHaveTextContent('Results: 0');
+        expect(
+          screen.getByText('Bookmarked Resources (1)')
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('total-results')).toHaveTextContent(
+          'Total: 0'
+        );
+        expect(screen.getByTestId('results-count')).toHaveTextContent(
+          'Results: 0'
+        );
       });
     });
 
@@ -765,9 +945,15 @@ describe('BookmarksPage', () => {
       const mockResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
-        meta: { totalCount: 0, totalPages: 1, currentPage: 1, perPage: 10, query: '' },
+        meta: {
+          totalCount: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 10,
+          query: '',
+        },
         data: [],
-        included: []
+        included: [],
       };
 
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
@@ -775,8 +961,12 @@ describe('BookmarksPage', () => {
       renderWithBookmarks(['test-id']);
 
       await waitFor(() => {
-        expect(screen.getByText('Bookmarked Resources (1)')).toBeInTheDocument();
-        expect(screen.getByTestId('total-results')).toHaveTextContent('Total: 0');
+        expect(
+          screen.getByText('Bookmarked Resources (1)')
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('total-results')).toHaveTextContent(
+          'Total: 0'
+        );
       });
     });
   });

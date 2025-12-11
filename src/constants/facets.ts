@@ -1,5 +1,6 @@
 export const CONFIGURED_FACETS = [
   'dct_spatial_sm',
+  'time_period',
   'gbl_resourceClass_sm',
   'gbl_resourceType_sm',
   'gbl_indexyear_im',

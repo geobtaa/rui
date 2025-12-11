@@ -48,7 +48,7 @@ describe('searchParams', () => {
         q: 'geospatial data',
         page: '1',
         'fq[dc_publisher_sm][]': 'MIT Libraries',
-        'fq[gbl_resourceClass_sm][]': 'Dataset'
+        'fq[gbl_resourceClass_sm][]': 'Dataset',
       });
 
       const result = parseSearchParams(searchParams);
@@ -90,7 +90,7 @@ describe('searchParams', () => {
       const searchParams = new URLSearchParams({
         q: 'geographic data',
         'fq[dct_temporal_sm][]': '2020',
-        'fq[dc_subject_sm][]': 'Geographic Information Systems'
+        'fq[dc_subject_sm][]': 'Geographic Information Systems',
       });
 
       const result = parseSearchParams(searchParams);
@@ -113,7 +113,7 @@ describe('searchParams', () => {
         page: '1',
         sort: 'relevance',
         format: 'json',
-        'fq[dc_publisher_sm][]': 'MIT Libraries'
+        'fq[dc_publisher_sm][]': 'MIT Libraries',
       });
 
       const result = parseSearchParams(searchParams);
@@ -130,7 +130,7 @@ describe('searchParams', () => {
     it('handles invalid page numbers gracefully', () => {
       const searchParams = new URLSearchParams({
         q: 'test',
-        page: 'invalid'
+        page: 'invalid',
       });
 
       const result = parseSearchParams(searchParams);
@@ -147,7 +147,7 @@ describe('searchParams', () => {
     it('handles negative page numbers', () => {
       const searchParams = new URLSearchParams({
         q: 'test',
-        page: '-1'
+        page: '-1',
       });
 
       const result = parseSearchParams(searchParams);
@@ -164,7 +164,7 @@ describe('searchParams', () => {
     it('handles zero page number', () => {
       const searchParams = new URLSearchParams({
         q: 'test',
-        page: '0'
+        page: '0',
       });
 
       const result = parseSearchParams(searchParams);
@@ -181,7 +181,7 @@ describe('searchParams', () => {
     it('handles URL-encoded query parameters', () => {
       const searchParams = new URLSearchParams({
         q: 'geographic%20information%20systems',
-        'fq[dc_publisher_sm][]': 'MIT%20Libraries'
+        'fq[dc_publisher_sm][]': 'MIT%20Libraries',
       });
 
       const result = parseSearchParams(searchParams);
@@ -199,7 +199,7 @@ describe('searchParams', () => {
       const searchParams = new URLSearchParams({
         q: 'test',
         'fq[dc_publisher_sm][]': 'MIT Libraries & Archives',
-        'fq[dc_subject_sm][]': 'GIS & Remote Sensing'
+        'fq[dc_subject_sm][]': 'GIS & Remote Sensing',
       });
 
       const result = parseSearchParams(searchParams);
@@ -249,7 +249,7 @@ describe('searchParams', () => {
       const searchParams = new URLSearchParams({
         q: 'test query',
         page: '2',
-        'fq[dc_publisher_sm][]': 'MIT Libraries'
+        'fq[dc_publisher_sm][]': 'MIT Libraries',
       });
 
       parseSearchParams(searchParams);
@@ -277,7 +277,7 @@ describe('searchParams', () => {
       const searchParams = new URLSearchParams({
         q: 'test',
         'fq[malformed_field': 'value',
-        'fq[valid_field][]': 'valid value'
+        'fq[valid_field][]': 'valid value',
       });
 
       const result = parseSearchParams(searchParams);
@@ -301,7 +301,7 @@ describe('searchParams', () => {
         query: 'test query',
         page: 1,
         perPage: 10,
-        facets: []
+        facets: [],
       };
 
       const result = buildSearchParams(params);
@@ -316,7 +316,7 @@ describe('searchParams', () => {
         query: 'test query',
         page: 3,
         perPage: 10,
-        facets: []
+        facets: [],
       };
 
       const result = buildSearchParams(params);
@@ -330,7 +330,7 @@ describe('searchParams', () => {
         query: 'test query',
         page: 1,
         perPage: 25,
-        facets: []
+        facets: [],
       };
 
       const result = buildSearchParams(params);
@@ -346,8 +346,8 @@ describe('searchParams', () => {
         perPage: 10,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-          { field: 'gbl_resourceClass_sm', value: 'Dataset' }
-        ]
+          { field: 'gbl_resourceClass_sm', value: 'Dataset' },
+        ],
       };
 
       const result = buildSearchParams(params);
@@ -364,14 +364,17 @@ describe('searchParams', () => {
         perPage: 10,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-          { field: 'dc_publisher_sm', value: 'Harvard University' }
-        ]
+          { field: 'dc_publisher_sm', value: 'Harvard University' },
+        ],
       };
 
       const result = buildSearchParams(params);
 
       expect(result.get('q')).toBe('maps');
-      expect(result.getAll('fq[dc_publisher_sm][]')).toEqual(['MIT Libraries', 'Harvard University']);
+      expect(result.getAll('fq[dc_publisher_sm][]')).toEqual([
+        'MIT Libraries',
+        'Harvard University',
+      ]);
     });
 
     it('handles empty query', () => {
@@ -379,7 +382,7 @@ describe('searchParams', () => {
         query: '',
         page: 1,
         perPage: 10,
-        facets: []
+        facets: [],
       };
 
       const result = buildSearchParams(params);
@@ -394,15 +397,17 @@ describe('searchParams', () => {
         perPage: 10,
         facets: [
           { field: 'dct_temporal_sm', value: '2020' },
-          { field: 'dc_subject_sm', value: 'Geographic Information Systems' }
-        ]
+          { field: 'dc_subject_sm', value: 'Geographic Information Systems' },
+        ],
       };
 
       const result = buildSearchParams(params);
 
       expect(result.get('q')).toBe('geographic data');
       expect(result.get('fq[dct_temporal_sm][]')).toBe('2020');
-      expect(result.get('fq[dc_subject_sm][]')).toBe('Geographic Information Systems');
+      expect(result.get('fq[dc_subject_sm][]')).toBe(
+        'Geographic Information Systems'
+      );
     });
 
     it('handles special characters in facet values', () => {
@@ -412,14 +417,16 @@ describe('searchParams', () => {
         perPage: 10,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries & Archives' },
-          { field: 'dc_subject_sm', value: 'GIS & Remote Sensing' }
-        ]
+          { field: 'dc_subject_sm', value: 'GIS & Remote Sensing' },
+        ],
       };
 
       const result = buildSearchParams(params);
 
       expect(result.get('q')).toBe('test');
-      expect(result.get('fq[dc_publisher_sm][]')).toBe('MIT Libraries & Archives');
+      expect(result.get('fq[dc_publisher_sm][]')).toBe(
+        'MIT Libraries & Archives'
+      );
       expect(result.get('fq[dc_subject_sm][]')).toBe('GIS & Remote Sensing');
     });
 
@@ -428,9 +435,7 @@ describe('searchParams', () => {
         query: 'geographic information systems',
         page: 1,
         perPage: 10,
-        facets: [
-          { field: 'dc_publisher_sm', value: 'MIT Libraries' }
-        ]
+        facets: [{ field: 'dc_publisher_sm', value: 'MIT Libraries' }],
       };
 
       const result = buildSearchParams(params);
@@ -474,12 +479,13 @@ describe('searchParams', () => {
     });
 
     it('handles very long query strings', () => {
-      const longQuery = 'This is a very long search query with many words that should be properly handled by the URL parameter building function';
+      const longQuery =
+        'This is a very long search query with many words that should be properly handled by the URL parameter building function';
       const params: SearchParams = {
         query: longQuery,
         page: 1,
         perPage: 10,
-        facets: []
+        facets: [],
       };
 
       const result = buildSearchParams(params);
@@ -494,8 +500,8 @@ describe('searchParams', () => {
         perPage: 10,
         facets: [
           { field: 'dct_temporal_sm', value: '2023' },
-          { field: 'gbl_resourceClass_sm', value: 'Dataset' }
-        ]
+          { field: 'gbl_resourceClass_sm', value: 'Dataset' },
+        ],
       };
 
       const result = buildSearchParams(params);
@@ -511,8 +517,8 @@ describe('searchParams', () => {
         perPage: 10,
         facets: [
           { field: 'dc_publisher_sm', value: '' },
-          { field: 'gbl_resourceClass_sm', value: 'Dataset' }
-        ]
+          { field: 'gbl_resourceClass_sm', value: 'Dataset' },
+        ],
       };
 
       const result = buildSearchParams(params);
@@ -530,8 +536,8 @@ describe('searchParams', () => {
         perPage: 25,
         facets: [
           { field: 'dc_publisher_sm', value: 'MIT Libraries' },
-          { field: 'gbl_resourceClass_sm', value: 'Dataset' }
-        ]
+          { field: 'gbl_resourceClass_sm', value: 'Dataset' },
+        ],
       };
 
       // Build URL parameters
@@ -554,8 +560,8 @@ describe('searchParams', () => {
           { field: 'dc_publisher_sm', value: 'MIT Libraries & Archives' },
           { field: 'dc_publisher_sm', value: 'Harvard University' },
           { field: 'dct_temporal_sm', value: '2020-2023' },
-          { field: 'dc_subject_sm', value: 'GIS & Remote Sensing' }
-        ]
+          { field: 'dc_subject_sm', value: 'GIS & Remote Sensing' },
+        ],
       };
 
       const searchParams = buildSearchParams(originalParams);
@@ -572,9 +578,7 @@ describe('searchParams', () => {
           query: 'maps',
           page: 1,
           perPage: 10,
-          facets: [
-            { field: 'dc_publisher_sm', value: 'MIT Libraries' }
-          ]
+          facets: [{ field: 'dc_publisher_sm', value: 'MIT Libraries' }],
         },
         {
           query: 'geospatial data',
@@ -582,8 +586,8 @@ describe('searchParams', () => {
           perPage: 25,
           facets: [
             { field: 'gbl_resourceClass_sm', value: 'Dataset' },
-            { field: 'dct_temporal_sm', value: '2020' }
-          ]
+            { field: 'dct_temporal_sm', value: '2020' },
+          ],
         },
         {
           query: 'remote sensing',
@@ -591,9 +595,9 @@ describe('searchParams', () => {
           perPage: 10,
           facets: [
             { field: 'dc_subject_sm', value: 'Remote Sensing' },
-            { field: 'dc_publisher_sm', value: 'Stanford University' }
-          ]
-        }
+            { field: 'dc_publisher_sm', value: 'Stanford University' },
+          ],
+        },
       ];
 
       testCases.forEach((params) => {
@@ -612,7 +616,7 @@ describe('searchParams', () => {
           query: '',
           page: 0,
           perPage: 1,
-          facets: []
+          facets: [],
         },
         {
           query: 'test',
@@ -620,9 +624,9 @@ describe('searchParams', () => {
           perPage: 10,
           facets: [
             { field: '', value: 'empty field' },
-            { field: 'valid_field', value: '' }
-          ]
-        }
+            { field: 'valid_field', value: '' },
+          ],
+        },
       ];
 
       edgeCases.forEach((params) => {

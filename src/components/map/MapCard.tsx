@@ -18,5 +18,3 @@ export function MapCard({ title, subtitle, children }: Props) {
     </div>
   );
 }
-
-

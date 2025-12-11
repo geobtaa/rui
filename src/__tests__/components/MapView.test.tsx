@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { MapView } from '../../components/search/MapView';
 import { MapProvider } from '../../context/MapContext';
 import type { GeoDocument } from '../../types/api';
@@ -41,7 +41,7 @@ const mockFixtureData: GeoDocument[] = [
       dct_description_sm: ['A historical paper map from MIT collections'],
       dct_temporal_sm: ['1950'],
       dc_publisher_sm: ['MIT Libraries'],
-      gbl_resourceClass_sm: ['Paper Maps']
+      gbl_resourceClass_sm: ['Paper Maps'],
     },
     meta: {
       ui: {
@@ -49,11 +49,11 @@ const mockFixtureData: GeoDocument[] = [
         viewer: {
           geometry: {
             type: 'Point',
-            coordinates: [-71.0935, 42.3601]
-          }
-        }
-      }
-    }
+            coordinates: [-71.0935, 42.3601],
+          },
+        },
+      },
+    },
   },
   {
     id: 'nyu-2451-34564',
@@ -63,7 +63,7 @@ const mockFixtureData: GeoDocument[] = [
       dct_description_sm: ['A point dataset with web mapping services'],
       dct_temporal_sm: ['2020'],
       dc_publisher_sm: ['NYU Libraries'],
-      gbl_resourceClass_sm: ['Point Data']
+      gbl_resourceClass_sm: ['Point Data'],
     },
     meta: {
       ui: {
@@ -71,19 +71,17 @@ const mockFixtureData: GeoDocument[] = [
         viewer: {
           geometry: {
             type: 'Point',
-            coordinates: [-74.006, 40.7128]
-          }
-        }
-      }
-    }
-  }
+            coordinates: [-74.006, 40.7128],
+          },
+        },
+      },
+    },
+  },
 ];
 
 // Test wrapper component
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <MapProvider>
-    {children}
-  </MapProvider>
+  <MapProvider>{children}</MapProvider>
 );
 
 describe('MapView', () => {
@@ -106,7 +104,9 @@ describe('MapView', () => {
         </TestWrapper>
       );
 
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
       expect(mapContainer).toHaveClass('w-full', 'rounded-lg', 'shadow-md');
     });
@@ -130,7 +130,9 @@ describe('MapView', () => {
         </TestWrapper>
       );
 
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
       // The ref is a React ref, not a DOM attribute, so we just check the element exists
       expect(mapContainer).toBeTruthy();
@@ -143,7 +145,9 @@ describe('MapView', () => {
         </TestWrapper>
       );
 
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toHaveClass(
         'h-[calc(100vh-120px)]',
         'w-full',
@@ -162,7 +166,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
 
@@ -174,7 +180,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
 
@@ -186,7 +194,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
 
@@ -200,17 +210,17 @@ describe('MapView', () => {
             dct_description_sm: ['A result without geometry'],
             dct_temporal_sm: ['2023'],
             dc_publisher_sm: ['Test Publisher'],
-            gbl_resourceClass_sm: ['Dataset']
+            gbl_resourceClass_sm: ['Dataset'],
           },
           meta: {
             ui: {
               thumbnail_url: null,
               viewer: {
-                geometry: null
-              }
-            }
-          }
-        }
+                geometry: null,
+              },
+            },
+          },
+        },
       ];
 
       render(
@@ -220,7 +230,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
   });
@@ -236,10 +248,10 @@ describe('MapView', () => {
             dct_description_sm: ['A result with missing meta'],
             dct_temporal_sm: ['2023'],
             dc_publisher_sm: ['Test Publisher'],
-            gbl_resourceClass_sm: ['Dataset']
+            gbl_resourceClass_sm: ['Dataset'],
           },
-          meta: null
-        }
+          meta: null,
+        },
       ];
 
       render(
@@ -249,7 +261,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
 
@@ -263,15 +277,15 @@ describe('MapView', () => {
             dct_description_sm: ['A result with missing viewer'],
             dct_temporal_sm: ['2023'],
             dc_publisher_sm: ['Test Publisher'],
-            gbl_resourceClass_sm: ['Dataset']
+            gbl_resourceClass_sm: ['Dataset'],
           },
           meta: {
             ui: {
               thumbnail_url: null,
-              viewer: null
-            }
-          }
-        }
+              viewer: null,
+            },
+          },
+        },
       ];
 
       render(
@@ -281,7 +295,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
 
@@ -295,7 +311,7 @@ describe('MapView', () => {
             dct_description_sm: ['A point result'],
             dct_temporal_sm: ['2023'],
             dc_publisher_sm: ['Test Publisher'],
-            gbl_resourceClass_sm: ['Dataset']
+            gbl_resourceClass_sm: ['Dataset'],
           },
           meta: {
             ui: {
@@ -303,11 +319,11 @@ describe('MapView', () => {
               viewer: {
                 geometry: {
                   type: 'Point',
-                  coordinates: [-71.0935, 42.3601]
-                }
-              }
-            }
-          }
+                  coordinates: [-71.0935, 42.3601],
+                },
+              },
+            },
+          },
         },
         {
           id: 'polygon-geometry',
@@ -317,7 +333,7 @@ describe('MapView', () => {
             dct_description_sm: ['A polygon result'],
             dct_temporal_sm: ['2023'],
             dc_publisher_sm: ['Test Publisher'],
-            gbl_resourceClass_sm: ['Dataset']
+            gbl_resourceClass_sm: ['Dataset'],
           },
           meta: {
             ui: {
@@ -325,18 +341,20 @@ describe('MapView', () => {
               viewer: {
                 geometry: {
                   type: 'Polygon',
-                  coordinates: [[
-                    [-71.1, 42.3],
-                    [-71, 42.3],
-                    [-71, 42.4],
-                    [-71.1, 42.4],
-                    [-71.1, 42.3]
-                  ]]
-                }
-              }
-            }
-          }
-        }
+                  coordinates: [
+                    [
+                      [-71.1, 42.3],
+                      [-71, 42.3],
+                      [-71, 42.4],
+                      [-71.1, 42.4],
+                      [-71.1, 42.3],
+                    ],
+                  ],
+                },
+              },
+            },
+          },
+        },
       ];
 
       render(
@@ -346,7 +364,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
   });
@@ -360,7 +380,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors when wrapped with MapProvider
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
     });
 
@@ -372,7 +394,9 @@ describe('MapView', () => {
       );
 
       // Component should render without errors
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
 
       // Rerender with different results
@@ -419,9 +443,11 @@ describe('MapView', () => {
         </TestWrapper>
       );
 
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toBeInTheDocument();
-      
+
       // Container should have proper structure
       const stickyContainer = document.querySelector('.sticky');
       expect(stickyContainer).toBeInTheDocument();
@@ -434,7 +460,9 @@ describe('MapView', () => {
         </TestWrapper>
       );
 
-      const mapContainer = document.querySelector('.h-\\[calc\\(100vh-120px\\)\\]');
+      const mapContainer = document.querySelector(
+        '.h-\\[calc\\(100vh-120px\\)\\]'
+      );
       expect(mapContainer).toHaveClass(
         'h-[calc(100vh-120px)]',
         'w-full',

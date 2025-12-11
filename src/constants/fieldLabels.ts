@@ -11,9 +11,17 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   dct_title_s: { label: 'Title', display: true },
   dct_alternative_sm: { label: 'Alternative Title', display: true },
   dct_description_sm: { label: 'Description', display: true },
-  dct_language_sm: { label: 'Language', display: true, facet: 'dct_language_sm' },
+  dct_language_sm: {
+    label: 'Language',
+    display: true,
+    facet: 'dct_language_sm',
+  },
   dct_creator_sm: { label: 'Creator', display: true, facet: 'dct_creator_sm' },
-  dct_publisher_sm: { label: 'Publisher', display: true, facet: 'dct_publisher_sm' },
+  dct_publisher_sm: {
+    label: 'Publisher',
+    display: true,
+    facet: 'dct_publisher_sm',
+  },
   dct_temporal_sm: {
     label: 'Temporal Coverage',
     display: true,
@@ -21,7 +29,11 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   },
   dct_issued_s: { label: 'Date Issued', display: true },
   dct_spatial_sm: { label: 'Place', display: true, facet: 'dct_spatial_sm' },
-  dct_accessRights_s: { label: 'Access Rights', display: true, facet: 'dct_accessRights_s' },
+  dct_accessRights_s: {
+    label: 'Access Rights',
+    display: true,
+    facet: 'dct_accessRights_s',
+  },
   dct_format_s: { label: 'Format', display: true, facet: 'dct_format_s' },
   dct_license_sm: { label: 'License', display: true },
   dct_identifier_sm: { label: 'Identifier', display: true },
@@ -38,7 +50,11 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
   dcat_centroid_original: { label: 'Centroid', display: true },
   dcat_bbox: { label: 'Bounding Box', display: true },
   dcat_bbox_original: { label: 'Bounding Box', display: true },
-  dcat_keyword_sm: { label: 'Keyword', display: true, facet: 'dcat_keyword_sm' },
+  dcat_keyword_sm: {
+    label: 'Keyword',
+    display: true,
+    facet: 'dcat_keyword_sm',
+  },
   dcat_spatial_sm: { label: 'Spatial', display: true },
 
   // Dublin Core
@@ -48,7 +64,11 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
 
   // GeoBlacklight
   gbl_daterange_drsim: { label: 'Date Range', display: true },
-  gbl_indexyear_im: { label: 'Index Year', display: true, facet: 'gbl_indexyear_im' },
+  gbl_indexyear_im: {
+    label: 'Index Year',
+    display: true,
+    facet: 'gbl_indexyear_im',
+  },
   gbl_mdversion_s: { label: 'Metadata Version', display: true },
   gbl_resourceClass_sm: {
     label: 'Resource Class',
@@ -60,7 +80,11 @@ export const FIELD_LABELS: Record<string, FieldConfig> = {
     display: true,
     facet: 'gbl_resourceType_sm',
   },
-  gbl_georeferenced_b: { label: 'Georeferenced', display: true, facet: 'gbl_georeferenced_b' },
+  gbl_georeferenced_b: {
+    label: 'Georeferenced',
+    display: true,
+    facet: 'gbl_georeferenced_b',
+  },
   gbl_wxsidentifier_s: { label: 'WXS Identifier', display: true },
 
   // Schema.org

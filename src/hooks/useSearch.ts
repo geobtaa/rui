@@ -32,9 +32,9 @@ export function useSearch() {
     hasQueryParam,
   } = parseSearchParams(searchParams);
   const facetsString = JSON.stringify(rawFacets);
-  const facets = useMemo(() => rawFacets, [rawFacets.length, facetsString]); // eslint-disable-line react-hooks/exhaustive-deps
+  const facets = useMemo(() => rawFacets, [facetsString]);
   const excludeString = JSON.stringify(rawExclude || []);
-  const excludeFacets = useMemo(() => rawExclude || [], [rawExclude?.length, excludeString]); // eslint-disable-line react-hooks/exhaustive-deps
+  const excludeFacets = useMemo(() => rawExclude || [], [excludeString]);
   const advancedString = JSON.stringify(rawAdvanced || []);
   const advancedQuery = useMemo(
     () => rawAdvanced || [],
@@ -105,7 +105,16 @@ export function useSearch() {
     };
 
     fetchResults();
-  }, [query, page, facets, excludeFacets, advancedQuery, sort, hasQueryParam, setLastApiUrl]);
+  }, [
+    query,
+    page,
+    facets,
+    excludeFacets,
+    advancedQuery,
+    sort,
+    hasQueryParam,
+    setLastApiUrl,
+  ]);
 
   const updateSearch = ({
     query,
@@ -150,7 +159,9 @@ export function useSearch() {
     if (facets !== undefined) {
       // Clear existing include filters
       Array.from(newParams.keys())
-        .filter((key) => key.startsWith('include_filters[') || key.startsWith('fq['))
+        .filter(
+          (key) => key.startsWith('include_filters[') || key.startsWith('fq[')
+        )
         .forEach((key) => newParams.delete(key));
 
       // Add new include filters

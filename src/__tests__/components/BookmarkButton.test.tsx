@@ -48,7 +48,12 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('p-2', 'rounded-full', 'hover:bg-gray-100', 'transition-colors');
+      expect(button).toHaveClass(
+        'p-2',
+        'rounded-full',
+        'hover:bg-gray-100',
+        'transition-colors'
+      );
     });
 
     it('renders bookmark icon', () => {
@@ -109,14 +114,14 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      
+
       // Initially not bookmarked
       expect(button).toHaveAttribute('aria-label', 'Add bookmark');
       expect(button).toHaveClass('text-gray-400');
 
       // Click to add bookmark
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>
@@ -130,7 +135,7 @@ describe('BookmarkButton', () => {
 
       // Click to remove bookmark
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>
@@ -168,10 +173,10 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      
+
       // First add bookmark
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>
@@ -218,7 +223,7 @@ describe('BookmarkButton', () => {
       const button = screen.getByRole('button');
       const icon = button.querySelector('svg');
       expect(icon).toBeInTheDocument();
-      
+
       // The fill should be 'none' when not bookmarked
       // We can't easily test the fill attribute directly, but we can test the styling
       expect(button).toHaveClass('text-gray-400');
@@ -232,10 +237,10 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      
+
       // Add bookmark
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>
@@ -245,7 +250,7 @@ describe('BookmarkButton', () => {
 
       const icon = button.querySelector('svg');
       expect(icon).toBeInTheDocument();
-      
+
       // The fill should be 'currentColor' when bookmarked
       // We can test this by checking the button color class
       expect(button).toHaveClass('text-blue-500');
@@ -272,10 +277,10 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      
+
       // Add bookmark
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>
@@ -295,7 +300,7 @@ describe('BookmarkButton', () => {
 
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
-      
+
       // Button should be focusable
       button.focus();
       expect(document.activeElement).toBe(button);
@@ -322,7 +327,7 @@ describe('BookmarkButton', () => {
       fireEvent.click(buttons[0]);
 
       // Re-render to reflect state change
-      const { rerender } = render(
+      render(
         <TestWrapper>
           <BookmarkButton itemId="test-item-1" />
           <BookmarkButton itemId="test-item-2" />
@@ -330,9 +335,12 @@ describe('BookmarkButton', () => {
       );
 
       const updatedButtons = screen.getAllByRole('button');
-      
+
       // First should be bookmarked, second should remain unbookmarked
-      expect(updatedButtons[0]).toHaveAttribute('aria-label', 'Remove bookmark');
+      expect(updatedButtons[0]).toHaveAttribute(
+        'aria-label',
+        'Remove bookmark'
+      );
       expect(updatedButtons[1]).toHaveAttribute('aria-label', 'Add bookmark');
     });
 
@@ -346,11 +354,11 @@ describe('BookmarkButton', () => {
       );
 
       const buttons = screen.getAllByRole('button');
-      
+
       // Bookmark items 1 and 3
       fireEvent.click(buttons[0]); // item-1
       fireEvent.click(buttons[2]); // item-3
-      
+
       // Re-render to reflect state changes
       rerender(
         <TestWrapper>
@@ -361,10 +369,16 @@ describe('BookmarkButton', () => {
       );
 
       const updatedButtons = screen.getAllByRole('button');
-      
-      expect(updatedButtons[0]).toHaveAttribute('aria-label', 'Remove bookmark'); // item-1
-      expect(updatedButtons[1]).toHaveAttribute('aria-label', 'Add bookmark');    // item-2
-      expect(updatedButtons[2]).toHaveAttribute('aria-label', 'Remove bookmark'); // item-3
+
+      expect(updatedButtons[0]).toHaveAttribute(
+        'aria-label',
+        'Remove bookmark'
+      ); // item-1
+      expect(updatedButtons[1]).toHaveAttribute('aria-label', 'Add bookmark'); // item-2
+      expect(updatedButtons[2]).toHaveAttribute(
+        'aria-label',
+        'Remove bookmark'
+      ); // item-3
     });
   });
 
@@ -414,7 +428,7 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      
+
       // Rapidly click multiple times
       fireEvent.click(button);
       fireEvent.click(button);
@@ -435,13 +449,13 @@ describe('BookmarkButton', () => {
       );
 
       const button = screen.getByRole('button');
-      
+
       // Initially not bookmarked
       expect(button).toHaveAttribute('aria-label', 'Add bookmark');
 
       // Simulate external bookmark addition (by clicking)
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>
@@ -455,10 +469,10 @@ describe('BookmarkButton', () => {
 
     it('works with different item IDs', () => {
       const testIds = ['item-1', 'item-2', 'item-3', 'item-4'];
-      
+
       render(
         <TestWrapper>
-          {testIds.map(id => (
+          {testIds.map((id) => (
             <BookmarkButton key={id} itemId={id} />
           ))}
         </TestWrapper>
@@ -468,7 +482,7 @@ describe('BookmarkButton', () => {
       expect(buttons).toHaveLength(4);
 
       // All should start unbookmarked
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         expect(button).toHaveAttribute('aria-label', 'Add bookmark');
       });
     });
@@ -485,10 +499,10 @@ describe('BookmarkButton', () => {
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
       expect(button).toHaveAttribute('aria-label', 'Add bookmark');
-      
+
       // Test bookmarking
       fireEvent.click(button);
-      
+
       // Re-render to reflect state change
       rerender(
         <TestWrapper>

@@ -29,7 +29,10 @@ export function HomePage() {
       try {
         const results = await fetchSearchResults('', 1, 1);
         const resourceClassFacet = results.included?.find(
-          (item) => item.type === 'facet' && (item.id === 'gbl_resourceClass_sm' || item.id === 'resource_class_agg')
+          (item) =>
+            item.type === 'facet' &&
+            (item.id === 'gbl_resourceClass_sm' ||
+              item.id === 'resource_class_agg')
         );
         const facetCounts =
           (resourceClassFacet?.attributes &&
@@ -109,46 +112,65 @@ export function HomePage() {
     if (query.trim()) {
       const newParams = new URLSearchParams();
       newParams.set('q', query);
-      
+
       // Preserve geo filters from current URL
       const geoType = searchParams.get('include_filters[geo][type]');
       if (geoType === 'bbox') {
-        const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
-        const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
-        const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
-        const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
-        
+        const topLeftLat = searchParams.get(
+          'include_filters[geo][top_left][lat]'
+        );
+        const topLeftLon = searchParams.get(
+          'include_filters[geo][top_left][lon]'
+        );
+        const bottomRightLat = searchParams.get(
+          'include_filters[geo][bottom_right][lat]'
+        );
+        const bottomRightLon = searchParams.get(
+          'include_filters[geo][bottom_right][lon]'
+        );
+
         if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
           newParams.set('include_filters[geo][type]', 'bbox');
           newParams.set('include_filters[geo][field]', 'dcat_bbox');
           newParams.set('include_filters[geo][top_left][lat]', topLeftLat);
           newParams.set('include_filters[geo][top_left][lon]', topLeftLon);
-          newParams.set('include_filters[geo][bottom_right][lat]', bottomRightLat);
-          newParams.set('include_filters[geo][bottom_right][lon]', bottomRightLon);
+          newParams.set(
+            'include_filters[geo][bottom_right][lat]',
+            bottomRightLat
+          );
+          newParams.set(
+            'include_filters[geo][bottom_right][lon]',
+            bottomRightLon
+          );
         }
       }
-      
+
       // Preserve category filters from current URL (if any)
-      const categoryFilters = searchParams.getAll('include_filters[gbl_resourceClass_sm][]');
-      const legacyCategoryFilters = searchParams.getAll('fq[gbl_resourceClass_sm][]');
-      
+      const categoryFilters = searchParams.getAll(
+        'include_filters[gbl_resourceClass_sm][]'
+      );
+      const legacyCategoryFilters = searchParams.getAll(
+        'fq[gbl_resourceClass_sm][]'
+      );
+
       // Use include_filters format (preferred)
       if (categoryFilters.length > 0) {
-        categoryFilters.forEach(value => {
+        categoryFilters.forEach((value) => {
           newParams.append('include_filters[gbl_resourceClass_sm][]', value);
         });
       } else if (legacyCategoryFilters.length > 0) {
         // Fall back to legacy format if present
-        legacyCategoryFilters.forEach(value => {
+        legacyCategoryFilters.forEach((value) => {
           newParams.append('include_filters[gbl_resourceClass_sm][]', value);
         });
       }
-      
+
       navigate(`/search?${newParams.toString()}`);
     }
   };
 
   const handleAdvancedSearchClick = () => {
+    // Always open advanced search when coming from home page
     navigate('/search?showAdvanced=true');
   };
 

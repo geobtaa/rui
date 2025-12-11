@@ -9,7 +9,10 @@ interface PlacenameAutocompleteProps {
   onPlaceSelect?: (place: GazetteerPlace) => void;
 }
 
-export function PlacenameAutocomplete({ onSelect, onPlaceSelect }: PlacenameAutocompleteProps) {
+export function PlacenameAutocomplete({
+  onSelect,
+  onPlaceSelect,
+}: PlacenameAutocompleteProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<GazetteerPlace[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -57,34 +60,46 @@ export function PlacenameAutocomplete({ onSelect, onPlaceSelect }: PlacenameAuto
 
   const handleSelectPlace = (place: GazetteerPlace) => {
     const attrs = place.attributes;
-    
+
     // Create bbox from min/max lat/lng
     // top_left is northwest (higher lat, lower lon)
     // bottom_right is southeast (lower lat, higher lon)
     const newParams = new URLSearchParams(searchParams);
-    
+
     // Remove existing geo filters
     Array.from(newParams.keys())
       .filter((key) => key.startsWith('include_filters[geo]'))
       .forEach((key) => newParams.delete(key));
-    
+
     // Add new bbox filter
     newParams.set('include_filters[geo][type]', 'bbox');
     newParams.set('include_filters[geo][field]', 'dcat_bbox');
-    newParams.set('include_filters[geo][top_left][lat]', attrs.max_latitude.toString());
-    newParams.set('include_filters[geo][top_left][lon]', attrs.min_longitude.toString());
-    newParams.set('include_filters[geo][bottom_right][lat]', attrs.min_latitude.toString());
-    newParams.set('include_filters[geo][bottom_right][lon]', attrs.max_longitude.toString());
-    
+    newParams.set(
+      'include_filters[geo][top_left][lat]',
+      attrs.max_latitude.toString()
+    );
+    newParams.set(
+      'include_filters[geo][top_left][lon]',
+      attrs.min_longitude.toString()
+    );
+    newParams.set(
+      'include_filters[geo][bottom_right][lat]',
+      attrs.min_latitude.toString()
+    );
+    newParams.set(
+      'include_filters[geo][bottom_right][lon]',
+      attrs.max_longitude.toString()
+    );
+
     // Reset to page 1 when bbox changes
     newParams.delete('page');
-    
+
     setSearchParams(newParams);
-    
+
     // Call optional callbacks
     onSelect?.(place);
     onPlaceSelect?.(place);
-    
+
     // Clear input and close dropdown
     setQuery('');
     setShowSuggestions(false);
@@ -106,7 +121,6 @@ export function PlacenameAutocomplete({ onSelect, onPlaceSelect }: PlacenameAuto
       setShowSuggestions(false);
     }
   };
-
 
   return (
     <div className="relative mb-2">
@@ -149,7 +163,9 @@ export function PlacenameAutocomplete({ onSelect, onPlaceSelect }: PlacenameAuto
           {isLoading ? (
             <div className="px-4 py-2 text-sm text-gray-500">Searching...</div>
           ) : suggestions.length === 0 ? (
-            <div className="px-4 py-2 text-sm text-gray-500">No places found</div>
+            <div className="px-4 py-2 text-sm text-gray-500">
+              No places found
+            </div>
           ) : (
             suggestions.map((place, index) => (
               <button
@@ -161,7 +177,9 @@ export function PlacenameAutocomplete({ onSelect, onPlaceSelect }: PlacenameAuto
                 onMouseEnter={() => setSelectedIndex(index)}
               >
                 <div className="text-sm text-gray-900 font-medium">
-                  {place.attributes.name} {place.attributes.placetype && `(${place.attributes.placetype})`}
+                  {place.attributes.name}{' '}
+                  {place.attributes.placetype &&
+                    `(${place.attributes.placetype})`}
                 </div>
                 <div className="text-xs text-gray-500">
                   {place.attributes.display_name || place.attributes.name}
@@ -174,4 +192,3 @@ export function PlacenameAutocomplete({ onSelect, onPlaceSelect }: PlacenameAuto
     </div>
   );
 }
-

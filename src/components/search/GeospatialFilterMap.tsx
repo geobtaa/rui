@@ -26,8 +26,12 @@ export function GeospatialFilterMap() {
 
     const topLeftLat = searchParams.get('include_filters[geo][top_left][lat]');
     const topLeftLon = searchParams.get('include_filters[geo][top_left][lon]');
-    const bottomRightLat = searchParams.get('include_filters[geo][bottom_right][lat]');
-    const bottomRightLon = searchParams.get('include_filters[geo][bottom_right][lon]');
+    const bottomRightLat = searchParams.get(
+      'include_filters[geo][bottom_right][lat]'
+    );
+    const bottomRightLon = searchParams.get(
+      'include_filters[geo][bottom_right][lon]'
+    );
 
     if (topLeftLat && topLeftLon && bottomRightLat && bottomRightLon) {
       return {
@@ -88,19 +92,19 @@ export function GeospatialFilterMap() {
         if (!mapRef.current) return;
 
         const bounds = mapRef.current.getBounds();
-        
+
         // Clear place geometry when user manually moves the map
         if (selectedPlaceGeoJsonRef.current) {
           mapRef.current.removeLayer(selectedPlaceGeoJsonRef.current);
           selectedPlaceGeoJsonRef.current = null;
         }
-        
+
         // Remove existing preview rectangle if it exists
         if (previewRectangleRef.current) {
           mapRef.current.removeLayer(previewRectangleRef.current);
           previewRectangleRef.current = null;
         }
-        
+
         // Add preview rectangle to show what area would be searched
         // Use a different style to indicate it's a preview (not yet applied)
         const previewRectangle = L.rectangle(bounds, {
@@ -111,9 +115,9 @@ export function GeospatialFilterMap() {
           fillOpacity: 0.15,
           dashArray: '5, 5', // Dashed line to indicate preview
         }).addTo(mapRef.current);
-        
+
         previewRectangleRef.current = previewRectangle;
-        
+
         // Show the "Search here" button
         setShowSearchButton(true);
       };
@@ -135,27 +139,27 @@ export function GeospatialFilterMap() {
   // or when the page loads with bbox params already in the URL
   useEffect(() => {
     if (!mapRef.current) return;
-    
+
     const bbox = getBBoxFromParams();
     if (bbox) {
       // Always update map bounds when bbox params change
       // Use a small delay to ensure map is ready and to batch updates
       const timeoutId = setTimeout(() => {
         if (!mapRef.current) return;
-        
+
         isUpdatingFromParamsRef.current = true;
         try {
           // Invalidate size to ensure map is properly rendered
           mapRef.current.invalidateSize();
-          
+
           // Reconstruct bounds from bbox
           // top_left is northwest (higher lat, lower lon)
           // bottom_right is southeast (lower lat, higher lon)
           const bounds = L.latLngBounds(
             [bbox.bottomRight.lat, bbox.topLeft.lon], // Southwest (south lat, west lon)
-            [bbox.topLeft.lat, bbox.bottomRight.lon]  // Northeast (north lat, east lon)
+            [bbox.topLeft.lat, bbox.bottomRight.lon] // Northeast (north lat, east lon)
           );
-          
+
           if (bounds && bounds.isValid()) {
             // Remove existing rectangles if they exist
             if (bboxRectangleRef.current) {
@@ -166,7 +170,7 @@ export function GeospatialFilterMap() {
               mapRef.current.removeLayer(previewRectangleRef.current);
               previewRectangleRef.current = null;
             }
-            
+
             // Add rectangle overlay to visualize the active bbox filter
             const rectangle = L.rectangle(bounds, {
               color: '#2563eb',
@@ -175,16 +179,16 @@ export function GeospatialFilterMap() {
               fillColor: '#2563eb',
               fillOpacity: 0.2,
             }).addTo(mapRef.current);
-            
+
             bboxRectangleRef.current = rectangle;
-            
+
             // Hide search button when bbox is set from URL (not from user interaction)
             setShowSearchButton(false);
-            
+
             // Fit map to bounds with padding, but keep the flag set longer
             // to prevent moveend from overwriting the bbox
             mapRef.current.fitBounds(bounds, { padding: [20, 20] });
-            
+
             // Keep flag set longer to prevent moveend from firing and overwriting
             setTimeout(() => {
               isUpdatingFromParamsRef.current = false;
@@ -202,7 +206,7 @@ export function GeospatialFilterMap() {
           }, 1000);
         }
       }, 50);
-      
+
       return () => clearTimeout(timeoutId);
     } else {
       // No bbox in params, remove rectangle overlays if they exist
@@ -214,10 +218,10 @@ export function GeospatialFilterMap() {
         mapRef.current.removeLayer(previewRectangleRef.current);
         previewRectangleRef.current = null;
       }
-      
+
       // Hide search button when bbox is cleared
       setShowSearchButton(false);
-      
+
       // Show world view only if zoomed out
       if (mapRef.current.getZoom() < 1) {
         isUpdatingFromParamsRef.current = true;
@@ -259,19 +263,19 @@ export function GeospatialFilterMap() {
 
   const handleSearchHere = () => {
     if (!mapRef.current) return;
-    
+
     const bounds = mapRef.current.getBounds();
     const newParams = new URLSearchParams(searchParams);
-    
+
     // Remove existing geo filters
     Array.from(newParams.keys())
       .filter((key) => key.startsWith('include_filters[geo]'))
       .forEach((key) => newParams.delete(key));
-    
+
     // Add new bbox filter from current map bounds
     const ne = bounds.getNorthEast();
     const sw = bounds.getSouthWest();
-    
+
     // Top-left is northwest corner (north = higher lat, west = lower lon)
     // Bottom-right is southeast corner (south = lower lat, east = higher lon)
     newParams.set('include_filters[geo][type]', 'bbox');
@@ -280,15 +284,15 @@ export function GeospatialFilterMap() {
     newParams.set('include_filters[geo][top_left][lon]', sw.lng.toString());
     newParams.set('include_filters[geo][bottom_right][lat]', sw.lat.toString());
     newParams.set('include_filters[geo][bottom_right][lon]', ne.lng.toString());
-    
+
     // Reset to page 1 when bbox changes
     newParams.delete('page');
-    
+
     setSearchParams(newParams);
-    
+
     // Hide the search button (it will show again if user moves map)
     setShowSearchButton(false);
-    
+
     // Remove preview rectangle and it will be replaced by the active bbox rectangle
     if (previewRectangleRef.current && mapRef.current) {
       mapRef.current.removeLayer(previewRectangleRef.current);
@@ -302,19 +306,19 @@ export function GeospatialFilterMap() {
       mapRef.current.removeLayer(selectedPlaceGeoJsonRef.current);
       selectedPlaceGeoJsonRef.current = null;
     }
-    
+
     // Clear bbox rectangle overlay
     if (bboxRectangleRef.current && mapRef.current) {
       mapRef.current.removeLayer(bboxRectangleRef.current);
       bboxRectangleRef.current = null;
     }
-    
+
     // Clear preview rectangle
     if (previewRectangleRef.current && mapRef.current) {
       mapRef.current.removeLayer(previewRectangleRef.current);
       previewRectangleRef.current = null;
     }
-    
+
     // Hide search button
     setShowSearchButton(false);
 
@@ -325,7 +329,6 @@ export function GeospatialFilterMap() {
     newParams.delete('page');
     setSearchParams(newParams);
   };
-
 
   // Clear place geometry and bbox rectangle when bbox is cleared
   useEffect(() => {
@@ -378,4 +381,3 @@ export function GeospatialFilterMap() {
     </div>
   );
 }
-

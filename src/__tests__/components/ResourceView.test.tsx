@@ -1,6 +1,6 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { ResourceView } from '../../pages/ResourceView';
 import { ApiProvider } from '../../context/ApiContext';
 import { DebugProvider } from '../../context/DebugContext';
@@ -68,7 +68,8 @@ const realFixtureData: GeoDocument[] = [
             type: 'application/pdf',
           },
         ],
-        citation: 'MIT Libraries (1950). Nondigitized paper map with library catalog link.',
+        citation:
+          'MIT Libraries (1950). Nondigitized paper map with library catalog link.',
         links: {
           'Library Catalog': [
             {
@@ -101,7 +102,7 @@ const realFixtureData: GeoDocument[] = [
           endpoint: 'https://example.com/wms2',
           geometry: {
             type: 'Point',
-            coordinates: [-74.0060, 40.7128],
+            coordinates: [-74.006, 40.7128],
           },
         },
         downloads: [
@@ -132,13 +133,16 @@ const realFixtureData: GeoDocument[] = [
     type: 'document',
     attributes: {
       dct_title_s: 'Polygon dataset with WFS, WMS, and FGDC metadata',
-      dct_description_sm: ['A polygon dataset from Tufts with comprehensive metadata'],
+      dct_description_sm: [
+        'A polygon dataset from Tufts with comprehensive metadata',
+      ],
       dct_temporal_sm: ['2019'],
       dc_publisher_sm: ['Tufts University'],
       gbl_resourceClass_sm: ['Polygon Data'],
       dct_accessrights_s: 'Public',
       gbl_wxsidentifier_s: 'tufts-cambridgegrid100-04',
-      locn_geometry_original: 'POLYGON((-71.1 42.3, -71.0 42.3, -71.0 42.4, -71.1 42.4, -71.1 42.3))',
+      locn_geometry_original:
+        'POLYGON((-71.1 42.3, -71.0 42.3, -71.0 42.4, -71.1 42.4, -71.1 42.3))',
     },
     meta: {
       ui: {
@@ -148,7 +152,15 @@ const realFixtureData: GeoDocument[] = [
           endpoint: 'https://example.com/wms3',
           geometry: {
             type: 'Polygon',
-            coordinates: [[[-71.1, 42.3], [-71.0, 42.3], [-71.0, 42.4], [-71.1, 42.4], [-71.1, 42.3]]],
+            coordinates: [
+              [
+                [-71.1, 42.3],
+                [-71.0, 42.3],
+                [-71.0, 42.4],
+                [-71.1, 42.4],
+                [-71.1, 42.3],
+              ],
+            ],
           },
         },
         downloads: [
@@ -158,9 +170,10 @@ const realFixtureData: GeoDocument[] = [
             type: 'application/geo+json',
           },
         ],
-        citation: 'Tufts University (2019). Polygon dataset with WFS, WMS, and FGDC metadata.',
+        citation:
+          'Tufts University (2019). Polygon dataset with WFS, WMS, and FGDC metadata.',
         links: {
-          'Metadata': [
+          Metadata: [
             {
               label: 'FGDC Metadata',
               url: 'https://example.com/metadata3.xml',
@@ -181,7 +194,8 @@ const realFixtureData: GeoDocument[] = [
       gbl_resourceClass_sm: ['Raster Data'],
       dct_accessrights_s: 'Restricted',
       gbl_wxsidentifier_s: 'stanford-dp018hs9766',
-      locn_geometry_original: 'POLYGON((-122.2 37.4, -122.1 37.4, -122.1 37.5, -122.2 37.5, -122.2 37.4))',
+      locn_geometry_original:
+        'POLYGON((-122.2 37.4, -122.1 37.4, -122.1 37.5, -122.2 37.5, -122.2 37.4))',
     },
     meta: {
       ui: {
@@ -191,13 +205,22 @@ const realFixtureData: GeoDocument[] = [
           endpoint: 'https://example.com/wms4',
           geometry: {
             type: 'Polygon',
-            coordinates: [[[-122.2, 37.4], [-122.1, 37.4], [-122.1, 37.5], [-122.2, 37.5], [-122.2, 37.4]]],
+            coordinates: [
+              [
+                [-122.2, 37.4],
+                [-122.1, 37.4],
+                [-122.1, 37.5],
+                [-122.2, 37.5],
+                [-122.2, 37.4],
+              ],
+            ],
           },
         },
         downloads: [],
-        citation: 'Stanford University (2021). Restricted raster layer with WMS and metadata.',
+        citation:
+          'Stanford University (2021). Restricted raster layer with WMS and metadata.',
         links: {
-          'Documentation': [
+          Documentation: [
             {
               label: 'Usage Guidelines',
               url: 'https://example.com/usage4.pdf',
@@ -213,7 +236,7 @@ const realFixtureData: GeoDocument[] = [
 const mockResourceData = realFixtureData[0];
 
 const mockSearchState = {
-  searchResults: realFixtureData.map(fixture => ({ id: fixture.id })),
+  searchResults: realFixtureData.map((fixture) => ({ id: fixture.id })),
   currentIndex: 0,
   totalResults: realFixtureData.length,
   searchUrl: '/search?q=test',
@@ -222,18 +245,16 @@ const mockSearchState = {
 };
 
 // Test wrapper component
-const TestWrapper = ({ 
-  children, 
-  initialEntries = ['/resources/mit-001145244'] 
-}: { 
+const TestWrapper = ({
+  children,
+  initialEntries = ['/resources/mit-001145244'],
+}: {
   children: React.ReactNode;
   initialEntries?: string[];
 }) => (
   <MemoryRouter initialEntries={initialEntries}>
     <ApiProvider>
-      <DebugProvider>
-        {children}
-      </DebugProvider>
+      <DebugProvider>{children}</DebugProvider>
     </ApiProvider>
   </MemoryRouter>
 );
@@ -247,7 +268,7 @@ describe('ResourceView Component', () => {
     const apiModule = await import('../../services/api');
     fetchResourceDetails = vi.mocked(apiModule.fetchResourceDetails);
     fetchSearchResults = vi.mocked(apiModule.fetchSearchResults);
-    
+
     mockUseParams.mockReturnValue({ id: 'mit-001145244' });
     mockUseLocation.mockReturnValue({
       state: mockSearchState,
@@ -257,13 +278,13 @@ describe('ResourceView Component', () => {
       key: 'test-key',
     });
     mockUseNavigate.mockReturnValue(mockNavigate);
-    
+
     // Use real fixture data instead of mocks
     fetchResourceDetails.mockImplementation((id: string) => {
-      const fixture = realFixtureData.find(f => f.id === id);
+      const fixture = realFixtureData.find((f) => f.id === id);
       return Promise.resolve(fixture || mockResourceData);
     });
-    
+
     fetchSearchResults.mockResolvedValue({
       data: realFixtureData.slice(0, 2), // Return first 2 fixtures for pagination tests
       meta: { total: realFixtureData.length, page: 2, per_page: 10 },
@@ -296,7 +317,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       const spinner = document.querySelector('.animate-spin');
@@ -316,7 +341,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('An unexpected error occurred while fetching item details')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'An unexpected error occurred while fetching item details'
+          )
+        ).toBeInTheDocument();
       });
     });
 
@@ -332,7 +361,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('API Error: Resource not accessible')).toBeInTheDocument();
+        expect(
+          screen.getByText('API Error: Resource not accessible')
+        ).toBeInTheDocument();
       });
     });
   });
@@ -349,7 +380,9 @@ describe('ResourceView Component', () => {
 
       await waitFor(() => {
         // Check for the debug container
-        const debugContainer = document.querySelector('.bg-yellow-100.border.border-yellow-400');
+        const debugContainer = document.querySelector(
+          '.bg-yellow-100.border.border-yellow-400'
+        );
         expect(debugContainer).toBeInTheDocument();
         expect(debugContainer).toHaveTextContent('Debug:');
         expect(debugContainer).toHaveTextContent('No data loaded yet');
@@ -366,7 +399,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
     });
 
@@ -378,7 +415,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // Breadcrumbs should be present (component renders them)
@@ -393,7 +434,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // ResourceSubtitle component should be rendered - check for publisher in breadcrumbs
@@ -410,7 +455,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       expect(screen.getByText('Back')).toBeInTheDocument();
@@ -426,7 +475,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       expect(screen.getByText('Next')).toBeInTheDocument();
@@ -454,7 +507,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       expect(screen.getByText('Prev')).toBeInTheDocument();
@@ -470,7 +527,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       const nextButton = screen.getByText('Next');
@@ -487,7 +548,7 @@ describe('ResourceView Component', () => {
 
     it('handles previous navigation within current page', async () => {
       const user = userEvent.setup();
-      
+
       // Set current index to 1 (not first item)
       const searchStateWithIndex = {
         ...mockSearchState,
@@ -509,7 +570,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       const prevButton = screen.getByText('Prev');
@@ -525,8 +590,7 @@ describe('ResourceView Component', () => {
     });
 
     it('handles next navigation to new page', async () => {
-      const user = userEvent.setup();
-      
+
       // Test basic navigation functionality
       render(
         <TestWrapper>
@@ -535,7 +599,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // Should show navigation controls
@@ -545,8 +613,7 @@ describe('ResourceView Component', () => {
     });
 
     it('handles previous navigation to previous page', async () => {
-      const user = userEvent.setup();
-      
+
       // Set to first item in current page
       const searchStateFirstItem = {
         ...mockSearchState,
@@ -568,7 +635,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       const prevButton = screen.getByText('Prev');
@@ -596,11 +667,17 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // ResourceViewer should be rendered (it's a complex component, so we check for its container)
-      const viewerContainer = document.querySelector('.bg-white.rounded-lg.shadow-md');
+      const viewerContainer = document.querySelector(
+        '.bg-white.rounded-lg.shadow-md'
+      );
       expect(viewerContainer).toBeInTheDocument();
     });
 
@@ -612,12 +689,18 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       expect(screen.getByText('Attribute')).toBeInTheDocument();
       expect(screen.getByText('Value')).toBeInTheDocument();
-      expect(screen.getByText('Click on map to inspect values')).toBeInTheDocument();
+      expect(
+        screen.getByText('Click on map to inspect values')
+      ).toBeInTheDocument();
     });
 
     it('renders IndexMap when protocol is open_index_map', async () => {
@@ -643,7 +726,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       const indexMapContainer = document.querySelector('.viewer-information');
@@ -658,7 +745,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // LocationMap should be rendered (it's a complex component, so we check for its presence)
@@ -675,7 +766,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // DownloadsTable should be rendered
@@ -690,7 +785,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // LinksTable should be rendered - check for the category name
@@ -705,11 +804,19 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // CitationTable should be rendered
-      expect(screen.getByText('MIT Libraries (1950). Nondigitized paper map with library catalog link.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'MIT Libraries (1950). Nondigitized paper map with library catalog link.'
+        )
+      ).toBeInTheDocument();
     });
 
     it('renders FullDetailsTable', async () => {
@@ -720,7 +827,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // FullDetailsTable should always be rendered
@@ -747,7 +858,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // Should still render the resource but without navigation controls
@@ -793,7 +908,9 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Minimal Resource' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: 'Minimal Resource' })
+        ).toBeInTheDocument();
       });
 
       // Should still render the basic structure
@@ -817,7 +934,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Point dataset with WMS and WFS' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Point dataset with WMS and WFS',
+          })
+        ).toBeInTheDocument();
       });
 
       // Should render NYU-specific content
@@ -842,7 +963,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Polygon dataset with WFS, WMS, and FGDC metadata' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Polygon dataset with WFS, WMS, and FGDC metadata',
+          })
+        ).toBeInTheDocument();
       });
 
       // Should render Tufts-specific content
@@ -867,7 +992,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Restricted raster layer with WMS and metadata' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Restricted raster layer with WMS and metadata',
+          })
+        ).toBeInTheDocument();
       });
 
       // Should render Stanford-specific content
@@ -876,8 +1005,7 @@ describe('ResourceView Component', () => {
     });
 
     it('handles navigation errors gracefully', async () => {
-      const user = userEvent.setup();
-      
+
       // Test with a simple error scenario
       fetchResourceDetails.mockRejectedValue(new Error('Network error'));
 
@@ -888,18 +1016,25 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('An unexpected error occurred while fetching item details')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'An unexpected error occurred while fetching item details'
+          )
+        ).toBeInTheDocument();
       });
 
       // Should show error message and not crash
-      expect(screen.getByText('An unexpected error occurred while fetching item details')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'An unexpected error occurred while fetching item details'
+        )
+      ).toBeInTheDocument();
     });
   });
 
   describe('URL Parameter Handling', () => {
     it('extracts search parameters correctly for pagination', async () => {
-      const user = userEvent.setup();
-      
+
       // Test basic navigation functionality
       render(
         <TestWrapper>
@@ -908,7 +1043,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       // Should show navigation controls
@@ -927,7 +1066,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       expect(screen.getByRole('main')).toBeInTheDocument();
@@ -942,7 +1085,11 @@ describe('ResourceView Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Nondigitized paper map with library catalog link' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', {
+            name: 'Nondigitized paper map with library catalog link',
+          })
+        ).toBeInTheDocument();
       });
 
       expect(screen.getByTitle('Back to Search Results')).toBeInTheDocument();

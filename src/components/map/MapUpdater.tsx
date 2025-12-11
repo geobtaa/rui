@@ -1,5 +1,9 @@
 // Wrapper that routes to the appropriate map updater by zoomLevel
-import type { ChoroplethData, ZoomLevel } from '../../types/map';
+import type {
+  ChoroplethData,
+  ZoomLevel,
+  MapFeatureClickPayload,
+} from '../../types/map';
 import { MapUpdaterCountry } from './MapUpdaterCountry';
 import { MapUpdaterRegion } from './MapUpdaterRegion';
 import { MapUpdaterCounty } from './MapUpdaterCounty';
@@ -12,7 +16,7 @@ export function MapUpdater({
 }: {
   data: ChoroplethData;
   zoomLevel: ZoomLevel;
-  onFeatureClick: (feature: any) => void;
+  onFeatureClick: (feature: MapFeatureClickPayload) => void;
   searchQuery: string;
 }) {
   if (zoomLevel === 'country') {
@@ -22,8 +26,10 @@ export function MapUpdater({
     return <MapUpdaterRegion data={data} onFeatureClick={onFeatureClick} />;
   }
   return (
-    <MapUpdaterCounty data={data} onFeatureClick={onFeatureClick} searchQuery={searchQuery} />
+    <MapUpdaterCounty
+      data={data}
+      onFeatureClick={onFeatureClick}
+      searchQuery={searchQuery}
+    />
   );
 }
-
-

@@ -4,7 +4,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { AdvancedSearchBuilder } from '../../components/search/AdvancedSearchBuilder';
 
 describe('AdvancedSearchBuilder', () => {
-  const renderBuilder = (props?: Partial<ComponentProps<typeof AdvancedSearchBuilder>>) => {
+  const renderBuilder = (
+    props?: Partial<ComponentProps<typeof AdvancedSearchBuilder>>
+  ) => {
     const onApply = vi.fn();
     const onCancel = vi.fn();
     const onReset = vi.fn();
@@ -87,4 +89,3 @@ describe('AdvancedSearchBuilder', () => {
     expect(onCancel).toHaveBeenCalled();
   });
 });
-

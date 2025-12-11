@@ -2,29 +2,56 @@ export interface GeoDocument {
   id: string;
   type: string;
   attributes: {
-    id: string;
-    dct_title_s: string;
-    dct_creator_sm?: string[];
-    dct_description_sm?: string[];
-    dct_publisher_sm?: string[];
-    dct_spatial_sm?: string[];
-    gbl_resourceClass_sm?: string[];
-    gbl_resourceType_sm?: string[];
-    dct_language_sm?: string[];
-    dcat_keyword_sm?: string[];
-    schema_provider_s?: string;
-    dct_accessRights_s?: string;
-    dct_format_s?: string;
-    dct_temporal_sm?: string[];
-    dct_issued_s?: string;
-    gbl_indexyear_im?: number[];
-    dct_references_s?: Record<string, string>;
-    locn_geometry_original?: string;
-    dcat_bbox?: string;
-    dcat_centroid_original?: string;
-    dct_identifier_sm?: string[];
-    gbl_mdversion_s?: string;
-    [key: string]: unknown;
+    ogm: {
+      id: string;
+      dct_title_s: string;
+      dct_creator_sm?: string[];
+      dct_description_sm?: string[];
+      dct_publisher_sm?: string[];
+      dct_spatial_sm?: string[];
+      gbl_resourceClass_sm?: string[];
+      gbl_resourceType_sm?: string[];
+      dct_language_sm?: string[];
+      dcat_keyword_sm?: string[];
+      schema_provider_s?: string;
+      dct_accessRights_s?: string;
+      dct_format_s?: string;
+      dct_temporal_sm?: string[];
+      dct_issued_s?: string;
+      gbl_indexYear_im?: number[];
+      gbl_indexyear_im?: number[];
+      dct_references_s?: string | Record<string, string>;
+      locn_geometry?: string;
+      locn_geometry_original?: string;
+      dcat_bbox?: string;
+      dcat_centroid?: string;
+      dcat_centroid_original?: string;
+      dct_identifier_sm?: string[];
+      gbl_mdVersion_s?: string;
+      gbl_mdversion_s?: string;
+      dct_alternative_sm?: string[];
+      gbl_displayNote_sm?: string[];
+      dcat_theme_sm?: string[];
+      gbl_dateRange_drsim?: string[];
+      pcdm_memberOf_sm?: string[];
+      dct_isPartOf_sm?: string[];
+      dct_rights_sm?: string[];
+      gbl_wxsIdentifier_s?: string;
+      dct_subjects_sm?: string[];
+      dct_subject_sm?: string[];
+      dc_publisher_sm?: string[];
+      [key: string]: unknown;
+    };
+    b1g?: {
+      b1g_code_s?: string;
+      b1g_dct_accrualMethod_s?: string;
+      b1g_dct_provenanceStatement_sm?: string[];
+      date_created_dtsi?: string;
+      geomg_id_s?: string;
+      publication_state?: string;
+      import_id?: string;
+      [key: string]: unknown;
+    };
   };
   meta?: {
     ui?: {
@@ -44,7 +71,7 @@ export interface GeoDocument {
       viewer?: {
         protocol?: string;
         endpoint?: string;
-        geometry?: string;
+        geometry?: string | GeoJSON.Polygon | GeoJSON.MultiPolygon;
       };
     };
   };
@@ -156,7 +183,11 @@ export interface JsonApiResponse {
     query: string;
     sort?: string;
     query_time?: unknown;
-    spelling_suggestions?: string[];
+    spellingSuggestions?: Array<{
+      text: string;
+      highlighted: string;
+      score: number;
+    }>;
   };
   data: Array<GeoDocument>;
   included?: Array<Facet | SortOption>;
@@ -180,7 +211,7 @@ interface SearchResponseMeta {
     first_page?: boolean;
     last_page?: boolean;
   };
-  spelling_suggestions: SpellingSuggestion[];
+  spellingSuggestions: SpellingSuggestion[];
 }
 
 export interface SearchResponse {

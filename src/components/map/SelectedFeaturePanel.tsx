@@ -15,14 +15,18 @@ export function SelectedFeaturePanel({ name, hits, level }: Props) {
           <dd className="text-lg font-semibold text-gray-900">{hits}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-gray-500">Geographic Level</dt>
+          <dt className="text-sm font-medium text-gray-500">
+            Geographic Level
+          </dt>
           <dd className="text-lg font-semibold text-gray-900 capitalize">
-            {level === 'country' ? 'Country' : level === 'region' ? 'Region (State)' : 'County'}
+            {level === 'country'
+              ? 'Country'
+              : level === 'region'
+                ? 'Region (State)'
+                : 'County'}
           </dd>
         </div>
       </div>
     </div>
   );
 }
-
-

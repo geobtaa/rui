@@ -31,8 +31,10 @@ describe('LocationMap', () => {
       render(<LocationMap geometry={mitPointGeometry} />);
 
       expect(screen.getByText('Location')).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Location');
-      
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+        'Location'
+      );
+
       const mapContainer = document.querySelector('.h-\\[300px\\]');
       expect(mapContainer).toBeInTheDocument();
     });
@@ -49,10 +51,21 @@ describe('LocationMap', () => {
       // Find the main container (parent of the header)
       const header = screen.getByText('Location').closest('div');
       const mainContainer = header?.parentElement;
-      expect(mainContainer).toHaveClass('bg-white', 'rounded-lg', 'shadow-md', 'overflow-hidden');
-      
+      expect(mainContainer).toHaveClass(
+        'bg-white',
+        'rounded-lg',
+        'shadow-md',
+        'overflow-hidden'
+      );
+
       // Check header classes
-      expect(header).toHaveClass('px-6', 'py-4', 'bg-gray-50', 'border-b', 'border-gray-200');
+      expect(header).toHaveClass(
+        'px-6',
+        'py-4',
+        'bg-gray-50',
+        'border-b',
+        'border-gray-200'
+      );
     });
 
     it('renders map container with correct dimensions', () => {
@@ -102,13 +115,15 @@ describe('LocationMap', () => {
       // Real fixture data from Tufts University
       const tuftsPolygonGeometry = {
         type: 'Polygon' as const,
-        coordinates: [[
-          [-71.1, 42.3],
-          [-71, 42.3],
-          [-71, 42.4],
-          [-71.1, 42.4],
-          [-71.1, 42.3]
-        ]],
+        coordinates: [
+          [
+            [-71.1, 42.3],
+            [-71, 42.3],
+            [-71, 42.4],
+            [-71.1, 42.4],
+            [-71.1, 42.3],
+          ],
+        ],
       };
 
       render(<LocationMap geometry={tuftsPolygonGeometry} />);
@@ -122,13 +137,15 @@ describe('LocationMap', () => {
       // Real fixture data from Stanford University
       const stanfordPolygonGeometry = {
         type: 'Polygon' as const,
-        coordinates: [[
-          [-122.2, 37.4],
-          [-122.1, 37.4],
-          [-122.1, 37.5],
-          [-122.2, 37.5],
-          [-122.2, 37.4]
-        ]],
+        coordinates: [
+          [
+            [-122.2, 37.4],
+            [-122.1, 37.4],
+            [-122.1, 37.5],
+            [-122.2, 37.5],
+            [-122.2, 37.4],
+          ],
+        ],
       };
 
       render(<LocationMap geometry={stanfordPolygonGeometry} />);
@@ -143,20 +160,24 @@ describe('LocationMap', () => {
       const complexMultiPolygon = {
         type: 'MultiPolygon' as const,
         coordinates: [
-          [[
-            [-71.1, 42.3],
-            [-71, 42.3],
-            [-71, 42.4],
-            [-71.1, 42.4],
-            [-71.1, 42.3]
-          ]],
-          [[
-            [-122.2, 37.4],
-            [-122.1, 37.4],
-            [-122.1, 37.5],
-            [-122.2, 37.5],
-            [-122.2, 37.4]
-          ]]
+          [
+            [
+              [-71.1, 42.3],
+              [-71, 42.3],
+              [-71, 42.4],
+              [-71.1, 42.4],
+              [-71.1, 42.3],
+            ],
+          ],
+          [
+            [
+              [-122.2, 37.4],
+              [-122.1, 37.4],
+              [-122.1, 37.5],
+              [-122.2, 37.5],
+              [-122.2, 37.4],
+            ],
+          ],
         ],
       };
 
@@ -169,7 +190,8 @@ describe('LocationMap', () => {
 
     it('handles WKT polygon string from fixture data', () => {
       // WKT string from fixture data
-      const wktPolygon = 'POLYGON((-71.1 42.3, -71 42.3, -71 42.4, -71.1 42.4, -71.1 42.3))';
+      const wktPolygon =
+        'POLYGON((-71.1 42.3, -71 42.3, -71 42.4, -71.1 42.4, -71.1 42.3))';
 
       render(<LocationMap geometry={wktPolygon} />);
 
@@ -180,7 +202,8 @@ describe('LocationMap', () => {
 
     it('handles WKT multipolygon string from fixture data', () => {
       // WKT multipolygon string from fixture data
-      const wktMultiPolygon = 'MULTIPOLYGON(((-71.1 42.3, -71 42.3, -71 42.4, -71.1 42.4, -71.1 42.3)), ((-70.9 42.2, -70.8 42.2, -70.8 42.3, -70.9 42.3, -70.9 42.2)))';
+      const wktMultiPolygon =
+        'MULTIPOLYGON(((-71.1 42.3, -71 42.3, -71 42.4, -71.1 42.4, -71.1 42.3)), ((-70.9 42.2, -70.8 42.2, -70.8 42.3, -70.9 42.3, -70.9 42.2)))';
 
       render(<LocationMap geometry={wktMultiPolygon} />);
 
@@ -191,7 +214,9 @@ describe('LocationMap', () => {
 
     it('handles object with WKT property from fixture data', () => {
       // Object with WKT property from fixture data
-      const wktObject = { wkt: 'POLYGON((-71.1 42.3, -71 42.3, -71 42.4, -71.1 42.4, -71.1 42.3))' };
+      const wktObject = {
+        wkt: 'POLYGON((-71.1 42.3, -71 42.3, -71 42.4, -71.1 42.4, -71.1 42.3))',
+      };
 
       render(<LocationMap geometry={wktObject} />);
 
@@ -291,13 +316,15 @@ describe('LocationMap', () => {
       // Real fixture data from Tufts University polygon dataset
       const tuftsPolygonDatasetGeometry = {
         type: 'Polygon' as const,
-        coordinates: [[
-          [-71.1, 42.3],
-          [-71, 42.3],
-          [-71, 42.4],
-          [-71.1, 42.4],
-          [-71.1, 42.3]
-        ]],
+        coordinates: [
+          [
+            [-71.1, 42.3],
+            [-71, 42.3],
+            [-71, 42.4],
+            [-71.1, 42.4],
+            [-71.1, 42.3],
+          ],
+        ],
       };
 
       render(<LocationMap geometry={tuftsPolygonDatasetGeometry} />);
@@ -311,13 +338,15 @@ describe('LocationMap', () => {
       // Real fixture data from Stanford University raster layer
       const stanfordRasterGeometry = {
         type: 'Polygon' as const,
-        coordinates: [[
-          [-122.2, 37.4],
-          [-122.1, 37.4],
-          [-122.1, 37.5],
-          [-122.2, 37.5],
-          [-122.2, 37.4]
-        ]],
+        coordinates: [
+          [
+            [-122.2, 37.4],
+            [-122.1, 37.4],
+            [-122.1, 37.5],
+            [-122.2, 37.5],
+            [-122.2, 37.4],
+          ],
+        ],
       };
 
       render(<LocationMap geometry={stanfordRasterGeometry} />);
@@ -332,20 +361,24 @@ describe('LocationMap', () => {
       const cambridgeGridGeometry = {
         type: 'MultiPolygon' as const,
         coordinates: [
-          [[
-            [-71.1, 42.3],
-            [-71, 42.3],
-            [-71, 42.4],
-            [-71.1, 42.4],
-            [-71.1, 42.3]
-          ]],
-          [[
-            [-122.2, 37.4],
-            [-122.1, 37.4],
-            [-122.1, 37.5],
-            [-122.2, 37.5],
-            [-122.2, 37.4]
-          ]]
+          [
+            [
+              [-71.1, 42.3],
+              [-71, 42.3],
+              [-71, 42.4],
+              [-71.1, 42.4],
+              [-71.1, 42.3],
+            ],
+          ],
+          [
+            [
+              [-122.2, 37.4],
+              [-122.1, 37.4],
+              [-122.1, 37.5],
+              [-122.2, 37.5],
+              [-122.2, 37.4],
+            ],
+          ],
         ],
       };
 
@@ -370,10 +403,21 @@ describe('LocationMap', () => {
       // Check main container (parent of header)
       const header = screen.getByText('Location').closest('div');
       const mainContainer = header?.parentElement;
-      expect(mainContainer).toHaveClass('bg-white', 'rounded-lg', 'shadow-md', 'overflow-hidden');
+      expect(mainContainer).toHaveClass(
+        'bg-white',
+        'rounded-lg',
+        'shadow-md',
+        'overflow-hidden'
+      );
 
       // Check header section
-      expect(header).toHaveClass('px-6', 'py-4', 'bg-gray-50', 'border-b', 'border-gray-200');
+      expect(header).toHaveClass(
+        'px-6',
+        'py-4',
+        'bg-gray-50',
+        'border-b',
+        'border-gray-200'
+      );
 
       // Check map container
       const mapContainer = document.querySelector('.h-\\[300px\\]');
@@ -387,17 +431,41 @@ describe('LocationMap', () => {
         // NYU Libraries point
         { type: 'Point' as const, coordinates: [-74.006, 40.7128] },
         // Tufts University polygon
-        { type: 'Polygon' as const, coordinates: [[[-71.1, 42.3], [-71, 42.3], [-71, 42.4], [-71.1, 42.4], [-71.1, 42.3]]] },
+        {
+          type: 'Polygon' as const,
+          coordinates: [
+            [
+              [-71.1, 42.3],
+              [-71, 42.3],
+              [-71, 42.4],
+              [-71.1, 42.4],
+              [-71.1, 42.3],
+            ],
+          ],
+        },
         // Stanford University polygon
-        { type: 'Polygon' as const, coordinates: [[[-122.2, 37.4], [-122.1, 37.4], [-122.1, 37.5], [-122.2, 37.5], [-122.2, 37.4]]] },
+        {
+          type: 'Polygon' as const,
+          coordinates: [
+            [
+              [-122.2, 37.4],
+              [-122.1, 37.4],
+              [-122.1, 37.5],
+              [-122.2, 37.5],
+              [-122.2, 37.4],
+            ],
+          ],
+        },
       ];
 
       geometries.forEach((geometry) => {
         const { unmount } = render(<LocationMap geometry={geometry} />);
 
         expect(screen.getByText('Location')).toBeInTheDocument();
-        expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Location');
-        
+        expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+          'Location'
+        );
+
         const mapContainer = document.querySelector('.h-\\[300px\\]');
         expect(mapContainer).toBeInTheDocument();
         expect(mapContainer).toHaveClass('h-[300px]', 'w-full');

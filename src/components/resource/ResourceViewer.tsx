@@ -27,8 +27,10 @@ interface ResourceViewerProps {
 export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
   // Load Geoblacklight only when needed (for viewer controllers)
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(window as any).Geoblacklight) {
       import('@geoblacklight/frontend').then((Geoblacklight) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).Geoblacklight = Geoblacklight;
         console.log('Geoblacklight loaded for viewer');
       });
@@ -141,7 +143,7 @@ export function ResourceViewer({ data, pageValue }: ResourceViewerProps) {
             data-leaflet-viewer-available-value={available}
             data-leaflet-viewer-map-geom-value={JSON.stringify(geometry)}
             data-leaflet-viewer-layer-id-value={
-              data.attributes.gbl_wxsIdentifier_s || ''
+              data.attributes.ogm.gbl_wxsIdentifier_s || ''
             }
             data-leaflet-viewer-options-value={JSON.stringify(
               leafletViewerOptions

@@ -11,7 +11,9 @@ export function ZoomLevelControls({ zoomLevel, onChange }: Props) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Geographic Level</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">
+            Geographic Level
+          </h3>
           <div className="flex space-x-2">
             {(['country', 'region', 'county'] as ZoomLevel[]).map((level) => (
               <button
@@ -32,12 +34,11 @@ export function ZoomLevelControls({ zoomLevel, onChange }: Props) {
         </div>
         <div className="text-sm text-gray-600">
           <div>
-            Current Level: <span className="font-semibold capitalize">{zoomLevel}</span>
+            Current Level:{' '}
+            <span className="font-semibold capitalize">{zoomLevel}</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-

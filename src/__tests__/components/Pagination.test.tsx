@@ -51,7 +51,7 @@ describe('Pagination Component', () => {
       // Check for navigation buttons by their position (first and last buttons)
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThanOrEqual(2);
-      
+
       // First button should be previous (disabled on page 1)
       expect(buttons[0]).toBeDisabled();
       // Last button should be next
@@ -339,7 +339,7 @@ describe('Pagination Component', () => {
 
       expect(screen.getByText('1')).toBeInTheDocument();
       expect(screen.queryByText('...')).not.toBeInTheDocument();
-      
+
       const buttons = screen.getAllByRole('button');
       expect(buttons[0]).toBeDisabled(); // Previous button
       expect(buttons[buttons.length - 1]).toBeDisabled(); // Next button
@@ -440,7 +440,10 @@ describe('Pagination Component', () => {
       );
 
       const prevButton = screen.getAllByRole('button')[0];
-      expect(prevButton).toHaveClass('disabled:opacity-50', 'disabled:cursor-not-allowed');
+      expect(prevButton).toHaveClass(
+        'disabled:opacity-50',
+        'disabled:cursor-not-allowed'
+      );
     });
 
     it('applies hover effects to clickable buttons', () => {
@@ -495,7 +498,13 @@ describe('Pagination Component', () => {
       );
 
       const paginationContainer = container.firstChild;
-      expect(paginationContainer).toHaveClass('flex', 'justify-center', 'items-center', 'space-x-2', 'mt-8');
+      expect(paginationContainer).toHaveClass(
+        'flex',
+        'justify-center',
+        'items-center',
+        'space-x-2',
+        'mt-8'
+      );
     });
   });
 });

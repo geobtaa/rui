@@ -460,7 +460,7 @@ export function ResourceView() {
                 {/* Title section */}
                 <div className="lg:col-span-8">
                   <h1 className="text-3xl font-bold text-gray-900">
-                    {data.attributes.dct_title_s}
+                    {data.attributes.ogm.dct_title_s}
                   </h1>
                   <ResourceSubtitle item={data} />
                 </div>
@@ -493,13 +493,13 @@ export function ResourceView() {
                   <div className="lg:sticky lg:top-[88px] space-y-6">
                     {/* Location Map - using geometry from viewer, original geometry, or locn_geometry */}
                     {(data?.meta?.ui?.viewer?.geometry ||
-                      data?.attributes?.locn_geometry_original ||
-                      data?.attributes?.locn_geometry) && (
+                      data?.attributes?.ogm?.locn_geometry_original ||
+                      data?.attributes?.ogm?.locn_geometry) && (
                       <LocationMap
                         geometry={
                           (data?.meta?.ui?.viewer?.geometry ||
-                            data?.attributes?.locn_geometry_original ||
-                            data?.attributes?.locn_geometry) as
+                            data?.attributes?.ogm?.locn_geometry_original ||
+                            data?.attributes?.ogm?.locn_geometry) as
                             | string
                             | GeoJSON.Polygon
                             | GeoJSON.MultiPolygon
@@ -541,7 +541,9 @@ export function ResourceView() {
             Array.isArray(data.meta.ui.similar_items) &&
             data.meta.ui.similar_items.length > 0 && (
               <SimilarItemsCarousel
-                similarItems={data.meta.ui.similar_items as unknown as GeoDocument[]}
+                similarItems={
+                  data.meta.ui.similar_items as unknown as GeoDocument[]
+                }
               />
             )}
         </div>

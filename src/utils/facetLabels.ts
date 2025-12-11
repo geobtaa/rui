@@ -1,6 +1,7 @@
 // Labels keyed by field-named facet IDs (new API)
 export const FACET_LABELS: Record<string, string> = {
   dct_spatial_sm: 'Place',
+  time_period: 'Time Period',
   gbl_resourceClass_sm: 'Resource Class',
   gbl_resourceType_sm: 'Resource Type',
   schema_provider_s: 'Provider',
@@ -11,6 +12,7 @@ export const FACET_LABELS: Record<string, string> = {
   dct_subject_sm: 'Subject',
   dct_subjects_sm: 'Subject',
   dcat_theme_sm: 'Theme',
+  gbl_georeferenced_b: 'Georeferenced',
 };
 
 // Backward-compat mapping for legacy *_agg IDs to new field IDs
@@ -43,17 +45,17 @@ export function getFacetLabel(field: string): string {
 // Note: Both provider_agg and institution_agg map to schema_provider_s in the forward direction,
 // but for reverse mapping we use provider_agg as the primary legacy name
 const REVERSE_FACET_ID_MAP: Record<string, string> = {
-  'dct_spatial_sm': 'spatial_agg',
-  'gbl_resourceClass_sm': 'resource_class_agg',
-  'gbl_resourceType_sm': 'resource_type_agg',
-  'schema_provider_s': 'provider_agg',
-  'dct_creator_sm': 'creator_agg',
-  'dct_accessRights_s': 'access_rights_agg',
-  'gbl_indexyear_im': 'index_year_agg',
-  'dct_language_sm': 'language_agg',
-  'dct_subject_sm': 'subject_agg',
-  'dct_format_s': 'format_agg',
-  'gbl_georeferenced_b': 'georeferenced_agg',
+  dct_spatial_sm: 'spatial_agg',
+  gbl_resourceClass_sm: 'resource_class_agg',
+  gbl_resourceType_sm: 'resource_type_agg',
+  schema_provider_s: 'provider_agg',
+  dct_creator_sm: 'creator_agg',
+  dct_accessRights_s: 'access_rights_agg',
+  gbl_indexyear_im: 'index_year_agg',
+  dct_language_sm: 'language_agg',
+  dct_subject_sm: 'subject_agg',
+  dct_format_s: 'format_agg',
+  gbl_georeferenced_b: 'georeferenced_agg',
 };
 
 export function getLegacyFacetName(fieldName: string): string {

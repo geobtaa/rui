@@ -9,7 +9,9 @@ export function TestPage() {
           This is a simple test page to verify React 19 is working correctly.
         </p>
         <div className="mt-4 p-4 bg-blue-100 rounded-lg">
-          <p className="text-blue-800">If you can see this, React 19 is working!</p>
+          <p className="text-blue-800">
+            If you can see this, React 19 is working!
+          </p>
         </div>
       </div>
     </div>

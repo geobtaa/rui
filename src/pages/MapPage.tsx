@@ -19,16 +19,23 @@ import { DEFAULT_US_CENTER, DEFAULT_US_ZOOM } from '../config/mapView';
 import type { ZoomLevel } from '../types/map';
 
 // Fix for default markers in Leaflet with Vite
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+import type { MapFeatureClickPayload } from '../types/map';
 
 export function MapPage() {
   // Local UI state: selected feature popup, current search query, and zoom level tab
-  const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const [selectedFeature, setSelectedFeature] =
+    useState<MapFeatureClickPayload | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('region');
 
@@ -37,7 +44,7 @@ export function MapPage() {
   const { data, loading, error } = useGeoFacets(searchQuery, setLastApiUrl);
 
   // When user clicks a shape on any map, store a small payload for the details panel
-  const handleFeatureClick = (feature: any) => {
+  const handleFeatureClick = (feature: MapFeatureClickPayload) => {
     setSelectedFeature(feature);
   };
 
@@ -112,7 +119,7 @@ export function MapPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Title and intro copy */}
         <div className="mb-6">
@@ -120,17 +127,24 @@ export function MapPage() {
             Geographic Resource Distribution
           </h1>
           <p className="text-gray-600">
-            Explore the distribution of geospatial resources across different geographic levels.
+            Explore the distribution of geospatial resources across different
+            geographic levels.
           </p>
         </div>
 
         {/* Controls to emphasize one level in the StatsBar */}
-        <ZoomLevelControls zoomLevel={zoomLevel} onChange={handleZoomLevelChange} />
+        <ZoomLevelControls
+          zoomLevel={zoomLevel}
+          onChange={handleZoomLevelChange}
+        />
 
         {/* Three synchronized maps; each uses MapUpdater variant under the hood */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Country */}
-          <MapCard title="Country Level" subtitle={`Features: ${data.country.length}`}>
+          <MapCard
+            title="Country Level"
+            subtitle={`Features: ${data.country.length}`}
+          >
             <MapContainer
               center={DEFAULT_US_CENTER}
               zoom={DEFAULT_US_ZOOM}
@@ -140,8 +154,8 @@ export function MapPage() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <MapUpdater 
-                data={data} 
+              <MapUpdater
+                data={data}
                 zoomLevel="country"
                 onFeatureClick={handleFeatureClick}
                 searchQuery={searchQuery}
@@ -150,7 +164,10 @@ export function MapPage() {
           </MapCard>
 
           {/* Region (state) */}
-          <MapCard title="Region (State) Level" subtitle={`Features: ${data.region.length}`}>
+          <MapCard
+            title="Region (State) Level"
+            subtitle={`Features: ${data.region.length}`}
+          >
             <MapContainer
               center={DEFAULT_US_CENTER}
               zoom={DEFAULT_US_ZOOM}
@@ -160,8 +177,8 @@ export function MapPage() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <MapUpdater 
-                data={data} 
+              <MapUpdater
+                data={data}
                 zoomLevel="region"
                 onFeatureClick={handleFeatureClick}
                 searchQuery={searchQuery}
@@ -170,7 +187,10 @@ export function MapPage() {
           </MapCard>
 
           {/* County (with WOF-aware matching and auto-fit) */}
-          <MapCard title="County Level" subtitle={`Features: ${data.county.length}`}>
+          <MapCard
+            title="County Level"
+            subtitle={`Features: ${data.county.length}`}
+          >
             <MapContainer
               center={DEFAULT_US_CENTER}
               zoom={DEFAULT_US_ZOOM}
@@ -180,8 +200,8 @@ export function MapPage() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <MapUpdater 
-                data={data} 
+              <MapUpdater
+                data={data}
                 zoomLevel="county"
                 onFeatureClick={handleFeatureClick}
                 searchQuery={searchQuery}
@@ -199,7 +219,7 @@ export function MapPage() {
             <p className="text-sm text-gray-600 mb-4">
               Search for resources and see their geographic distribution
             </p>
-            
+
             <div className="max-w-md">
               <SearchField
                 placeholder="Search for maps, data, imagery..."

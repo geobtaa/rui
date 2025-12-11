@@ -1,17 +1,27 @@
 import { useEffect, useState } from 'react';
 import { GeoJSON } from 'react-leaflet';
-import type { ChoroplethData } from '../../types/map';
+import type {
+  ChoroplethData,
+  GeoJsonData,
+  MapFeatureClickPayload,
+} from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
 
 // Color scale shared with other updaters
 function getColor(intensity: number): string {
-  return intensity > 0.8 ? '#800026' :
-         intensity > 0.6 ? '#BD0026' :
-         intensity > 0.4 ? '#E31A1C' :
-         intensity > 0.2 ? '#FC4E2A' :
-         intensity > 0.1 ? '#FD8D3C' :
-         intensity > 0   ? '#FEB24C' :
-                           '#FED976';
+  return intensity > 0.8
+    ? '#800026'
+    : intensity > 0.6
+      ? '#BD0026'
+      : intensity > 0.4
+        ? '#E31A1C'
+        : intensity > 0.2
+          ? '#FC4E2A'
+          : intensity > 0.1
+            ? '#FD8D3C'
+            : intensity > 0
+              ? '#FEB24C'
+              : '#FED976';
 }
 
 export function MapUpdaterRegion({
@@ -19,13 +29,15 @@ export function MapUpdaterRegion({
   onFeatureClick,
 }: {
   data: ChoroplethData;
-  onFeatureClick: (feature: any) => void;
+  onFeatureClick: (feature: MapFeatureClickPayload) => void;
 }) {
   // Load US states GeoJSON and keep local
-  const [geoJson, setGeoJson] = useState<any>(null);
+  const [geoJson, setGeoJson] = useState<GeoJsonData | null>(null);
 
   useEffect(() => {
-    fetchGeoJsonForLevel('region').then(setGeoJson).catch(() => setGeoJson(null));
+    fetchGeoJsonForLevel('region')
+      .then(setGeoJson)
+      .catch(() => setGeoJson(null));
   }, []);
 
   // Precompute scale for choropleth intensity
@@ -58,7 +70,11 @@ export function MapUpdaterRegion({
     <GeoJSON
       data={geoJson}
       style={(feature) => {
-        const featureName = feature?.properties?.name || feature?.properties?.NAME || feature?.properties?.state || 'Unknown State';
+        const featureName =
+          feature?.properties?.name ||
+          feature?.properties?.NAME ||
+          feature?.properties?.state ||
+          'Unknown State';
         const hits = getHits(featureName);
         const intensity = hits / maxHits;
         return {
@@ -71,7 +87,10 @@ export function MapUpdaterRegion({
         };
       }}
       onEachFeature={(feature, layer) => {
-        const featureName = feature?.properties?.name || feature?.properties?.NAME || 'Unknown State';
+        const featureName =
+          feature?.properties?.name ||
+          feature?.properties?.NAME ||
+          'Unknown State';
         const hits = getHits(featureName);
         layer.bindPopup(`
           <div>
@@ -80,10 +99,10 @@ export function MapUpdaterRegion({
             <p><strong>Level:</strong> region</p>
           </div>
         `);
-        layer.on('click', () => onFeatureClick({ properties: { name: featureName, hits } }));
+        layer.on('click', () =>
+          onFeatureClick({ properties: { name: featureName, hits } })
+        );
       }}
     />
   );
 }
-
-

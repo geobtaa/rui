@@ -215,9 +215,7 @@ describe('FacetMoreModal', () => {
 
     render(<FacetMoreModal {...props} />);
 
-    expect(
-      screen.getByText(/Current search context/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Current search context/i)).toBeInTheDocument();
     expect(screen.getByText(/Search:/)).toBeInTheDocument();
     expect(screen.getByText(/Maps/)).toBeInTheDocument();
     expect(screen.getByText(/Illinois/)).toBeInTheDocument();
@@ -255,5 +253,3 @@ describe('FacetMoreModal', () => {
     );
   });
 });
-
-

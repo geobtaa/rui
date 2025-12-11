@@ -14,7 +14,10 @@ interface Attributes {
 
 interface FullDetailsTableProps {
   data: {
-    attributes: Attributes;
+    attributes: {
+      ogm: Attributes;
+      b1g?: Attributes;
+    };
     meta?: {
       ui?: {
         relationships?: Record<string, unknown>;
@@ -43,7 +46,11 @@ const relationshipLabels: { [key: string]: string } = {
 };
 
 export function FullDetailsTable({ data }: FullDetailsTableProps) {
-  const attributes = data?.attributes || {};
+  // Merge ogm and b1g attributes for display
+  const attributes = {
+    ...(data?.attributes?.ogm || {}),
+    ...(data?.attributes?.b1g || {}),
+  };
   const uiRelationships = data?.meta?.ui?.relationships || {};
   const [isPlaceExpanded, setIsPlaceExpanded] = useState(false);
 
@@ -528,18 +535,16 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                   <li className="text-sm text-gray-900">
                     {key === 'dct_spatial_sm' &&
                     Array.isArray(value) &&
-                    value.length > 15 ? (
-                      renderPlaceValues(
-                        value as string | string[] | null | undefined,
-                        true
-                      )
-                    ) : (
-                      renderValue(
-                        key,
-                        value as string | string[] | null | undefined,
-                        true
-                      )
-                    )}
+                    value.length > 15
+                      ? renderPlaceValues(
+                          value as string | string[] | null | undefined,
+                          true
+                        )
+                      : renderValue(
+                          key,
+                          value as string | string[] | null | undefined,
+                          true
+                        )}
                   </li>
                 </ul>
               </div>

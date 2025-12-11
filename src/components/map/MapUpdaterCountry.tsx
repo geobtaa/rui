@@ -1,22 +1,35 @@
 import { useEffect, useState } from 'react';
 import { GeoJSON } from 'react-leaflet';
-import type { ChoroplethData } from '../../types/map';
+import type {
+  ChoroplethData,
+  GeoJsonData,
+  MapFeatureClickPayload,
+} from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
 
 // Normalize for loose matching between API labels and GeoJSON names
 function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+  return name
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, '')
+    .trim();
 }
 
 // Color scale used across maps
 function getColor(intensity: number): string {
-  return intensity > 0.8 ? '#800026' :
-         intensity > 0.6 ? '#BD0026' :
-         intensity > 0.4 ? '#E31A1C' :
-         intensity > 0.2 ? '#FC4E2A' :
-         intensity > 0.1 ? '#FD8D3C' :
-         intensity > 0   ? '#FEB24C' :
-                           '#FED976';
+  return intensity > 0.8
+    ? '#800026'
+    : intensity > 0.6
+      ? '#BD0026'
+      : intensity > 0.4
+        ? '#E31A1C'
+        : intensity > 0.2
+          ? '#FC4E2A'
+          : intensity > 0.1
+            ? '#FD8D3C'
+            : intensity > 0
+              ? '#FEB24C'
+              : '#FED976';
 }
 
 export function MapUpdaterCountry({
@@ -24,13 +37,15 @@ export function MapUpdaterCountry({
   onFeatureClick,
 }: {
   data: ChoroplethData;
-  onFeatureClick: (feature: any) => void;
+  onFeatureClick: (feature: MapFeatureClickPayload) => void;
 }) {
   // GeoJSON is loaded per-zoom-level to keep code small and responsibilities clear
-  const [geoJson, setGeoJson] = useState<any>(null);
+  const [geoJson, setGeoJson] = useState<GeoJsonData | null>(null);
 
   useEffect(() => {
-    fetchGeoJsonForLevel('country').then(setGeoJson).catch(() => setGeoJson(null));
+    fetchGeoJsonForLevel('country')
+      .then(setGeoJson)
+      .catch(() => setGeoJson(null));
   }, []);
 
   // Precompute scale for choropleth intensity
@@ -58,8 +73,10 @@ export function MapUpdaterCountry({
       const ng = normalizeName(geoName);
       return (
         nd === ng ||
-        (nd.includes('united states') && (ng.includes('united states') || ng === 'us' || ng === 'usa')) ||
-        (nd.includes('usa') && (ng.includes('usa') || ng === 'us' || ng.includes('united states')))
+        (nd.includes('united states') &&
+          (ng.includes('united states') || ng === 'us' || ng === 'usa')) ||
+        (nd.includes('usa') &&
+          (ng.includes('usa') || ng === 'us' || ng.includes('united states')))
       );
     });
     return item ? item.attributes.hits : 0;
@@ -70,7 +87,11 @@ export function MapUpdaterCountry({
     <GeoJSON
       data={geoJson}
       style={(feature) => {
-        const featureName = feature?.properties?.name || feature?.properties?.NAME || feature?.properties?.ADMIN || 'Unknown Country';
+        const featureName =
+          feature?.properties?.name ||
+          feature?.properties?.NAME ||
+          feature?.properties?.ADMIN ||
+          'Unknown Country';
         const hits = getHits(featureName);
         const intensity = hits / maxHits;
         return {
@@ -83,7 +104,10 @@ export function MapUpdaterCountry({
         };
       }}
       onEachFeature={(feature, layer) => {
-        const featureName = feature?.properties?.name || feature?.properties?.NAME || 'Unknown Country';
+        const featureName =
+          feature?.properties?.name ||
+          feature?.properties?.NAME ||
+          'Unknown Country';
         const hits = getHits(featureName);
         layer.bindPopup(`
           <div>
@@ -92,10 +116,10 @@ export function MapUpdaterCountry({
             <p><strong>Level:</strong> country</p>
           </div>
         `);
-        layer.on('click', () => onFeatureClick({ properties: { name: featureName, hits } }));
+        layer.on('click', () =>
+          onFeatureClick({ properties: { name: featureName, hits } })
+        );
       }}
     />
   );
 }
-
-

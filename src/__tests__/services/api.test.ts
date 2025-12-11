@@ -5,7 +5,7 @@ import { FacetFilter } from '../../types/search';
 vi.doUnmock('../../services/api');
 
 // Mock environment variables by directly setting them
-const originalEnv = import.meta.env;
+// const originalEnv = import.meta.env; // Reserved for potential future use
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -18,10 +18,10 @@ const mockPerformance = {
 global.performance = mockPerformance as any;
 
 // Mock console methods to capture logs for testing
-const consoleSpy = {
-  log: vi.spyOn(console, 'log'),
-  error: vi.spyOn(console, 'error'),
-};
+// const consoleSpy = {
+//   log: vi.spyOn(console, 'log'),
+//   error: vi.spyOn(console, 'error'),
+// }; // Reserved for potential future use
 
 // Import the actual API functions after unmocking
 let ApiError: any;
@@ -35,13 +35,13 @@ describe('API Service', () => {
     vi.clearAllMocks();
     mockFetch.mockClear();
     mockPerformance.now.mockClear();
-    
+
     // Set up test environment variables
     (import.meta.env as any).VITE_API_BASE_URL = 'https://test-api.example.com';
     (import.meta.env as any).VITE_CSRF_TOKEN = 'test-csrf-token';
     (import.meta.env as any).VITE_ENFORCE_HTTPS = 'true';
     (import.meta.env as any).VITE_USE_JSONP = 'false';
-    
+
     // Dynamically import the actual API functions
     const apiModule = await import('../../services/api');
     ApiError = apiModule.ApiError;
@@ -58,7 +58,7 @@ describe('API Service', () => {
   describe('ApiError Class', () => {
     it('creates ApiError with message and status', () => {
       const error = new ApiError('Test error', 404);
-      
+
       expect(error.message).toBe('Test error');
       expect(error.status).toBe(404);
       expect(error.name).toBe('ApiError');
@@ -67,7 +67,7 @@ describe('API Service', () => {
 
     it('creates ApiError with message only', () => {
       const error = new ApiError('Test error');
-      
+
       expect(error.message).toBe('Test error');
       expect(error.status).toBeUndefined();
       expect(error.name).toBe('ApiError');
@@ -92,7 +92,9 @@ describe('API Service', () => {
             type: 'document',
             attributes: {
               dct_title_s: 'Nondigitized paper map with library catalog link',
-              dct_description_sm: ['A historical paper map from MIT collections'],
+              dct_description_sm: [
+                'A historical paper map from MIT collections',
+              ],
               dct_temporal_sm: ['1950'],
               dc_publisher_sm: ['MIT Libraries'],
               gbl_resourceClass_sm: ['Paper Maps'],
@@ -191,7 +193,9 @@ describe('API Service', () => {
 
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('fq%5Bgbl_resourceClass_sm%5D%5B%5D=Paper+Maps'),
+        expect.stringContaining(
+          'fq%5Bgbl_resourceClass_sm%5D%5B%5D=Paper+Maps'
+        ),
         expect.any(Object)
       );
     });
@@ -221,7 +225,16 @@ describe('API Service', () => {
         { op: 'NOT', field: 'dct_title_s', q: 'Wisconsin' },
       ];
 
-      const result = await fetchSearchResults('', 1, 10, [], undefined, undefined, [], advancedClauses);
+      const result = await fetchSearchResults(
+        '',
+        1,
+        10,
+        [],
+        undefined,
+        undefined,
+        [],
+        advancedClauses
+      );
 
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -259,7 +272,14 @@ describe('API Service', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await fetchSearchResults('data', 1, 10, [], undefined, 'title');
+      const result = await fetchSearchResults(
+        'data',
+        1,
+        10,
+        [],
+        undefined,
+        'title'
+      );
 
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -387,7 +407,9 @@ describe('API Service', () => {
 
       expect(result).toEqual(mockResourceDetails);
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('https://test-api.example.com/resources/mit-001145244'),
+        expect.stringContaining(
+          'https://test-api.example.com/resources/mit-001145244'
+        ),
         expect.any(Object)
       );
     });
@@ -427,7 +449,9 @@ describe('API Service', () => {
       await fetchResourceDetails('nyu-2451-34564', onApiCall);
 
       expect(onApiCall).toHaveBeenCalledWith(
-        expect.stringContaining('https://test-api.example.com/resources/nyu-2451-34564')
+        expect.stringContaining(
+          'https://test-api.example.com/resources/nyu-2451-34564'
+        )
       );
     });
 
@@ -438,7 +462,9 @@ describe('API Service', () => {
         text: () => Promise.resolve('Not Found'),
       });
 
-      await expect(fetchResourceDetails('nonexistent-id')).rejects.toThrow(ApiError);
+      await expect(fetchResourceDetails('nonexistent-id')).rejects.toThrow(
+        ApiError
+      );
     });
 
     it('handles network errors', async () => {
@@ -610,7 +636,9 @@ describe('API Service', () => {
             type: 'document',
             attributes: {
               dct_title_s: 'Nondigitized paper map with library catalog link',
-              dct_description_sm: ['A historical paper map from MIT collections'],
+              dct_description_sm: [
+                'A historical paper map from MIT collections',
+              ],
             },
             meta: {
               ui: {
@@ -652,7 +680,10 @@ describe('API Service', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await fetchBookmarkedResources(['mit-001145244', 'nyu-2451-34564']);
+      const result = await fetchBookmarkedResources([
+        'mit-001145244',
+        'nyu-2451-34564',
+      ]);
 
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -729,7 +760,9 @@ describe('API Service', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      await expect(fetchBookmarkedResources(['test-id'])).rejects.toThrow(ApiError);
+      await expect(fetchBookmarkedResources(['test-id'])).rejects.toThrow(
+        ApiError
+      );
     });
 
     it('handles API errors gracefully', async () => {
@@ -739,13 +772,17 @@ describe('API Service', () => {
         text: () => Promise.resolve('Internal Server Error'),
       });
 
-      await expect(fetchBookmarkedResources(['test-id'])).rejects.toThrow(ApiError);
+      await expect(fetchBookmarkedResources(['test-id'])).rejects.toThrow(
+        ApiError
+      );
     });
 
     it('handles network errors', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(fetchBookmarkedResources(['test-id'])).rejects.toThrow(ApiError);
+      await expect(fetchBookmarkedResources(['test-id'])).rejects.toThrow(
+        ApiError
+      );
     });
 
     it('uses default API URL when VITE_API_BASE_URL is not set', async () => {
@@ -802,7 +839,8 @@ describe('API Service', () => {
 
       // Override environment to use HTTP URL
       const originalEnv = import.meta.env.VITE_API_BASE_URL;
-      (import.meta.env as any).VITE_API_BASE_URL = 'http://test-api.example.com';
+      (import.meta.env as any).VITE_API_BASE_URL =
+        'http://test-api.example.com';
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -843,12 +881,12 @@ describe('API Service', () => {
       });
 
       const startTime = Date.now();
-      
+
       await fetchSearchResults('test');
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       // Should complete within 100ms in test environment
       expect(duration).toBeLessThan(100);
     });
@@ -872,7 +910,9 @@ describe('API Service', () => {
             type: 'document',
             attributes: {
               dct_title_s: 'Nondigitized paper map with library catalog link',
-              dct_description_sm: ['A historical paper map from MIT collections'],
+              dct_description_sm: [
+                'A historical paper map from MIT collections',
+              ],
               dct_temporal_sm: ['1950'],
               dc_publisher_sm: ['MIT Libraries'],
               gbl_resourceClass_sm: ['Paper Maps'],
@@ -901,8 +941,12 @@ describe('API Service', () => {
       const result = await fetchSearchResults('MIT');
 
       expect(result.data[0].id).toBe('mit-001145244');
-      expect(result.data[0].attributes.dct_title_s).toBe('Nondigitized paper map with library catalog link');
-      expect(result.data[0].attributes.dc_publisher_sm).toEqual(['MIT Libraries']);
+      expect(result.data[0].attributes.ogm.dct_title_s).toBe(
+        'Nondigitized paper map with library catalog link'
+      );
+      expect(result.data[0].attributes.ogm.dc_publisher_sm).toEqual([
+        'MIT Libraries',
+      ]);
     });
 
     it('handles NYU Libraries fixture data in resource details', async () => {
@@ -910,11 +954,14 @@ describe('API Service', () => {
         id: 'nyu-2451-34564',
         type: 'document',
         attributes: {
-          dct_title_s: 'Point dataset with WMS and WFS',
-          dct_description_sm: ['A point dataset with web mapping services'],
-          dct_temporal_sm: ['2020'],
-          dc_publisher_sm: ['NYU Libraries'],
-          gbl_resourceClass_sm: ['Point Data'],
+          ogm: {
+            id: 'nyu-2451-34564',
+            dct_title_s: 'Point dataset with WMS and WFS',
+            dct_description_sm: ['A point dataset with web mapping services'],
+            dct_temporal_sm: ['2020'],
+            dc_publisher_sm: ['NYU Libraries'],
+            gbl_resourceClass_sm: ['Point Data'],
+          },
         },
         meta: {
           ui: {
@@ -941,8 +988,10 @@ describe('API Service', () => {
       const result = await fetchResourceDetails('nyu-2451-34564');
 
       expect(result.id).toBe('nyu-2451-34564');
-      expect(result.attributes.dct_title_s).toBe('Point dataset with WMS and WFS');
-      expect(result.attributes.dc_publisher_sm).toEqual(['NYU Libraries']);
+      expect(result.attributes.ogm.dct_title_s).toBe(
+        'Point dataset with WMS and WFS'
+      );
+      expect(result.attributes.ogm.dc_publisher_sm).toEqual(['NYU Libraries']);
     });
 
     it('handles Tufts University fixture data in bookmarked resources', async () => {
@@ -961,11 +1010,14 @@ describe('API Service', () => {
             id: 'tufts-cambridgegrid100-04',
             type: 'document',
             attributes: {
-              dct_title_s: 'Polygon dataset with WFS, WMS, and FGDC metadata',
-              dct_description_sm: ['A comprehensive polygon dataset'],
-              dct_temporal_sm: ['2019', '2020'],
-              dc_publisher_sm: ['Tufts University', 'Cambridge Grid'],
-              gbl_resourceClass_sm: ['Polygon Data'],
+              ogm: {
+                id: 'tufts-cambridgegrid100-04',
+                dct_title_s: 'Polygon dataset with WFS, WMS, and FGDC metadata',
+                dct_description_sm: ['A comprehensive polygon dataset'],
+                dct_temporal_sm: ['2019', '2020'],
+                dc_publisher_sm: ['Tufts University', 'Cambridge Grid'],
+                gbl_resourceClass_sm: ['Polygon Data'],
+              },
             },
             meta: {
               ui: {
@@ -973,7 +1025,15 @@ describe('API Service', () => {
                 viewer: {
                   geometry: {
                     type: 'Polygon',
-                    coordinates: [[[-71.1, 42.3], [-71, 42.3], [-71, 42.4], [-71.1, 42.4], [-71.1, 42.3]]],
+                    coordinates: [
+                      [
+                        [-71.1, 42.3],
+                        [-71, 42.3],
+                        [-71, 42.4],
+                        [-71.1, 42.4],
+                        [-71.1, 42.3],
+                      ],
+                    ],
                   },
                 },
               },
@@ -988,11 +1048,18 @@ describe('API Service', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await fetchBookmarkedResources(['tufts-cambridgegrid100-04']);
+      const result = await fetchBookmarkedResources([
+        'tufts-cambridgegrid100-04',
+      ]);
 
       expect(result.data[0].id).toBe('tufts-cambridgegrid100-04');
-      expect(result.data[0].attributes.dct_title_s).toBe('Polygon dataset with WFS, WMS, and FGDC metadata');
-      expect(result.data[0].attributes.dc_publisher_sm).toEqual(['Tufts University', 'Cambridge Grid']);
+      expect(result.data[0].attributes.ogm.dct_title_s).toBe(
+        'Polygon dataset with WFS, WMS, and FGDC metadata'
+      );
+      expect(result.data[0].attributes.ogm.dc_publisher_sm).toEqual([
+        'Tufts University',
+        'Cambridge Grid',
+      ]);
     });
 
     it('handles Stanford University fixture data in suggestions', async () => {
