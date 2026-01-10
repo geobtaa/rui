@@ -13,9 +13,15 @@ export function StaticResultMap({ result }: StaticResultMapProps) {
 
   // Build static map URL
   const getStaticMapUrl = (): string => {
+    // Prefer API-provided static map URL
+    if (result.meta?.ui?.static_map) {
+      return result.meta.ui.static_map;
+    }
+
+    // Fallback (though API should provide it)
     const baseUrl = import.meta.env.VITE_API_BASE_URL
       ? `${import.meta.env.VITE_API_BASE_URL}/resources/${result.id}/static-map`
-      : `https://geo.btaa.org/api/v1/resources/${result.id}/static-map`;
+      : `https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/${result.id}/static-map`;
     return baseUrl;
   };
 

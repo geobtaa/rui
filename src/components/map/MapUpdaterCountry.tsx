@@ -6,6 +6,7 @@ import type {
   MapFeatureClickPayload,
 } from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
+import { formatCount } from '../../utils/formatCount';
 
 // Normalize for loose matching between API labels and GeoJSON names
 function normalizeName(name: string): string {
@@ -50,7 +51,7 @@ export function MapUpdaterCountry({
 
   // Precompute scale for choropleth intensity
   const currentData = data.country;
-  const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
+  const maxHits = Math.max(...currentData.map((d) => d.hits), 1);
 
   if (!geoJson || !geoJson.features) {
     return (
@@ -66,7 +67,7 @@ export function MapUpdaterCountry({
   // Map API facet label to GeoJSON feature name for hit lookup
   const getHits = (featureName: string) => {
     const item = currentData.find((dataItem) => {
-      const dataLabel = dataItem.attributes.label.toLowerCase();
+      const dataLabel = dataItem.label.toLowerCase();
       const geoName = featureName.toLowerCase();
       if (dataLabel === geoName) return true;
       const nd = normalizeName(dataLabel);
@@ -79,7 +80,7 @@ export function MapUpdaterCountry({
           (ng.includes('usa') || ng === 'us' || ng.includes('united states')))
       );
     });
-    return item ? item.attributes.hits : 0;
+    return item ? item.hits : 0;
   };
 
   // Render GeoJSON and wire style and popups
@@ -112,7 +113,7 @@ export function MapUpdaterCountry({
         layer.bindPopup(`
           <div>
             <h3>${featureName}</h3>
-            <p><strong>Resources:</strong> ${hits}</p>
+            <p><strong>Resources:</strong> ${formatCount(hits)}</p>
             <p><strong>Level:</strong> country</p>
           </div>
         `);

@@ -6,6 +6,7 @@ import {
   shouldDisplayField,
   getFacetField,
 } from '../../constants/fieldLabels';
+import { formatCount } from '../../utils/formatCount';
 
 // Define a type for the attributes
 interface Attributes {
@@ -471,9 +472,9 @@ export function FullDetailsTable({ data }: FullDetailsTableProps) {
                     {relationshipLabels.browse_all
                       ? relationshipLabels.browse_all.replace(
                           '%{count}',
-                          totalCount.toString()
+                          formatCount(totalCount)
                         )
-                      : `Browse all ${totalCount} records...`}
+                      : `Browse all ${formatCount(totalCount)} records...`}
                   </Link>
                 </li>
               )}

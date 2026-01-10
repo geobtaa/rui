@@ -56,6 +56,7 @@ export interface GeoDocument {
   meta?: {
     ui?: {
       thumbnail_url?: string;
+      static_map?: string;
       citation?: string;
       downloads?: Array<{
         label: string;
@@ -87,20 +88,27 @@ export interface ParsedFacet {
   value: string;
 }
 
-interface FacetItem {
+type FacetTupleItem = [string | number, number];
+
+interface FacetObjectItem {
   attributes: {
-    label: string;
+    label?: string;
     value: string | number;
     hits: number;
   };
-  links: {
-    self: string;
+  links?: {
+    self?: string;
   };
 }
+
+type FacetItem = FacetTupleItem | FacetObjectItem;
 
 interface Facet {
   type: 'facet';
   id: string;
+  links?: {
+    applyTemplate?: string;
+  };
   attributes: {
     label: string;
     items: FacetItem[];

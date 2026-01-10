@@ -90,7 +90,7 @@ import type { GeoJsonFeature } from '../types/map';
 
 export function getCountyHitsFromFeature(
   feature: GeoJsonFeature,
-  countyItems: Array<{ attributes: { value: string; hits: number } }>
+  countyItems: Array<{ value: string; hits: number }>
 ): number {
   const featureCountyNameRaw =
     feature?.properties?.NAME ||
@@ -109,26 +109,26 @@ export function getCountyHitsFromFeature(
 
   const item = countyItems.find((dataItem) => {
     const { stateAbbr, countyName } = parseCountyFacetValue(
-      dataItem.attributes.value
+      dataItem.value
     );
     if (!stateAbbr || !countyName) return false;
     const normCounty = normalizeName(countyName);
     return featureStateAbbr === stateAbbr && normCounty === featureCountyName;
   });
 
-  return item ? item.attributes.hits : 0;
+  return item ? item.hits : 0;
 }
 
 // Determine which state has the most county hits overall
 export function getTopStateAbbrByCountyHits(
-  countyItems: Array<{ attributes: { value: string; hits: number } }>
+  countyItems: Array<{ value: string; hits: number }>
 ): string | null {
   const hitsByState: Record<string, number> = {};
   for (const item of countyItems) {
-    const parsed = parseCountyFacetValue(item.attributes.value);
+    const parsed = parseCountyFacetValue(item.value);
     if (!parsed.stateAbbr) continue;
     hitsByState[parsed.stateAbbr] =
-      (hitsByState[parsed.stateAbbr] || 0) + (item.attributes.hits || 0);
+      (hitsByState[parsed.stateAbbr] || 0) + (item.hits || 0);
   }
   const top = Object.entries(hitsByState).sort((a, b) => b[1] - a[1])[0];
   return top ? top[0] : null;

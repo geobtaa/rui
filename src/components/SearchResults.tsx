@@ -154,7 +154,10 @@ export function SearchResults({
                     to={`/resources/${result.id}`}
                     state={{
                       searchResults: results,
-                      currentIndex: getAbsoluteIndex(index) - 1,
+                      // Index within the currently-loaded page (NOT absolute)
+                      currentIndex: index,
+                      // Absolute index across the full result set (0-based)
+                      absoluteIndex: (currentPage - 1) * 10 + index,
                       totalResults: totalResults,
                       searchUrl: location.pathname + location.search,
                       currentPage: currentPage,

@@ -6,6 +6,7 @@ import { getResourceIcon } from '../../utils/resourceIcons';
 
 interface SimilarItemsCarouselProps {
   similarItems?: GeoDocument[];
+  title?: string;
 }
 
 interface SimilarItemCardProps {
@@ -57,9 +58,9 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
         {/* Image Container */}
         <div className="aspect-video w-full bg-gray-50 relative overflow-hidden">
           {thumbnailUrl &&
-          typeof thumbnailUrl === 'string' &&
-          thumbnailUrl.trim() !== '' &&
-          !imageError ? (
+            typeof thumbnailUrl === 'string' &&
+            thumbnailUrl.trim() !== '' &&
+            !imageError ? (
             <img
               src={thumbnailUrl}
               alt={title}
@@ -107,6 +108,7 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
 
 export function SimilarItemsCarousel({
   similarItems,
+  title = 'Similar Items',
 }: SimilarItemsCarouselProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
@@ -162,7 +164,7 @@ export function SimilarItemsCarousel({
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden my-8">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">Similar Items</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
       </div>
 
       <div className="relative px-6 py-6">
@@ -193,11 +195,10 @@ export function SimilarItemsCarousel({
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    i === currentPage
-                      ? 'bg-blue-600'
-                      : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-colors ${i === currentPage
+                    ? 'bg-blue-600'
+                    : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
                   aria-label={`Go to page ${i + 1}`}
                   aria-current={i === currentPage ? 'page' : undefined}
                 />

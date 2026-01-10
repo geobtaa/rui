@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { fetchSearchResults } from '../services/api';
 import type { JsonApiResponse } from '../types/api';
-import type { ChoroplethData, GeoFacet } from '../types/map';
+import type { ChoroplethData } from '../types/map';
+import { normalizeFacetItems } from '../utils/normalizeFacetItems';
 
 // Fetches search facet aggregations (country/region/county) for a given query.
 // Returns normalized choropleth data structure + loading/error states.
@@ -32,7 +33,7 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
         if (response.included) {
           // Extract only the three geo facets we're interested in (field-named IDs)
           const geoFacets = response.included.filter(
-            (item): item is GeoFacet =>
+            (item) =>
               item.type === 'facet' &&
               ['geo_country', 'geo_region', 'geo_county'].includes(item.id)
           );
@@ -43,12 +44,19 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
             county: [],
           };
           geoFacets.forEach((facet) => {
-            if (facet.id === 'geo_country')
-              newData.country = facet.attributes.items;
-            if (facet.id === 'geo_region')
-              newData.region = facet.attributes.items;
-            if (facet.id === 'geo_county')
-              newData.county = facet.attributes.items;
+            const normalized = normalizeFacetItems(
+              facet.attributes?.items || [],
+              facet.links
+            ).map((i) => ({
+              label: i.label,
+              value: String(i.value),
+              hits: i.hits,
+              url: i.url,
+            }));
+
+            if (facet.id === 'geo_country') newData.country = normalized;
+            if (facet.id === 'geo_region') newData.region = normalized;
+            if (facet.id === 'geo_county') newData.county = normalized;
           });
           setData(newData);
         } else {

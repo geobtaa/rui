@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SearchResults } from '../components/SearchResults';
 import { Pagination } from '../components/Pagination';
@@ -14,6 +14,7 @@ import { MapProvider } from '../context/MapContext';
 import { SortControl } from '../components/search/SortControl';
 import { AdvancedSearchBuilder } from '../components/search/AdvancedSearchBuilder';
 import { GeospatialFilterMap } from '../components/search/GeospatialFilterMap';
+import { formatCount } from '../utils/formatCount';
 
 // Create a separate component for the search content
 function SearchContent() {
@@ -21,13 +22,6 @@ function SearchContent() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdvancedParam = searchParams.get('showAdvanced') === 'true';
-  const [showAdvancedBuilder, setShowAdvancedBuilder] =
-    useState(showAdvancedParam);
-
-  // Update showAdvancedBuilder when URL param changes
-  useEffect(() => {
-    setShowAdvancedBuilder(showAdvancedParam);
-  }, [showAdvancedParam]);
 
   const {
     query,
@@ -114,7 +108,10 @@ function SearchContent() {
 
   const handleAdvancedApply = (clauses: typeof advancedQuery) => {
     updateSearch({ advancedQuery: clauses });
-    setShowAdvancedBuilder(false);
+    // Close the builder by clearing the URL param (gear icon is source of truth)
+    const next = new URLSearchParams(searchParams);
+    next.delete('showAdvanced');
+    setSearchParams(next);
   };
 
   const handleAdvancedReset = () => {
@@ -174,30 +171,16 @@ function SearchContent() {
             onClearAll={handleClearAll}
           />
 
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={(e) => {
-                setShowAdvancedBuilder((prev) => !prev);
-                // Blur the button so it doesn't interfere with autofocus
-                (e.currentTarget as HTMLButtonElement).blur();
-              }}
-              className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                advancedQuery.length > 0
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-white text-blue-700 border border-blue-300 hover:border-blue-400 hover:text-blue-900'
-              }`}
-            >
-              Advanced Search
-            </button>
-          </div>
-
-          {showAdvancedBuilder && (
+          {showAdvancedParam && (
             <div className="mb-8">
               <AdvancedSearchBuilder
                 clauses={advancedQuery}
                 onApply={handleAdvancedApply}
-                onCancel={() => setShowAdvancedBuilder(false)}
+                onCancel={() => {
+                  const next = new URLSearchParams(searchParams);
+                  next.delete('showAdvanced');
+                  setSearchParams(next);
+                }}
                 onReset={handleAdvancedReset}
               />
             </div>
@@ -245,9 +228,12 @@ function SearchContent() {
                   <div className="mb-6 flex justify-between items-center">
                     <h2 className="text-lg text-gray-600">
                       Showing results{' '}
-                      {Math.min((page - 1) * perPage + 1, searchTotalResults)}-
-                      {Math.min(page * perPage, searchTotalResults)} of{' '}
-                      {searchTotalResults}
+                      {formatCount(
+                        Math.min((page - 1) * perPage + 1, searchTotalResults)
+                      )}
+                      -
+                      {formatCount(Math.min(page * perPage, searchTotalResults))} of{' '}
+                      {formatCount(searchTotalResults)}
                     </h2>
                     <SortControl
                       options={

@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/generate-config.js",
     "build": "vite build",
+    "prebuild": "node scripts/generate-config.js",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx,css,md,json}'",
@@ -29,6 +31,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "js-cookie": "^3.0.5",
+    "js-yaml": "^4.1.1",
     "leaflet": "^1.9.4",
     "leaflet-fullscreen": "^1.0.2",
     "lucide-react": "^0.544.0",

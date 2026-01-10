@@ -2,7 +2,12 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        brand: 'rgb(var(--color-primary) / <alpha-value>)',
+        'brand-active': 'rgb(var(--color-active) / <alpha-value>)',
+      },
+    },
   },
   plugins: [
     require('@tailwindcss/typography'),

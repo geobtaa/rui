@@ -15,99 +15,73 @@ import {
   Search,
 } from 'lucide-react';
 import { fetchSearchResults } from '../services/api';
+import { SimilarItemsCarousel } from '../components/resource/SimilarItemsCarousel';
+import type { GeoDocument } from '../types/api';
+import { useTheme } from '../hooks/useTheme';
+import { formatCount } from '../utils/formatCount';
+import { useResourceClasses } from '../hooks/useResourceClasses';
 
 export function HomePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [resourceCounts, setResourceCounts] = useState<Record<string, number>>(
-    {}
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const { theme, themeId } = useTheme();
+  const { resourceClasses, isLoading: isLoadingResourceClasses } =
+    useResourceClasses();
+  const [featuredCollections, setFeaturedCollections] = useState<GeoDocument[]>([]);
+  const [featuredMaps, setFeaturedMaps] = useState<GeoDocument[]>([]);
 
   useEffect(() => {
-    const fetchCounts = async () => {
+    // Reset state immediately on theme change so we don't show stale counts/content.
+    setFeaturedCollections([]);
+    setFeaturedMaps([]);
+
+    const fetchFeatured = async () => {
       try {
-        const results = await fetchSearchResults('', 1, 1);
-        const resourceClassFacet = results.included?.find(
-          (item) =>
-            item.type === 'facet' &&
-            (item.id === 'gbl_resourceClass_sm' ||
-              item.id === 'resource_class_agg')
+        const featuredItems = theme.homepage?.featured || [];
+        const results = await Promise.all(
+          featuredItems.map(async (item) => {
+            const data = await fetchSearchResults(
+              '',
+              1,
+              item.limit,
+              [{ field: item.field, value: item.value }],
+              undefined,
+              item.sort
+            );
+            return { title: item.title, data: data?.data || [] };
+          })
         );
-        const facetCounts =
-          (resourceClassFacet?.attributes &&
-          'items' in resourceClassFacet.attributes
-            ? resourceClassFacet.attributes.items?.reduce(
-                (acc, item) => {
-                  acc[item.attributes.value as string] = item.attributes.hits;
-                  return acc;
-                },
-                {} as Record<string, number>
-              )
-            : {}) || {};
-        setResourceCounts(facetCounts);
+
+        // Map results back to specific state for backward compatibility/simplicity in this refactor
+        // Ideally we would map over these results in the JSX
+        const collections = results.find((r) => r.title === "Featured Collections");
+        const maps = results.find((r) => r.title === "Featured Maps");
+
+        if (collections?.data) setFeaturedCollections(collections.data);
+        if (maps?.data) setFeaturedMaps(maps.data);
+
       } catch (error) {
-        console.error('Error fetching resource counts:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching featured items:', error);
       }
     };
 
-    fetchCounts();
-  }, []);
+    fetchFeatured();
+  }, [themeId]);
 
-  const resourceClasses = [
-    {
-      id: 'Dataset',
-      label: 'Datasets',
-      count: resourceCounts['Datasets'] || 0,
-      icon: <Database className="w-6 h-6" />,
-      aggValue: 'Datasets',
-    },
-    {
-      id: 'Map',
-      label: 'Maps',
-      count: resourceCounts['Maps'] || 0,
-      icon: <Map className="w-6 h-6" />,
-      aggValue: 'Maps',
-    },
-    {
-      id: 'Web service',
-      label: 'Web Services',
-      count: resourceCounts['Web services'] || 0,
-      icon: <Globe className="w-6 h-6" />,
-      aggValue: 'Web services',
-    },
-    {
-      id: 'Collection',
-      label: 'Collections',
-      count: resourceCounts['Collections'] || 0,
-      icon: <Library className="w-6 h-6" />,
-      aggValue: 'Collections',
-    },
-    {
-      id: 'Imagery',
-      label: 'Imagery',
-      count: resourceCounts['Imagery'] || 0,
-      icon: <Image className="w-6 h-6" />,
-      aggValue: 'Imagery',
-    },
-    {
-      id: 'Other',
-      label: 'Other',
-      count: resourceCounts['Other'] || 0,
-      icon: <Folder className="w-6 h-6" />,
-      aggValue: 'Other',
-    },
-    {
-      id: 'Website',
-      label: 'Websites',
-      count: resourceCounts['Websites'] || 0,
-      icon: <Globe2 className="w-6 h-6" />,
-      aggValue: 'Websites',
-    },
-  ];
+  const getResourceClassIcon = (label: string) => {
+    const v = label.toLowerCase();
+    if (v.includes('dataset')) return <Database className="w-6 h-6" />;
+    if (v.includes('map')) return <Map className="w-6 h-6" />;
+    if (v.includes('web service') || v.includes('service'))
+      return <Globe className="w-6 h-6" />;
+    if (v.includes('collection')) return <Library className="w-6 h-6" />;
+    if (v.includes('imagery') || v.includes('raster'))
+      return <Image className="w-6 h-6" />;
+    if (v.includes('website')) return <Globe2 className="w-6 h-6" />;
+    return <Folder className="w-6 h-6" />;
+  };
 
+  /* ... handlers (handleSearch, handleAdvancedSearchClick, handleResourceClassClick, handleBrowseAll) ... */
   const handleSearch = (query: string) => {
     if (query.trim()) {
       const newParams = new URLSearchParams();
@@ -176,7 +150,9 @@ export function HomePage() {
 
   const handleResourceClassClick = (aggValue: string) => {
     navigate(
-      `/search?fq[gbl_resourceClass_sm][]=${encodeURIComponent(aggValue)}`
+      `/search?include_filters[gbl_resourceClass_sm][]=${encodeURIComponent(
+        aggValue
+      )}`
     );
   };
 
@@ -191,14 +167,11 @@ export function HomePage() {
       <main className="flex-1 bg-gray-50">
         <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-4rem)]">
           <div className="col-span-1 lg:col-span-8 px-4 md:px-8 lg:px-12 py-4 lg:py-4 flex flex-col">
-            <div className="space-y-6 lg:space-y-8 max-w-3xl">
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
-                BTAA Geoportal
-              </h1>
+            <div className="space-y-6 lg:space-y-8 max-w-4xl w-full">
+              <h1 className="sr-only">{theme.institution.name}</h1>
 
               <p className="text-lg lg:text-xl text-gray-600">
-                Search geospatial resources from Big Ten Academic Alliance
-                institutions
+                {theme.institution.hero_text}
               </p>
 
               <div className="w-full">
@@ -210,7 +183,7 @@ export function HomePage() {
                   onAdvancedSearchClick={handleAdvancedSearchClick}
                 />
                 <div className="mt-1">
-                  <ResourceClassFilterTabs />
+                  <ResourceClassFilterTabs variant="content" />
                 </div>
               </div>
 
@@ -219,6 +192,23 @@ export function HomePage() {
                   Browse and download GIS data, maps, and other geospatial
                   resources.
                 </p>
+              </div>
+
+              {/* Featured Sections */}
+              <div className="space-y-8 pt-4">
+                {featuredCollections.length > 0 && (
+                  <SimilarItemsCarousel
+                    similarItems={featuredCollections}
+                    title="Featured Collections"
+                  />
+                )}
+
+                {featuredMaps.length > 0 && (
+                  <SimilarItemsCarousel
+                    similarItems={featuredMaps}
+                    title="Featured Maps"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -243,22 +233,25 @@ export function HomePage() {
                   </div>
                 </button>
 
-                {resourceClasses.map((resource) => (
+                {resourceClasses
+                  .filter((rc) => rc.hits > 0)
+                  .slice(0, 12)
+                  .map((rc) => (
                   <button
-                    key={resource.id}
-                    onClick={() => handleResourceClassClick(resource.aggValue)}
+                    key={rc.value}
+                    onClick={() => handleResourceClassClick(rc.value)}
                     className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="text-gray-400 group-hover:text-blue-500">
-                        {resource.icon}
+                        {getResourceClassIcon(rc.label)}
                       </div>
                       <span className="text-gray-700 group-hover:text-gray-900">
-                        {resource.label}
+                        {rc.label}
                       </span>
                     </div>
                     <span className="text-sm text-gray-500 group-hover:text-gray-700">
-                      {!isLoading ? resource.count : ''}
+                      {!isLoadingResourceClasses ? formatCount(rc.hits) : ''}
                     </span>
                   </button>
                 ))}

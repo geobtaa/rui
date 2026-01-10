@@ -1,29 +1,16 @@
 export type ZoomLevel = 'country' | 'region' | 'county';
 
-export interface GeoFacetItem {
-  attributes: {
-    label: string;
-    value: string;
-    hits: number;
-  };
-  links: {
-    self: string;
-  };
-}
-
-export interface GeoFacet {
-  type: 'facet';
-  id: string;
-  attributes: {
-    label: string;
-    items: GeoFacetItem[];
-  };
+export interface ChoroplethFacetItem {
+  label: string;
+  value: string;
+  hits: number;
+  url?: string;
 }
 
 export interface ChoroplethData {
-  country: GeoFacetItem[];
-  region: GeoFacetItem[];
-  county: GeoFacetItem[];
+  country: ChoroplethFacetItem[];
+  region: ChoroplethFacetItem[];
+  county: ChoroplethFacetItem[];
 }
 
 // GeoJSON feature types for map components

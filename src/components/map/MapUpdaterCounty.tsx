@@ -8,6 +8,7 @@ import type {
 import { fetchGeoJsonForLevel } from '../../services/geojson';
 import { getCountyHitsFromFeature } from '../../utils/geoCounty';
 import { useCountyAutoFit } from '../../hooks/useCountyAutoFit';
+import { formatCount } from '../../utils/formatCount';
 
 // Shared color scale
 function getColor(intensity: number): string {
@@ -50,7 +51,7 @@ export function MapUpdaterCounty({
 
   // Precompute scale for choropleth intensity
   const currentData = data.county;
-  const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
+  const maxHits = Math.max(...currentData.map((d) => d.hits), 1);
 
   if (!geoJson || !geoJson.features) {
     return (
@@ -89,7 +90,7 @@ export function MapUpdaterCounty({
         layer.bindPopup(`
           <div>
             <h3>${name}</h3>
-            <p><strong>Resources:</strong> ${hits}</p>
+            <p><strong>Resources:</strong> ${formatCount(hits)}</p>
             <p><strong>Level:</strong> county</p>
           </div>
         `);

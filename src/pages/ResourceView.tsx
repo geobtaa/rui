@@ -20,6 +20,8 @@ import { LocationMap } from '../components/resource/LocationMap';
 import { DownloadsTable } from '../components/resource/DownloadsTable';
 import { LinksTable } from '../components/resource/LinksTable';
 import { SimilarItemsCarousel } from '../components/resource/SimilarItemsCarousel';
+import { parseSearchParams } from '../utils/searchParams';
+import { formatCount } from '../utils/formatCount';
 
 // Define types for search results
 interface SearchResult {
@@ -34,11 +36,6 @@ interface SearchState {
   searchUrl: string;
   currentPage: number;
   absoluteIndex?: number;
-}
-
-interface FacetFilter {
-  field: string;
-  value: string;
 }
 
 // Define the ResourceData type to match the actual API response
@@ -164,16 +161,8 @@ export function ResourceView() {
       const urlParams = new URLSearchParams(
         searchState.searchUrl.split('?')[1] || ''
       );
-      const query = urlParams.get('q') || '';
-
-      // Extract facets from the URL if they exist
-      const facets: FacetFilter[] = [];
-      for (const [key, value] of urlParams.entries()) {
-        if (key.startsWith('fq[') && key.endsWith('][]')) {
-          const field = key.slice(3, -3); // Extract field name from fq[field][]
-          facets.push({ field, value });
-        }
-      }
+      const { query, facets, excludeFacets, advancedQuery } =
+        parseSearchParams(urlParams);
 
       // Get current sort value if it exists
       const sort = urlParams.get('sort') || undefined;
@@ -184,7 +173,9 @@ export function ResourceView() {
         10,
         facets,
         setLastApiUrl,
-        sort
+        sort,
+        excludeFacets,
+        advancedQuery
       );
 
       return results.data;
@@ -204,16 +195,8 @@ export function ResourceView() {
       const urlParams = new URLSearchParams(
         searchState.searchUrl.split('?')[1] || ''
       );
-      const query = urlParams.get('q') || '';
-
-      // Extract facets from the URL if they exist
-      const facets: FacetFilter[] = [];
-      for (const [key, value] of urlParams.entries()) {
-        if (key.startsWith('fq[') && key.endsWith('][]')) {
-          const field = key.slice(3, -3); // Extract field name from fq[field][]
-          facets.push({ field, value });
-        }
-      }
+      const { query, facets, excludeFacets, advancedQuery } =
+        parseSearchParams(urlParams);
 
       // Get current sort value if it exists
       const sort = urlParams.get('sort') || undefined;
@@ -224,7 +207,9 @@ export function ResourceView() {
         10,
         facets,
         setLastApiUrl,
-        sort
+        sort,
+        excludeFacets,
+        advancedQuery
       );
 
       return results.data;
@@ -429,7 +414,7 @@ export function ResourceView() {
 
                   {searchState && (
                     <span className="text-gray-500 px-2">
-                      {displayIndex} of {searchState.totalResults}
+                      {formatCount(displayIndex)} of {formatCount(searchState.totalResults)}
                     </span>
                   )}
 

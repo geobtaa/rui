@@ -2,6 +2,7 @@ import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '../../context/ApiContext';
 import { useDebug } from '../../context/DebugContext';
+import { useTheme } from '../../hooks/useTheme';
 
 interface FooterProps {
   id?: string; // Make optional since not all pages will have an ID
@@ -10,10 +11,7 @@ interface FooterProps {
 export function Footer({ id }: FooterProps) {
   const { lastApiUrl } = useApi();
   const { showDetails, toggleDetails } = useDebug();
-
-  if (!lastApiUrl) {
-    return null;
-  }
+  const { themeId, themes, setThemeId } = useTheme();
 
   return (
     <footer className="bg-white shadow-sm">
@@ -26,6 +24,28 @@ export function Footer({ id }: FooterProps) {
               rights reserved.
             </div>
             <div className="flex items-center space-x-4">
+              <label className="sr-only" htmlFor="theme-select">
+                Select theme
+              </label>
+              <select
+                id="theme-select"
+                value={themeId}
+                onChange={(e) => {
+                  const nextThemeId = e.target.value;
+                  if (nextThemeId === themeId) return;
+                  // Persist theme selection first, then hard-reload so the app
+                  // re-initializes with the new theme's default_query_params.
+                  setThemeId(nextThemeId);
+                  window.location.reload();
+                }}
+                className="rounded-md bg-white text-gray-900 text-sm px-2 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand/40"
+              >
+                {themes.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
               {id && (
                 <a
                   href={`https://geo.btaa.org/catalog/${id}`}
@@ -63,25 +83,27 @@ export function Footer({ id }: FooterProps) {
           </div>
 
           {/* API URL Row */}
-          <div className="text-sm text-gray-500">
-            <p className="mb-2">Last API Request:</p>
-            <a
-              href={lastApiUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block"
-            >
-              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all">
-                <code className="flex-1 overflow-x-auto text-blue-600">
-                  {lastApiUrl}
-                </code>
-                <ExternalLink
-                  size={14}
-                  className="text-gray-400 group-hover:text-blue-500"
-                />
-              </div>
-            </a>
-          </div>
+          {lastApiUrl && (
+            <div className="text-sm text-gray-500">
+              <p className="mb-2">Last API Request:</p>
+              <a
+                href={lastApiUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block"
+              >
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all">
+                  <code className="flex-1 overflow-x-auto text-blue-600">
+                    {lastApiUrl}
+                  </code>
+                  <ExternalLink
+                    size={14}
+                    className="text-gray-400 group-hover:text-blue-500"
+                  />
+                </div>
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </footer>

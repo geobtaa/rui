@@ -9,6 +9,7 @@ import {
 } from '../../constants/fieldLabels';
 import { fetchFacetValues } from '../../services/api';
 import type { FacetValue } from '../../types/api';
+import { formatCount } from '../../utils/formatCount';
 
 interface AdvancedSearchBuilderProps {
   clauses: AdvancedClause[];
@@ -662,7 +663,7 @@ export function AdvancedSearchBuilder({
                               </div>
                               {hits !== undefined && (
                                 <div className="text-xs text-gray-500">
-                                  {hits} {hits === 1 ? 'result' : 'results'}
+                                  {formatCount(hits)} {hits === 1 ? 'result' : 'results'}
                                 </div>
                               )}
                             </button>

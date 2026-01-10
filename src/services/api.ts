@@ -7,6 +7,7 @@ import {
   GazetteerPlace,
 } from '../types/api';
 import { AdvancedClause, FacetFilter } from '../types/search';
+import { getActiveThemeConfig } from '../config/institution';
 
 export class ApiError extends Error {
   constructor(
@@ -41,10 +42,42 @@ function ensureHttps(url: string): string {
   return url;
 }
 
+function joinUrl(base: string, path: string): string {
+  const b = base.replace(/\/+$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${b}${p}`;
+}
+
+function getApiBaseUrlFromConfig(): string {
+  const theme = getActiveThemeConfig();
+  // Allow environment override (useful for dev/tests); otherwise, use theme config.
+  return import.meta.env.VITE_API_BASE_URL || theme.api.base_url;
+}
+
+function getSearchPathFromConfig(): string {
+  const theme = getActiveThemeConfig();
+  return theme.api.search_path || '/search';
+}
+
 // Helper function to create a URL with common parameters
 function createApiUrl(baseUrl: string): URL {
   const url = new URL(ensureHttps(baseUrl));
   url.searchParams.set('format', 'json');
+
+  // Apply always-on query params from the active theme config (theme.yaml)
+  const theme = getActiveThemeConfig();
+  const defaults = theme.api.default_query_params || [];
+  defaults.forEach((entry) => {
+    if (!entry) return;
+    const normalizedEntry = entry.trim().replace(/^[?&]+/, '');
+    const idx = normalizedEntry.indexOf('=');
+    const key = idx >= 0 ? normalizedEntry.slice(0, idx) : normalizedEntry;
+    const value = idx >= 0 ? normalizedEntry.slice(idx + 1) : '';
+    // Avoid duplicating identical key/value pairs
+    if (url.searchParams.getAll(key).includes(value)) return;
+    url.searchParams.append(key, value);
+  });
+
   return url;
 }
 
@@ -227,9 +260,8 @@ export async function fetchSearchResults(
     advancedClauses: advancedQuery.length,
   });
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/search`
-    : 'https://geo.btaa.org/api/v1/search';
+  const theme = getActiveThemeConfig();
+  const baseUrl = joinUrl(getApiBaseUrlFromConfig(), getSearchPathFromConfig());
   const url = createApiUrl(baseUrl);
 
   url.searchParams.set('search_field', 'all_fields');
@@ -240,6 +272,13 @@ export async function fetchSearchResults(
   // Read geo filters from current URL if they exist
   // Only apply them if all required geo filter parameters are present
   // This ensures we don't apply partial or stale geo filters
+
+  // ALWAYS apply configured provider filter
+  const includeFilters = theme.api.params?.include_filters || {};
+  Object.entries(includeFilters).forEach(([key, value]) => {
+    url.searchParams.append(`include_filters[${key}][]`, value);
+  });
+
   if (typeof window !== 'undefined') {
     const currentUrl = new URL(window.location.href);
     const geoType = currentUrl.searchParams.get('include_filters[geo][type]');
@@ -368,9 +407,12 @@ export async function fetchFacetValues({
   qFacet,
   options = defaultFetchOptions,
 }: FetchFacetValuesParams): Promise<FacetValuesResponse> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/search/facets/${facetName}`
-    : `https://geo.btaa.org/api/v1/search/facets/${facetName}`;
+  // ? `${import.meta.env.VITE_API_BASE_URL}/search/facets/${facetName}`
+  // : `https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search/facets/${facetName}`;
+  const baseUrl = joinUrl(
+    getApiBaseUrlFromConfig(),
+    `${getSearchPathFromConfig()}/facets/${facetName}`
+  );
 
   const url = createApiUrl(baseUrl);
 
@@ -428,9 +470,9 @@ export async function fetchResourceDetails(
   onApiCall?: (url: string) => void,
   options: FetchOptions = { useJsonp: false } // Always use regular fetch for modern JSON:API
 ): Promise<GeoDocumentDetails> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/resources/`
-    : 'https://geo.btaa.org/';
+  // ? `${import.meta.env.VITE_API_BASE_URL}/resources/`
+  // : 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/';
+  const baseUrl = joinUrl(getApiBaseUrlFromConfig(), '/resources/');
   const url = createApiUrl(`${baseUrl}${id}`);
   onApiCall?.(url.toString());
 
@@ -471,9 +513,9 @@ export async function fetchSuggestions(
 ): Promise<Suggestion[]> {
   if (!query.trim()) return [];
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/suggest`
-    : 'https://geo.btaa.org/suggest';
+  // ? `${import.meta.env.VITE_API_BASE_URL}/suggest`
+  // : 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/suggest';
+  const baseUrl = joinUrl(getApiBaseUrlFromConfig(), '/suggest');
 
   const url = createApiUrl(baseUrl);
   url.searchParams.set('q', query);
@@ -516,9 +558,9 @@ export async function fetchBookmarkedResources(
     };
   }
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/search/`
-    : 'https://geo.btaa.org/';
+  // ? `${import.meta.env.VITE_API_BASE_URL}/search/`
+  // : 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search/';
+  const baseUrl = joinUrl(getApiBaseUrlFromConfig(), `${getSearchPathFromConfig()}/`);
   const url = createApiUrl(baseUrl);
 
   url.searchParams.set('search_field', 'all_fields');

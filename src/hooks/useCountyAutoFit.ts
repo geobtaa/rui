@@ -10,7 +10,7 @@ import type { GeoJsonData, GeoJsonFeature } from '../types/map';
 interface Params {
   map: L.Map;
   geoJson: GeoJsonData | null;
-  countyItems: Array<{ attributes: { value: string; hits: number } }>;
+  countyItems: Array<{ value: string; hits: number }>;
   searchQuery: string;
 }
 
@@ -35,13 +35,13 @@ export function useCountyAutoFit({
     // Find top county by hits and compute bounds from GeoJSON
     const topCountyItem = countyItems.reduce(
       (max, item) =>
-        (item.attributes.hits || 0) > (max?.attributes.hits || 0) ? item : max,
+        (item.hits || 0) > (max?.hits || 0) ? item : max,
       countyItems[0]
     );
     if (!topCountyItem) return;
 
     const { stateAbbr, countyName } = parseCountyFacetValue(
-      topCountyItem.attributes.value
+      topCountyItem.value
     );
     const targetStateFips = stateAbbrToFips[stateAbbr];
     if (!targetStateFips || !countyName) return;

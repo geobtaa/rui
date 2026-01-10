@@ -4,23 +4,21 @@ import { MinusCircle } from 'lucide-react';
 import { FACET_LABELS, normalizeFacetId } from '../utils/facetLabels';
 import { CONFIGURED_FACETS } from '../constants/facets';
 import { FacetMoreModal } from './search/FacetMoreModal';
+import {
+  normalizeFacetItems,
+  type FacetItem,
+  type FacetLinks,
+} from '../utils/normalizeFacetItems';
+import { formatCount } from '../utils/formatCount';
 
 // New JSON:API facet structure
 interface JsonApiFacet {
   type: 'facet';
   id: string;
+  links?: FacetLinks;
   attributes: {
     label: string;
-    items: Array<{
-      attributes: {
-        label: string;
-        value: string | number;
-        hits: number;
-      };
-      links: {
-        self: string;
-      };
-    }>;
+    items: FacetItem[];
   };
 }
 
@@ -112,12 +110,7 @@ export function FacetList({ facets }: FacetListProps) {
     .map((facet) => ({
       id: normalizeFacetId(facet.id),
       label: facet.attributes.label,
-      items: facet.attributes.items.map((item) => ({
-        label: item.attributes.label,
-        value: item.attributes.value,
-        hits: item.attributes.hits,
-        url: item.links.self,
-      })),
+      items: normalizeFacetItems(facet.attributes.items, facet.links),
     }));
 
   // Order facets according to CONFIGURED_FACETS and filter to only show configured ones
@@ -167,7 +160,7 @@ export function FacetList({ facets }: FacetListProps) {
                             isActive ? 'text-blue-400' : 'text-gray-400'
                           }`}
                         >
-                          ({item.hits})
+                          ({formatCount(item.hits)})
                         </span>
                         {isActive && (
                           <span className="text-blue-400 ml-auto">×</span>

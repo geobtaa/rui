@@ -6,6 +6,7 @@ import type {
   MapFeatureClickPayload,
 } from '../../types/map';
 import { fetchGeoJsonForLevel } from '../../services/geojson';
+import { formatCount } from '../../utils/formatCount';
 
 // Color scale shared with other updaters
 function getColor(intensity: number): string {
@@ -42,7 +43,7 @@ export function MapUpdaterRegion({
 
   // Precompute scale for choropleth intensity
   const currentData = data.region;
-  const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
+  const maxHits = Math.max(...currentData.map((d) => d.hits), 1);
 
   if (!geoJson || !geoJson.features) {
     return (
@@ -58,11 +59,11 @@ export function MapUpdaterRegion({
   // Map API facet label to state feature name (simple partial match)
   const getHits = (featureName: string) => {
     const dataItem = currentData.find((d) => {
-      const label = d.attributes.label.toLowerCase();
+      const label = d.label.toLowerCase();
       const geo = featureName.toLowerCase();
       return label === geo || label.includes(geo) || geo.includes(label);
     });
-    return dataItem ? dataItem.attributes.hits : 0;
+    return dataItem ? dataItem.hits : 0;
   };
 
   // Render GeoJSON and wire style and popups
@@ -95,7 +96,7 @@ export function MapUpdaterRegion({
         layer.bindPopup(`
           <div>
             <h3>${featureName}</h3>
-            <p><strong>Resources:</strong> ${hits}</p>
+            <p><strong>Resources:</strong> ${formatCount(hits)}</p>
             <p><strong>Level:</strong> region</p>
           </div>
         `);

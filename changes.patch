@@ -1,0 +1,1668 @@
+diff --git a/README.md b/README.md
+index dac5e9a..698f6ba 100644
+--- a/README.md
++++ b/README.md
+@@ -10,6 +10,13 @@ Install dependencies:
+ npm install
+ ```
+ 
++## Configuration
++
++Edit **`institution.yaml`** to configure the application (institution name, API base URL, branding colors, etc).
++
++- `src/config/theme.css` is generated from `institution.yaml` (CSS variables) via `npm run dev` / `npm run build`.
++- `src/config/institution.ts` loads and parses `institution.yaml` at runtime.
++
+ Configure the database:
+ ```bash
+ cp .env.example .env
+diff --git a/featured_collections.json b/featured_collections.json
+new file mode 100644
+index 0000000..7082edd
+--- /dev/null
++++ b/featured_collections.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Collections&per_page=4&page=1"},"meta":{"totalCount":0,"totalPages":0,"currentPage":1,"perPage":4,"query":null,"sort":null,"queryTime":{"elasticsearch":"15ms","resourceProcessing":{"total":"0ms","perResource":"0ms","thumbnailService":"0ms","citationService":"0ms","viewerService":"0ms"},"totalResponseTime":"17ms"},"spellingSuggestions":[]},"data":[],"included":[]}
+\ No newline at end of file
+diff --git a/featured_collections_singular.json b/featured_collections_singular.json
+new file mode 100644
+index 0000000..6afeee2
+--- /dev/null
++++ b/featured_collections_singular.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Collection&per_page=4&page=1"},"meta":{"totalCount":0,"totalPages":0,"currentPage":1,"perPage":4,"query":null,"sort":null,"queryTime":{"elasticsearch":"22ms","resourceProcessing":{"total":"0ms","perResource":"0ms","thumbnailService":"0ms","citationService":"0ms","viewerService":"0ms"},"totalResponseTime":"23ms"},"spellingSuggestions":[]},"data":[],"included":[]}
+\ No newline at end of file
+diff --git a/featured_maps.json b/featured_maps.json
+new file mode 100644
+index 0000000..4a65779
+--- /dev/null
++++ b/featured_maps.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Maps&per_page=4&page=1"},"meta":{"totalCount":0,"totalPages":0,"currentPage":1,"perPage":4,"query":null,"sort":null,"queryTime":{"elasticsearch":"15ms","resourceProcessing":{"total":"0ms","perResource":"0ms","thumbnailService":"0ms","citationService":"0ms","viewerService":"0ms"},"totalResponseTime":"17ms"},"spellingSuggestions":[]},"data":[],"included":[]}
+\ No newline at end of file
+diff --git a/featured_maps_singular.json b/featured_maps_singular.json
+new file mode 100644
+index 0000000..87ec7cf
+--- /dev/null
++++ b/featured_maps_singular.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Map&per_page=4&page=1"},"meta":{"totalCount":0,"totalPages":0,"currentPage":1,"perPage":4,"query":null,"sort":null,"queryTime":{"elasticsearch":"10ms","resourceProcessing":{"total":"0ms","perResource":"0ms","thumbnailService":"0ms","citationService":"0ms","viewerService":"0ms"},"totalResponseTime":"12ms"},"spellingSuggestions":[]},"data":[],"included":[]}
+\ No newline at end of file
+diff --git a/fetch_ids.cjs b/fetch_ids.cjs
+new file mode 100644
+index 0000000..ff915b3
+--- /dev/null
++++ b/fetch_ids.cjs
+@@ -0,0 +1,55 @@
++
++const https = require('https');
++
++function fetchUrl(url) {
++    return new Promise((resolve, reject) => {
++        https.get(url, (res) => {
++            let data = '';
++            res.on('data', (chunk) => data += chunk);
++            res.on('end', () => {
++                try {
++                    resolve(JSON.parse(data));
++                } catch (e) {
++                    reject(e);
++                }
++            });
++        }).on('error', reject);
++    });
++}
++
++async function main() {
++    const baseUrl = 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search';
++    const providerFilter = 'include_filters[schema_provider_s][]=NYU';
++
++    // 1. Fetch facets to see correct class names
++    console.log('Fetching facets...');
++    const facetUrl = `${baseUrl}?${providerFilter}&per_page=1`;
++    const facetData = await fetchUrl(facetUrl);
++
++    const resourceClassFacet = facetData.included?.find(
++        i => i.id === 'gbl_resourceClass_sm' || i.id === 'resource_class_agg'
++    );
++
++    console.log('Available Resource Classes:', JSON.stringify(resourceClassFacet?.attributes?.items || [], null, 2));
++
++    // 2. Fetch Maps (using plural "Maps" if that's what we saw earlier, but verifying)
++    // Based on earlier viewing, it was "Maps" and "Collections".
++
++    const mapUrl = `${baseUrl}?${providerFilter}&include_filters[gbl_resourceClass_sm][]=Maps&per_page=4`;
++    console.log('Fetching Maps from:', mapUrl);
++    const mapData = await fetchUrl(mapUrl);
++    console.log('Maps found:', mapData.data?.length || 0);
++    if (mapData.data) {
++        console.log('Map IDs:', mapData.data.map(d => d.id));
++    }
++
++    const collUrl = `${baseUrl}?${providerFilter}&include_filters[gbl_resourceClass_sm][]=Collections&per_page=4`;
++    console.log('Fetching Collections from:', collUrl);
++    const collData = await fetchUrl(collUrl);
++    console.log('Collections found:', collData.data?.length || 0);
++    if (collData.data) {
++        console.log('Collection IDs:', collData.data.map(d => d.id));
++    }
++}
++
++main().catch(console.error);
+diff --git a/institution.yaml b/institution.yaml
+new file mode 100644
+index 0000000..049d5de
+--- /dev/null
++++ b/institution.yaml
+@@ -0,0 +1,32 @@
++institution:
++  name: "NYU Spatial Data Repository"
++  logo_url: "/nyu-logo.svg"
++  hero_text: "Search geospatial resources from New York University and the OpenGeoMetadata community."
++  hero_description: "Browse and download GIS data, maps, and other geospatial resources."
++
++branding:
++  colors:
++    primary: "#57068C"
++    active: "#8900E1"
++  fonts:
++    sans: "Inter, sans-serif"
++
++api:
++  # base_url: "https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1"
++  base_url: "http://localhost:8000/api/v1"
++  search_path: "/search"
++  default_query_params:
++    - "&include_filters[ogm_repo][]=edu.nyu"
++
++homepage:
++  featured:
++    - title: "Featured Collections"
++      field: "gbl_resourceClass_sm"
++      value: "Datasets"
++      sort: "year_desc"
++      limit: 4
++    - title: "Featured Maps"
++      field: "gbl_resourceClass_sm"
++      value: "Datasets"
++      sort: "title_asc"
++      limit: 4
+diff --git a/nyu_datasets.json b/nyu_datasets.json
+new file mode 100644
+index 0000000..7cc33a6
+--- /dev/null
++++ b/nyu_datasets.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets&per_page=8&page=1","next":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets&per_page=8&page=2","first":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets&per_page=8&page=1","last":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets&per_page=8&page=512"},"meta":{"totalCount":4096,"totalPages":512,"currentPage":1,"perPage":8,"query":null,"sort":null,"queryTime":{"elasticsearch":"85ms","resourceProcessing":{"total":"70ms","perResource":"9ms","thumbnailService":"17ms","citationService":"0ms","viewerService":"1ms"},"totalResponseTime":"157ms"},"spellingSuggestions":[]},"data":[{"type":"resource","id":"nyu-2451-33876","attributes":{"ogm":{"id":"nyu-2451-33876","dct_title_s":"National Jewish Population Map by County","dct_description_sm":["This polygon shapefile contains estimates of the number of Jewish persons in the U.S. by county in 2010 census geographies, based upon multiple sources of data, including Jewish community studies available at the Jewish Data Bank, the Data Bank's Current Jewish Population Report series, and the American Community Survey. Joshua Comenetz used indicators like language spoken and ancestry in the absence of standard demographic data to measure Jewish populations. For more information on the methodology used to compile this data set, see the Jewish Data Bank."],"dct_language_sm":["English"],"dct_publisher_sm":[""],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Polygon data"],"dct_subject_sm":["Demographics","Religion","Judaism"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["United States"],"locn_geometry":"ENVELOPE(-179.14734, 179.778465, 71.390482, 17.881242)","dct_accessRights_s":"Public","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33876","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33876\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/bitstream/2451/33876/2/nyu_2451_33876.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33876"],"gbl_mdModified_dt":"2020-11-25T08:00:43","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). National Jewish Population Map by County. . http://hdl.handle.net/2451/33876","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/bitstream/2451/33876/2/nyu_2451_33876.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33876"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[-179.14734,71.390482],[-179.14734,17.881242],[179.778465,17.881242],[179.778465,71.390482],[-179.14734,71.390482]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33876/static-map","similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33888","attributes":{"ogm":{"id":"nyu-2451-33888","dct_title_s":"Grade \"A\" Restaurants in Manhattan","dct_description_sm":["This point shapefile displays restaurants in Manhattan that received a grade of \"A\" from the Department of Health and Mental Hygiene Restaurant Inspection. The points were extracted from the DOHMH New York City Restaurant Inspection Results dataset as current on 3/6/2015. Note that the locations were established with the LION geocoder in ArcMap, and some locations, espcially those in parks, piers, and side streets, on the dataset are not reflected in this file."],"dct_language_sm":["English"],"dct_creator_sm":["Michelle Thompson"],"dct_publisher_sm":[""],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Point data"],"dct_subject_sm":["Restaurants","Inspection","Health and hygiene","Urban health"],"dct_temporal_sm":["2013","2015"],"gbl_indexYear_im":[2013],"dct_spatial_sm":["Manhattan, New York, United States","New York County, New York, United States"],"locn_geometry":"ENVELOPE(-142.79870371803, -73.8935141122246, 40.8874611172832, -90.0)","dct_isPartOf_sm":["NYU Research Data"],"dct_accessRights_s":"Public","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33888","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33888\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/71932/nyu_2451_33888.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33888"],"gbl_mdModified_dt":"2015-11-23T20:57:44","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"Michelle Thompson. (n.d.). Grade \"A\" Restaurants in Manhattan. . http://hdl.handle.net/2451/33888","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/71932/nyu_2451_33888.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33888"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[-142.79870371803,40.8874611172832],[-142.79870371803,-90.0],[-73.8935141122246,-90.0],[-73.8935141122246,40.8874611172832],[-142.79870371803,40.8874611172832]]]}},"similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33891","attributes":{"ogm":{"id":"nyu-2451-33891","dct_title_s":"2010 China Township Rails","dct_description_sm":["This file contains the name and route of rails in China. The attribute table contains the name of each route in Chinese and English. Some fields are null. The source of the data is the National Geomatic Center of China."],"dct_language_sm":["Chinese"],"dct_publisher_sm":["Beijing Hua tong ren shi chang xin xi you xian ze ren gong si"],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Line data"],"dct_subject_sm":["Railroads--China--Maps","Railroads--China","Transportation--China","China--Maps"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["People's Republic of China, China"],"locn_geometry":"ENVELOPE(84.7080385538836, 133.122650297828, 52.9693411104193, 18.2223377227783)","dct_isPartOf_sm":["2010 China Data Center Township Census Files"],"dct_accessRights_s":"Restricted","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33891","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33891\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/70890/nyu_2451_33891.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33891"],"gbl_mdModified_dt":"2015-11-23T18:57:38","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). 2010 China Township Rails. Beijing Hua tong ren shi chang xin xi you xian ze ren gong si. http://hdl.handle.net/2451/33891","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/70890/nyu_2451_33891.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33891"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[84.7080385538836,52.9693411104193],[84.7080385538836,18.2223377227783],[133.122650297828,18.2223377227783],[133.122650297828,52.9693411104193],[84.7080385538836,52.9693411104193]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33891/static-map","similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33914","attributes":{"ogm":{"id":"nyu-2451-33914","dct_title_s":"2010 China State Roads","dct_description_sm":["This file contains the names and locations of state roads in China."],"dct_language_sm":["Chinese"],"dct_publisher_sm":["Beijing Hua tong ren shi chang xin xi you xian ze ren gong si"],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Line data"],"dct_subject_sm":["Transportation--China","Roads--China","China--Maps"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["People's Republic of China, China"],"locn_geometry":"ENVELOPE(74.9090270996094, 132.523883794862, 50.5736618041992, 18.1906719207764)","dct_isPartOf_sm":["2010 China Data Center Township Census Files"],"dct_accessRights_s":"Restricted","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33914","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33914\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/71945/nyu_2451_33914.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33914"],"gbl_mdModified_dt":"2015-11-23T18:57:37","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). 2010 China State Roads. Beijing Hua tong ren shi chang xin xi you xian ze ren gong si. http://hdl.handle.net/2451/33914","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/71945/nyu_2451_33914.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33914"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[74.9090270996094,50.5736618041992],[74.9090270996094,18.1906719207764],[132.523883794862,18.1906719207764],[132.523883794862,50.5736618041992],[74.9090270996094,50.5736618041992]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33914/static-map","similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33915","attributes":{"ogm":{"id":"nyu-2451-33915","dct_title_s":"2010 China Township County Boundaries","dct_description_sm":["This line shapefile contains the county boundaries for China."],"dct_language_sm":["Chinese"],"dct_publisher_sm":["Beijing Hua tong ren shi chang xin xi you xian ze ren gong si"],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Line data"],"dct_subject_sm":["China--Boundaries","China--Maps"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["People's Republic of China, China"],"locn_geometry":"ENVELOPE(73.4469604492188, 135.085830688477, 53.5579261779785, 3.40847730636597)","dct_isPartOf_sm":["2010 China Data Center Township Census Files"],"dct_accessRights_s":"Restricted","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33915","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33915\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/71152/nyu_2451_33915.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33915"],"gbl_mdModified_dt":"2015-11-23T18:57:38","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). 2010 China Township County Boundaries. Beijing Hua tong ren shi chang xin xi you xian ze ren gong si. http://hdl.handle.net/2451/33915","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/71152/nyu_2451_33915.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33915"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[73.4469604492188,53.5579261779785],[73.4469604492188,3.40847730636597],[135.085830688477,3.40847730636597],[135.085830688477,53.5579261779785],[73.4469604492188,53.5579261779785]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33915/static-map","similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33916","attributes":{"ogm":{"id":"nyu-2451-33916","dct_title_s":"2010 China Coastlines and Islands","dct_description_sm":["This file contains the boundaries for China's coastlines and islands."],"dct_language_sm":["Chinese"],"dct_publisher_sm":["Beijing Hua tong ren shi chang xin xi you xian ze ren gong si"],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Polygon data"],"dct_subject_sm":["China--Boundaries","Islands--China","China--Maps"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["People's Republic of China, China"],"locn_geometry":"ENVELOPE(73.4469604492188, 135.085830688477, 53.5579261779785, 16.833438873291)","dct_isPartOf_sm":["2010 China Data Center Township Census Files"],"dct_accessRights_s":"Restricted","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33916","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33916\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/71098/nyu_2451_33916.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33916"],"gbl_mdModified_dt":"2015-11-23T18:57:38","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). 2010 China Coastlines and Islands. Beijing Hua tong ren shi chang xin xi you xian ze ren gong si. http://hdl.handle.net/2451/33916","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/71098/nyu_2451_33916.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33916"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[73.4469604492188,53.5579261779785],[73.4469604492188,16.833438873291],[135.085830688477,16.833438873291],[135.085830688477,53.5579261779785],[73.4469604492188,53.5579261779785]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33916/static-map","similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33917","attributes":{"ogm":{"id":"nyu-2451-33917","dct_title_s":"2010 China Township Highways","dct_description_sm":["This file contains names and locations of highways in China. The source is the National Geomatic Center of China (NGCC)."],"dct_language_sm":["Chinese"],"dct_publisher_sm":["Beijing Hua tong ren shi chang xin xi you xian ze ren gong si"],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Line data"],"dct_subject_sm":["Transportation--China","China--Maps"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["People's Republic of China, China"],"locn_geometry":"ENVELOPE(84.8292615539964, 132.546783591845, 47.6620139968296, 18.226526260376)","dct_isPartOf_sm":["2010 China Data Center Township Census Files"],"dct_accessRights_s":"Restricted","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33917","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33917\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/71100/nyu_2451_33917.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33917"],"gbl_mdModified_dt":"2015-11-23T18:57:38","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). 2010 China Township Highways. Beijing Hua tong ren shi chang xin xi you xian ze ren gong si. http://hdl.handle.net/2451/33917","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/71100/nyu_2451_33917.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33917"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[84.8292615539964,47.6620139968296],[84.8292615539964,18.226526260376],[132.546783591845,18.226526260376],[132.546783591845,47.6620139968296],[84.8292615539964,47.6620139968296]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33917/static-map","similar_items":[]},"score":1.0}},{"type":"resource","id":"nyu-2451-33918","attributes":{"ogm":{"id":"nyu-2451-33918","dct_title_s":"2010 China Provincial Trunk Roads","dct_description_sm":["China Provincial Trunk Roads is a polyline theme representing provincial trunk roads in China for 2000."],"dct_language_sm":["Chinese"],"dct_publisher_sm":["Beijing Hua tong ren shi chang xin xi you xian ze ren gong si"],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Line data"],"dct_subject_sm":["Transportation--China","Roads--China","China--Maps"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["People's Republic of China, China"],"locn_geometry":"ENVELOPE(73.9164962768555, 134.312316894531, 53.3699378967285, 18.2233543395996)","dct_isPartOf_sm":["2010 China Data Center Township Census Files"],"dct_accessRights_s":"Restricted","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33918","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33918\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/retrieve/71102/nyu_2451_33918.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33918"],"gbl_mdModified_dt":"2015-11-23T18:57:37","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). 2010 China Provincial Trunk Roads. Beijing Hua tong ren shi chang xin xi you xian ze ren gong si. http://hdl.handle.net/2451/33918","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/retrieve/71102/nyu_2451_33918.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33918"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-restricted.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[73.9164962768555,53.3699378967285],[73.9164962768555,18.2233543395996],[134.312316894531,18.2233543395996],[134.312316894531,53.3699378967285],[73.9164962768555,53.3699378967285]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33918/static-map","similar_items":[]},"score":1.0}}],"included":[{"type":"facet","id":"dct_spatial_sm","attributes":{"label":"Dct Spatial","items":[{"attributes":{"label":"Canada","value":"Canada","hits":1274},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Canada"}},{"attributes":{"label":"Mexico","value":"Mexico","hits":387},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Mexico"}},{"attributes":{"label":"Northwest Territories, Canada","value":"Northwest Territories, Canada","hits":287},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Northwest+Territories%2C+Canada"}},{"attributes":{"label":"Ontario, Canada","value":"Ontario, Canada","hits":287},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Ontario%2C+Canada"}},{"attributes":{"label":"Manitoba, Canada","value":"Manitoba, Canada","hits":256},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Manitoba%2C+Canada"}},{"attributes":{"label":"Alberta, Canada","value":"Alberta, Canada","hits":250},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Alberta%2C+Canada"}},{"attributes":{"label":"Saskatchewan, Canada","value":"Saskatchewan, Canada","hits":233},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Saskatchewan%2C+Canada"}},{"attributes":{"label":"New Hampshire, United States","value":"New Hampshire, United States","hits":119},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=New+Hampshire%2C+United+States"}},{"attributes":{"label":"New York, New York, United States","value":"New York, New York, United States","hits":97},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=New+York%2C+New+York%2C+United+States"}},{"attributes":{"label":"Kelowna, Canada","value":"Kelowna, Canada","hits":95},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Kelowna%2C+Canada"}},{"attributes":{"label":"Okanagan, Canada","value":"Okanagan, Canada","hits":95},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Okanagan%2C+Canada"}}]}},{"type":"facet","id":"gbl_resourceClass_sm","attributes":{"label":"Gbl Resourceclass","items":[{"attributes":{"label":"Datasets","value":"Datasets","hits":4096},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets"}}]}},{"type":"facet","id":"gbl_resourceType_sm","attributes":{"label":"Gbl Resourcetype","items":[{"attributes":{"label":"Raster data","value":"Raster data","hits":1377},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Raster+data"}},{"attributes":{"label":"Polygon data","value":"Polygon data","hits":1204},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Polygon+data"}},{"attributes":{"label":"Point data","value":"Point data","hits":809},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Point+data"}},{"attributes":{"label":"Line data","value":"Line data","hits":573},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Line+data"}},{"attributes":{"label":"Multi-spectral data","value":"Multi-spectral data","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Multi-spectral+data"}},{"attributes":{"label":"Satellite imagery","value":"Satellite imagery","hits":52},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Satellite+imagery"}}]}},{"type":"facet","id":"gbl_indexYear_im","attributes":{"label":"Gbl Indexyear Im","items":[{"attributes":{"label":1945,"value":1945,"hits":1258},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=1945"}},{"attributes":{"label":2016,"value":2016,"hits":977},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2016"}},{"attributes":{"label":2015,"value":2015,"hits":529},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2015"}},{"attributes":{"label":1978,"value":1978,"hits":493},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=1978"}},{"attributes":{"label":2010,"value":2010,"hits":189},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2010"}},{"attributes":{"label":2018,"value":2018,"hits":154},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2018"}},{"attributes":{"label":2001,"value":2001,"hits":109},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2001"}},{"attributes":{"label":2017,"value":2017,"hits":67},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2017"}},{"attributes":{"label":2004,"value":2004,"hits":65},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2004"}},{"attributes":{"label":2011,"value":2011,"hits":60},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2011"}},{"attributes":{"label":2007,"value":2007,"hits":30},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2007"}}]}},{"type":"facet","id":"time_period","attributes":{"label":"Time Period","items":[{"attributes":{"label":"2020-2024","value":"2020-2024","hits":4},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2020-2024"}},{"attributes":{"label":"2015-2019","value":"2015-2019","hits":1728},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2015-2019"}},{"attributes":{"label":"2010-2014","value":"2010-2014","hits":317},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2010-2014"}},{"attributes":{"label":"2005-2009","value":"2005-2009","hits":79},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2005-2009"}},{"attributes":{"label":"2000-2004","value":"2000-2004","hits":188},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2000-2004"}},{"attributes":{"label":"1950-1999","value":"1950-1999","hits":517},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1950-1999"}},{"attributes":{"label":"1900-1949","value":"1900-1949","hits":1258},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1900-1949"}},{"attributes":{"label":"1400s-earlier","value":"1400s-earlier","hits":5},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1400s-earlier"}}]}},{"type":"facet","id":"dct_language_sm","attributes":{"label":"Dct Language","items":[{"attributes":{"label":"English","value":"English","hits":3177},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=English"}},{"attributes":{"label":"Russian","value":"Russian","hits":493},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Russian"}},{"attributes":{"label":"Spanish","value":"Spanish","hits":403},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Spanish"}},{"attributes":{"label":"Arabic","value":"Arabic","hits":11},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Arabic"}},{"attributes":{"label":"Chinese","value":"Chinese","hits":10},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Chinese"}},{"attributes":{"label":"English|Arabic","value":"English|Arabic","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=English%7CArabic"}},{"attributes":{"label":"eng","value":"eng","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=eng"}}]}},{"type":"facet","id":"dct_creator_sm","attributes":{"label":"Dct Creator","items":[{"attributes":{"label":"United States. National Geospatial-Intelligence Agency","value":"United States. National Geospatial-Intelligence Agency","hits":856},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=United+States.+National+Geospatial-Intelligence+Agency"}},{"attributes":{"label":"Debra F. Laefer","value":"Debra F. Laefer","hits":82},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Debra+F.+Laefer"}},{"attributes":{"label":"Anh-Vu Vo","value":"Anh-Vu Vo","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Anh-Vu+Vo"}},{"attributes":{"label":"Hamid Gharibi","value":"Hamid Gharibi","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Hamid+Gharibi"}},{"attributes":{"label":"Linh Truong-Hong","value":"Linh Truong-Hong","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Linh+Truong-Hong"}},{"attributes":{"label":"Saleh Abuwarda","value":"Saleh Abuwarda","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Saleh+Abuwarda"}},{"attributes":{"label":"Geological Survey (U.S.)","value":"Geological Survey (U.S.)","hits":34},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Geological+Survey+%28U.S.%29"}},{"attributes":{"label":"United States. Defense Mapping Agency","value":"United States. Defense Mapping Agency","hits":30},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=United+States.+Defense+Mapping+Agency"}},{"attributes":{"label":"Central Agency For Public Mobilization And Statistics (CAPMAS), Egypt 2017","value":"Central Agency For Public Mobilization And Statistics (CAPMAS), Egypt 2017","hits":13},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Central+Agency+For+Public+Mobilization+And+Statistics+%28CAPMAS%29%2C+Egypt+2017"}},{"attributes":{"label":"Instituto Nacional de Estadística (INE)","value":"Instituto Nacional de Estadística (INE)","hits":12},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Instituto+Nacional+de+Estad%C3%ADstica+%28INE%29"}},{"attributes":{"label":"Instituto Nacional de Estadística y Censo","value":"Instituto Nacional de Estadística y Censo","hits":11},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Instituto+Nacional+de+Estad%C3%ADstica+y+Censo"}}]}},{"type":"facet","id":"schema_provider_s","attributes":{"label":"Schema Provider S","items":[{"attributes":{"label":"NYU","value":"NYU","hits":4096},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bschema_provider_s%5D%5B%5D=NYU"}}]}},{"type":"facet","id":"dct_accessRights_s","attributes":{"label":"Dct Accessrights S","items":[{"attributes":{"label":"Public","value":"Public","hits":2115},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_accessRights_s%5D%5B%5D=Public"}},{"attributes":{"label":"Restricted","value":"Restricted","hits":1981},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_accessRights_s%5D%5B%5D=Restricted"}}]}},{"type":"facet","id":"gbl_georeferenced_b","attributes":{"label":"Gbl Georeferenced B","items":[]}},{"type":"facet","id":"geo_country","attributes":{"label":"Geo Country","items":[]}},{"type":"facet","id":"geo_region","attributes":{"label":"Geo Region","items":[]}},{"type":"facet","id":"geo_county","attributes":{"label":"Geo County","items":[]}},{"type":"sort","id":"relevance","attributes":{"label":"Relevance"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=relevance"}},{"type":"sort","id":"year_desc","attributes":{"label":"Year (Newest first)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=year_desc"}},{"type":"sort","id":"year_asc","attributes":{"label":"Year (Oldest first)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=year_asc"}},{"type":"sort","id":"title_asc","attributes":{"label":"Title (A-Z)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=title_asc"}},{"type":"sort","id":"title_desc","attributes":{"label":"Title (Z-A)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=title_desc"}}]}
+\ No newline at end of file
+diff --git a/nyu_sample.json b/nyu_sample.json
+new file mode 100644
+index 0000000..4e4c97d
+--- /dev/null
++++ b/nyu_sample.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=1","next":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=2","first":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=1","last":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=4123"},"meta":{"totalCount":4123,"totalPages":4123,"currentPage":1,"perPage":1,"query":null,"sort":null,"queryTime":{"elasticsearch":"87ms","resourceProcessing":{"total":"53ms","perResource":"53ms","thumbnailService":"7ms","citationService":"0ms","viewerService":"1ms"},"totalResponseTime":"141ms"},"spellingSuggestions":[]},"data":[{"type":"resource","id":"nyu-2451-33876","attributes":{"ogm":{"id":"nyu-2451-33876","dct_title_s":"National Jewish Population Map by County","dct_description_sm":["This polygon shapefile contains estimates of the number of Jewish persons in the U.S. by county in 2010 census geographies, based upon multiple sources of data, including Jewish community studies available at the Jewish Data Bank, the Data Bank's Current Jewish Population Report series, and the American Community Survey. Joshua Comenetz used indicators like language spoken and ancestry in the absence of standard demographic data to measure Jewish populations. For more information on the methodology used to compile this data set, see the Jewish Data Bank."],"dct_language_sm":["English"],"dct_publisher_sm":[""],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Polygon data"],"dct_subject_sm":["Demographics","Religion","Judaism"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["United States"],"locn_geometry":"ENVELOPE(-179.14734, 179.778465, 71.390482, 17.881242)","dct_accessRights_s":"Public","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33876","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33876\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/bitstream/2451/33876/2/nyu_2451_33876.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33876"],"gbl_mdModified_dt":"2020-11-25T08:00:43","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). National Jewish Population Map by County. . http://hdl.handle.net/2451/33876","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/bitstream/2451/33876/2/nyu_2451_33876.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33876"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[-179.14734,71.390482],[-179.14734,17.881242],[179.778465,17.881242],[179.778465,71.390482],[-179.14734,71.390482]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33876/static-map","similar_items":[]},"score":1.0}}],"included":[{"type":"facet","id":"dct_spatial_sm","attributes":{"label":"Dct Spatial","items":[{"attributes":{"label":"Canada","value":"Canada","hits":1283},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Canada"}},{"attributes":{"label":"Mexico","value":"Mexico","hits":387},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Mexico"}},{"attributes":{"label":"Northwest Territories, Canada","value":"Northwest Territories, Canada","hits":287},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Northwest+Territories%2C+Canada"}},{"attributes":{"label":"Ontario, Canada","value":"Ontario, Canada","hits":287},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Ontario%2C+Canada"}},{"attributes":{"label":"Manitoba, Canada","value":"Manitoba, Canada","hits":256},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Manitoba%2C+Canada"}},{"attributes":{"label":"Alberta, Canada","value":"Alberta, Canada","hits":250},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Alberta%2C+Canada"}},{"attributes":{"label":"Saskatchewan, Canada","value":"Saskatchewan, Canada","hits":233},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Saskatchewan%2C+Canada"}},{"attributes":{"label":"New Hampshire, United States","value":"New Hampshire, United States","hits":119},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=New+Hampshire%2C+United+States"}},{"attributes":{"label":"United States of America","value":"United States of America","hits":102},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=United+States+of+America"}},{"attributes":{"label":"New York, New York, United States","value":"New York, New York, United States","hits":97},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=New+York%2C+New+York%2C+United+States"}},{"attributes":{"label":"Kelowna, Canada","value":"Kelowna, Canada","hits":95},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Kelowna%2C+Canada"}}]}},{"type":"facet","id":"gbl_resourceClass_sm","attributes":{"label":"Gbl Resourceclass","items":[{"attributes":{"label":"Datasets","value":"Datasets","hits":4096},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets"}},{"attributes":{"label":"Other","value":"Other","hits":18},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Other"}},{"attributes":{"label":"Imagery","value":"Imagery","hits":9},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Imagery"}}]}},{"type":"facet","id":"gbl_resourceType_sm","attributes":{"label":"Gbl Resourcetype","items":[{"attributes":{"label":"Raster data","value":"Raster data","hits":1386},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Raster+data"}},{"attributes":{"label":"Polygon data","value":"Polygon data","hits":1213},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Polygon+data"}},{"attributes":{"label":"Point data","value":"Point data","hits":814},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Point+data"}},{"attributes":{"label":"Line data","value":"Line data","hits":577},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Line+data"}},{"attributes":{"label":"Multi-spectral data","value":"Multi-spectral data","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Multi-spectral+data"}},{"attributes":{"label":"Satellite imagery","value":"Satellite imagery","hits":52},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Satellite+imagery"}}]}},{"type":"facet","id":"gbl_indexYear_im","attributes":{"label":"Gbl Indexyear Im","items":[{"attributes":{"label":1945,"value":1945,"hits":1258},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=1945"}},{"attributes":{"label":2016,"value":2016,"hits":977},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2016"}},{"attributes":{"label":2015,"value":2015,"hits":529},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2015"}},{"attributes":{"label":1978,"value":1978,"hits":493},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=1978"}},{"attributes":{"label":2010,"value":2010,"hits":207},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2010"}},{"attributes":{"label":2018,"value":2018,"hits":154},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2018"}},{"attributes":{"label":2001,"value":2001,"hits":109},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2001"}},{"attributes":{"label":2017,"value":2017,"hits":67},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2017"}},{"attributes":{"label":2004,"value":2004,"hits":65},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2004"}},{"attributes":{"label":2011,"value":2011,"hits":60},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2011"}},{"attributes":{"label":2007,"value":2007,"hits":30},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2007"}}]}},{"type":"facet","id":"time_period","attributes":{"label":"Time Period","items":[{"attributes":{"label":"2020-2024","value":"2020-2024","hits":4},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2020-2024"}},{"attributes":{"label":"2015-2019","value":"2015-2019","hits":1728},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2015-2019"}},{"attributes":{"label":"2010-2014","value":"2010-2014","hits":335},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2010-2014"}},{"attributes":{"label":"2005-2009","value":"2005-2009","hits":79},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2005-2009"}},{"attributes":{"label":"2000-2004","value":"2000-2004","hits":188},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2000-2004"}},{"attributes":{"label":"1950-1999","value":"1950-1999","hits":522},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1950-1999"}},{"attributes":{"label":"1900-1949","value":"1900-1949","hits":1259},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1900-1949"}},{"attributes":{"label":"1850-1899","value":"1850-1899","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1850-1899"}},{"attributes":{"label":"1800-1849","value":"1800-1849","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1800-1849"}},{"attributes":{"label":"1700s","value":"1700s","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1700s"}},{"attributes":{"label":"1400s-earlier","value":"1400s-earlier","hits":5},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1400s-earlier"}}]}},{"type":"facet","id":"dct_language_sm","attributes":{"label":"Dct Language","items":[{"attributes":{"label":"English","value":"English","hits":3202},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=English"}},{"attributes":{"label":"Russian","value":"Russian","hits":493},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Russian"}},{"attributes":{"label":"Spanish","value":"Spanish","hits":403},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Spanish"}},{"attributes":{"label":"Arabic","value":"Arabic","hits":11},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Arabic"}},{"attributes":{"label":"Chinese","value":"Chinese","hits":10},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Chinese"}},{"attributes":{"label":"eng","value":"eng","hits":3},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=eng"}},{"attributes":{"label":"English|Arabic","value":"English|Arabic","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=English%7CArabic"}}]}},{"type":"facet","id":"dct_creator_sm","attributes":{"label":"Dct Creator","items":[{"attributes":{"label":"United States. National Geospatial-Intelligence Agency","value":"United States. National Geospatial-Intelligence Agency","hits":856},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=United+States.+National+Geospatial-Intelligence+Agency"}},{"attributes":{"label":"Debra F. Laefer","value":"Debra F. Laefer","hits":82},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Debra+F.+Laefer"}},{"attributes":{"label":"Anh-Vu Vo","value":"Anh-Vu Vo","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Anh-Vu+Vo"}},{"attributes":{"label":"Hamid Gharibi","value":"Hamid Gharibi","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Hamid+Gharibi"}},{"attributes":{"label":"Linh Truong-Hong","value":"Linh Truong-Hong","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Linh+Truong-Hong"}},{"attributes":{"label":"Saleh Abuwarda","value":"Saleh Abuwarda","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Saleh+Abuwarda"}},{"attributes":{"label":"Geological Survey (U.S.)","value":"Geological Survey (U.S.)","hits":34},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Geological+Survey+%28U.S.%29"}},{"attributes":{"label":"United States. Defense Mapping Agency","value":"United States. Defense Mapping Agency","hits":30},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=United+States.+Defense+Mapping+Agency"}},{"attributes":{"label":"Central Agency For Public Mobilization And Statistics (CAPMAS), Egypt 2017","value":"Central Agency For Public Mobilization And Statistics (CAPMAS), Egypt 2017","hits":13},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Central+Agency+For+Public+Mobilization+And+Statistics+%28CAPMAS%29%2C+Egypt+2017"}},{"attributes":{"label":"Instituto Nacional de Estadística (INE)","value":"Instituto Nacional de Estadística (INE)","hits":12},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Instituto+Nacional+de+Estad%C3%ADstica+%28INE%29"}},{"attributes":{"label":"Instituto Nacional de Estadística y Censo","value":"Instituto Nacional de Estadística y Censo","hits":11},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Instituto+Nacional+de+Estad%C3%ADstica+y+Censo"}}]}},{"type":"facet","id":"schema_provider_s","attributes":{"label":"Schema Provider S","items":[{"attributes":{"label":"NYU","value":"NYU","hits":4123},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bschema_provider_s%5D%5B%5D=NYU"}}]}},{"type":"facet","id":"dct_accessRights_s","attributes":{"label":"Dct Accessrights S","items":[{"attributes":{"label":"Public","value":"Public","hits":2130},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_accessRights_s%5D%5B%5D=Public"}},{"attributes":{"label":"Restricted","value":"Restricted","hits":1993},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_accessRights_s%5D%5B%5D=Restricted"}}]}},{"type":"facet","id":"gbl_georeferenced_b","attributes":{"label":"Gbl Georeferenced B","items":[]}},{"type":"facet","id":"geo_country","attributes":{"label":"Geo Country","items":[]}},{"type":"facet","id":"geo_region","attributes":{"label":"Geo Region","items":[]}},{"type":"facet","id":"geo_county","attributes":{"label":"Geo County","items":[]}},{"type":"sort","id":"relevance","attributes":{"label":"Relevance"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=relevance"}},{"type":"sort","id":"year_desc","attributes":{"label":"Year (Newest first)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=year_desc"}},{"type":"sort","id":"year_asc","attributes":{"label":"Year (Oldest first)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=year_asc"}},{"type":"sort","id":"title_asc","attributes":{"label":"Title (A-Z)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=title_asc"}},{"type":"sort","id":"title_desc","attributes":{"label":"Title (Z-A)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=title_desc"}}]}
+\ No newline at end of file
+diff --git a/package-lock.json b/package-lock.json
+index 51a88f3..0a912a8 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -16,6 +16,7 @@
+         "dotenv": "^16.4.7",
+         "express": "^4.21.2",
+         "js-cookie": "^3.0.5",
++        "js-yaml": "^4.1.1",
+         "leaflet": "^1.9.4",
+         "leaflet-fullscreen": "^1.0.2",
+         "lucide-react": "^0.544.0",
+@@ -4312,8 +4313,7 @@
+     "node_modules/argparse": {
+       "version": "2.0.1",
+       "resolved": "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz",
+-      "integrity": "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==",
+-      "dev": true
++      "integrity": "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="
+     },
+     "node_modules/aria-hidden": {
+       "version": "1.2.4",
+@@ -8173,10 +8173,9 @@
+       "dev": true
+     },
+     "node_modules/js-yaml": {
+-      "version": "4.1.0",
+-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
+-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
+-      "dev": true,
++      "version": "4.1.1",
++      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.1.tgz",
++      "integrity": "sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==",
+       "dependencies": {
+         "argparse": "^2.0.1"
+       },
+diff --git a/package.json b/package.json
+index 5d258ab..b3ce336 100644
+--- a/package.json
++++ b/package.json
+@@ -6,7 +6,9 @@
+   "type": "module",
+   "scripts": {
+     "dev": "vite",
++    "predev": "node scripts/generate-config.js",
+     "build": "vite build",
++    "prebuild": "node scripts/generate-config.js",
+     "lint": "eslint 'src/**/*.{ts,tsx}'",
+     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
+     "format": "prettier --write 'src/**/*.{ts,tsx,css,md,json}'",
+@@ -29,6 +31,7 @@
+     "dotenv": "^16.4.7",
+     "express": "^4.21.2",
+     "js-cookie": "^3.0.5",
++    "js-yaml": "^4.1.1",
+     "leaflet": "^1.9.4",
+     "leaflet-fullscreen": "^1.0.2",
+     "lucide-react": "^0.544.0",
+@@ -85,4 +88,4 @@
+     "vite": "^5.4.2",
+     "vitest": "^3.2.4"
+   }
+-}
++}
+\ No newline at end of file
+diff --git a/public/nyu-logo.svg b/public/nyu-logo.svg
+new file mode 100644
+index 0000000..3f94b86
+--- /dev/null
++++ b/public/nyu-logo.svg
+@@ -0,0 +1,71 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
++<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
++	 viewBox="0 0 218 40" style="enable-background:new 0 0 218 40;" xml:space="preserve">
++<style type="text/css">
++	.st0{fill:#FFFFFF;}
++</style>
++<path id="nyulibraries-logo" class="st0" d="M127.6,39.4V0.9h-1.9v38.5H127.6z M50.4,9h4.5l10.3,13.5V9H70v22h-4.1L55.1,17v14h-4.8
++	V9L50.4,9z M80.8,22.4L72.3,9h5.7l5.3,8.9L88.6,9h5.5l-8.5,13.3V31h-4.9L80.8,22.4L80.8,22.4z M96.1,21.3V9h4.8v12.2
++	c0,3.5,1.8,5.4,4.6,5.4c3,0,4.6-1.8,4.6-5.2V9.1h4.8v12.2c0,6.6-3.7,9.8-9.5,9.8C99.6,31,96.1,27.8,96.1,21.3z M40.2,39.4H1.7V0.9
++	h38.5V39.4z M19.6,34.9c0,0.3,0.6,0.4,0.8,0l1.3-10.7h-3.2L19.6,34.9L19.6,34.9z M22.8,21.9h-5.5v1.7h5.5V21.9L22.8,21.9z M21.3,21
++	c7.1,0.3,7.6-6.2,7.6-8.6c0-0.1-0.1-0.1-0.1,0c-0.3,0.5-1.2,2.3-3.6,3.3C22.8,16.7,21.4,18.9,21.3,21C21.2,21,21.3,21,21.3,21
++	L21.3,21z M20.5,20.6c1.2-5.3,5.4-5.5,5.8-6.4c0.6-1.5-0.5-4.4-0.8-4.8h-0.1c-0.6,1.3-1.5,2.6-2.2,3.1
++	C22.3,13.2,18.5,16.1,20.5,20.6C20.4,20.6,20.5,20.6,20.5,20.6L20.5,20.6z M19.7,20.8c-2.3-5,2.3-8.2,3.1-9c0.1-0.1,0.1-0.1,0.1-0.3
++	c0-1.5-0.9-4.1-1.2-4.5h-0.1c-0.4,1.5-2.6,3.9-3,4.4C15,15.7,15.9,18.4,19.7,20.8L19.7,20.8L19.7,20.8z M18.7,21
++	c-4-2.3-3.6-5.7-1.9-8.2c0,0,0-0.1,0-0.3c-0.1-0.6-0.8-2.1-1-2.4c-0.1-0.1-0.1-0.1-0.1,0c0,0.6-0.8,2.3-1.9,4.2
++	C12.5,16.3,12.5,20.8,18.7,21C18.7,21.1,18.7,21,18.7,21L18.7,21z"/>
++<g id="XMLID_1_">
++	<path id="XMLID_2_" class="st0" d="M143.1,13.2c2,0.4,3,1.2,3,2.6c0,1.6-1.3,2.6-3.1,2.6c-1.4,0-2.6-0.5-3.7-1.5l0.6-0.8
++		c0.9,0.9,1.9,1.3,3.1,1.3c1.2,0,2-0.6,2-1.6c0-0.9-0.5-1.3-2.4-1.7c-2.1-0.5-3.1-1.1-3.1-2.6c0-1.5,1.3-2.5,3-2.5
++		c1.3,0,2.3,0.4,3.2,1.1l-0.6,0.8c-0.8-0.7-1.7-1-2.6-1c-1.2,0-1.9,0.6-1.9,1.5C140.6,12.3,141.1,12.7,143.1,13.2z"/>
++	<path id="XMLID_4_" class="st0" d="M151.6,18.4c-1.2,0-2.1-0.7-2.6-1.4v3.4h-1v-8.8h1v1.4c0.5-0.8,1.3-1.5,2.6-1.5
++		c1.6,0,3.2,1.3,3.2,3.5C154.8,17.1,153.2,18.4,151.6,18.4z M151.4,12.2c-1.2,0-2.4,1-2.4,2.6c0,1.6,1.2,2.6,2.4,2.6
++		c1.3,0,2.4-1,2.4-2.6C153.8,13.3,152.7,12.2,151.4,12.2z"/>
++	<path id="XMLID_7_" class="st0" d="M157,12.8l-0.3-0.8c0.7-0.3,1.5-0.6,2.4-0.6c1.8,0,2.9,0.9,2.9,2.7v4.1h-1v-1
++		c-0.5,0.6-1.2,1.2-2.4,1.2c-1.2,0-2.5-0.7-2.5-2.1c0-1.4,1.2-2.2,2.9-2.2c0.9,0,1.5,0.1,2.1,0.3v-0.2c0-1.2-0.7-1.8-2-1.8
++		C158.3,12.3,157.6,12.5,157,12.8z M157.1,16.2c0,0.9,0.8,1.4,1.7,1.4c1.2,0,2.2-0.8,2.2-1.8v-0.6c-0.5-0.1-1.2-0.3-2-0.3
++		C157.8,14.8,157.1,15.4,157.1,16.2z"/>
++	<path id="XMLID_10_" class="st0" d="M165.4,16.3c0,0.8,0.5,1.1,1.1,1.1c0.3,0,0.6-0.1,1-0.2V18c-0.4,0.2-0.7,0.3-1.2,0.3
++		c-1.1,0-1.9-0.5-1.9-1.9v-4.1h-0.9v-0.9h0.9v-2h1v2h2.1v0.9h-2.1V16.3z"/>
++	<path id="XMLID_12_" class="st0" d="M169.4,10V8.9h1.1V10H169.4z M169.4,18.2v-6.7h1v6.7H169.4z"/>
++	<path id="XMLID_15_" class="st0" d="M173.1,12.8l-0.3-0.8c0.7-0.3,1.5-0.6,2.4-0.6c1.8,0,2.9,0.9,2.9,2.7v4.1h-1v-1
++		c-0.5,0.6-1.2,1.2-2.4,1.2c-1.2,0-2.5-0.7-2.5-2.1c0-1.4,1.2-2.2,2.9-2.2c0.9,0,1.5,0.1,2.1,0.3v-0.2c0-1.2-0.7-1.8-2-1.8
++		C174.4,12.3,173.8,12.5,173.1,12.8z M173.3,16.2c0,0.9,0.8,1.4,1.7,1.4c1.2,0,2.2-0.8,2.2-1.8v-0.6c-0.5-0.1-1.2-0.3-2-0.3
++		C174,14.8,173.3,15.4,173.3,16.2z"/>
++	<path id="XMLID_18_" class="st0" d="M180.4,18.2V8.7h1v9.5H180.4z"/>
++	<path id="XMLID_20_" class="st0" d="M190.9,18.2h-3.2V9.1h3.2c2.9,0,4.8,2,4.8,4.5C195.8,16.2,193.8,18.2,190.9,18.2z M190.9,10.1
++		h-2.1v7.2h2.1c2.3,0,3.8-1.6,3.8-3.6C194.7,11.6,193.2,10.1,190.9,10.1z"/>
++	<path id="XMLID_23_" class="st0" d="M198.2,12.8l-0.3-0.8c0.7-0.3,1.5-0.6,2.4-0.6c1.8,0,2.9,0.9,2.9,2.7v4.1h-1v-1
++		c-0.5,0.6-1.2,1.2-2.4,1.2c-1.2,0-2.5-0.7-2.5-2.1c0-1.4,1.2-2.2,2.9-2.2c0.9,0,1.5,0.1,2.1,0.3v-0.2c0-1.2-0.7-1.8-2-1.8
++		C199.4,12.3,198.8,12.5,198.2,12.8z M198.3,16.2c0,0.9,0.8,1.4,1.7,1.4c1.2,0,2.2-0.8,2.2-1.8v-0.6c-0.5-0.1-1.2-0.3-2-0.3
++		C199,14.8,198.3,15.4,198.3,16.2z"/>
++	<path id="XMLID_26_" class="st0" d="M206.6,16.3c0,0.8,0.5,1.1,1.1,1.1c0.3,0,0.6-0.1,1-0.2V18c-0.4,0.2-0.7,0.3-1.2,0.3
++		c-1.1,0-1.9-0.5-1.9-1.9v-4.1h-0.9v-0.9h0.9v-2h1v2h2.1v0.9h-2.1V16.3z"/>
++	<path id="XMLID_28_" class="st0" d="M210.9,12.8l-0.3-0.8c0.7-0.3,1.5-0.6,2.4-0.6c1.8,0,2.9,0.9,2.9,2.7v4.1h-1v-1
++		c-0.5,0.6-1.2,1.2-2.4,1.2c-1.2,0-2.5-0.7-2.5-2.1c0-1.4,1.2-2.2,2.9-2.2c0.9,0,1.5,0.1,2.1,0.3v-0.2c0-1.2-0.7-1.8-2-1.8
++		C212.1,12.3,211.5,12.5,210.9,12.8z M211,16.2c0,0.9,0.8,1.4,1.7,1.4c1.2,0,2.2-0.8,2.2-1.8v-0.6c-0.5-0.1-1.2-0.3-2-0.3
++		C211.7,14.8,211,15.4,211,16.2z"/>
++	<path id="XMLID_31_" class="st0" d="M146.1,31.2l-2.6-3.5h-2.6v3.5h-1v-9.1h3.9c2,0,3.3,1.1,3.3,2.7c0,1.5-1,2.4-2.5,2.7l2.8,3.7
++		H146.1z M143.7,23.1h-2.8v3.7h2.8c1.4,0,2.3-0.7,2.3-1.9C146,23.7,145.1,23.1,143.7,23.1z"/>
++	<path id="XMLID_34_" class="st0" d="M151.9,30.5c0.9,0,1.6-0.4,2.1-0.9l0.6,0.6c-0.7,0.8-1.5,1.3-2.8,1.3c-1.8,0-3.4-1.4-3.4-3.5
++		c0-2,1.4-3.5,3.2-3.5c2,0,3.1,1.6,3.1,3.6c0,0.1,0,0.2,0,0.3h-5.3C149.7,29.7,150.7,30.5,151.9,30.5z M153.9,27.5
++		c-0.1-1.2-0.8-2.3-2.1-2.3c-1.2,0-2.1,1-2.2,2.3H153.9z"/>
++	<path id="XMLID_37_" class="st0" d="M160.2,31.4c-1.2,0-2.1-0.7-2.6-1.4v3.4h-1v-8.8h1v1.4c0.5-0.8,1.3-1.5,2.6-1.5
++		c1.6,0,3.2,1.3,3.2,3.5C163.4,30.1,161.8,31.4,160.2,31.4z M160,25.2c-1.2,0-2.4,1-2.4,2.6c0,1.6,1.2,2.6,2.4,2.6
++		c1.3,0,2.4-1,2.4-2.6C162.4,26.3,161.3,25.2,160,25.2z"/>
++	<path id="XMLID_40_" class="st0" d="M168.3,31.4c-2,0-3.5-1.6-3.5-3.5s1.5-3.5,3.5-3.5c2,0,3.5,1.6,3.5,3.5S170.4,31.4,168.3,31.4z
++		 M168.3,25.2c-1.5,0-2.5,1.2-2.5,2.6s1.1,2.6,2.5,2.6c1.5,0,2.5-1.2,2.5-2.6C170.8,26.4,169.8,25.2,168.3,25.2z"/>
++	<path id="XMLID_43_" class="st0" d="M175.9,31.3c-1,0-2-0.4-2.8-1l0.5-0.7c0.7,0.5,1.5,0.9,2.3,0.9c0.8,0,1.4-0.4,1.4-1.1v0
++		c0-0.7-0.8-0.9-1.7-1.2c-1.1-0.3-2.2-0.7-2.2-1.9v0c0-1.2,1-1.9,2.3-1.9c0.8,0,1.7,0.3,2.4,0.7l-0.5,0.8c-0.6-0.4-1.3-0.6-2-0.6
++		c-0.8,0-1.3,0.4-1.3,1v0c0,0.6,0.8,0.9,1.7,1.2c1,0.3,2.2,0.7,2.2,1.9v0C178.3,30.6,177.2,31.3,175.9,31.3z"/>
++	<path id="XMLID_45_" class="st0" d="M180.2,23v-1.1h1.1V23H180.2z M180.2,31.2v-6.7h1v6.7H180.2z"/>
++	<path id="XMLID_48_" class="st0" d="M184.9,29.3c0,0.8,0.5,1.1,1.1,1.1c0.3,0,0.6-0.1,1-0.2V31c-0.4,0.2-0.7,0.3-1.2,0.3
++		c-1.1,0-1.9-0.5-1.9-1.9v-4.1H183v-0.9h0.9v-2h1v2h2.1v0.9h-2.1V29.3z"/>
++	<path id="XMLID_50_" class="st0" d="M191.7,31.4c-2,0-3.5-1.6-3.5-3.5s1.5-3.5,3.5-3.5c2,0,3.5,1.6,3.5,3.5S193.7,31.4,191.7,31.4z
++		 M191.7,25.2c-1.5,0-2.5,1.2-2.5,2.6s1.1,2.6,2.5,2.6c1.5,0,2.5-1.2,2.5-2.6C194.2,26.4,193.1,25.2,191.7,25.2z"/>
++	<path id="XMLID_53_" class="st0" d="M198,31.2h-1v-6.7h1v1.8c0.5-1.1,1.5-1.9,2.7-1.9v1.1h-0.1c-1.5,0-2.7,1.1-2.7,3.1V31.2z"/>
++	<path id="XMLID_55_" class="st0" d="M205.6,31.4c-0.6,1.4-1.2,1.9-2.2,1.9c-0.6,0-1-0.1-1.4-0.3l0.3-0.8c0.3,0.2,0.6,0.2,1.1,0.2
++		c0.6,0,1-0.3,1.4-1.3l-3.1-6.7h1.1l2.4,5.6l2.2-5.6h1.1L205.6,31.4z"/>
++</g>
++</svg>
+diff --git a/sample_result_for_maps.json b/sample_result_for_maps.json
+new file mode 100644
+index 0000000..08e2057
+--- /dev/null
++++ b/sample_result_for_maps.json
+@@ -0,0 +1 @@
++{"jsonapi":{"version":"1.1","profile":["https://gin.btaa.org/api/v1/ld/profiles/ogm-b1g.profile.jsonld","https://gin.btaa.org/api/v1/ld/profiles/ogm-ui.profile.jsonld"]},"links":{"self":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=1","next":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=2","first":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=1","last":"http://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=NYU&per_page=1&page=4123"},"meta":{"totalCount":4123,"totalPages":4123,"currentPage":1,"perPage":1,"query":null,"sort":null,"queryTime":{"elasticsearch":"61ms","resourceProcessing":{"total":"51ms","perResource":"51ms","thumbnailService":"4ms","citationService":"0ms","viewerService":"0ms"},"totalResponseTime":"114ms"},"spellingSuggestions":[]},"data":[{"type":"resource","id":"nyu-2451-33876","attributes":{"ogm":{"id":"nyu-2451-33876","dct_title_s":"National Jewish Population Map by County","dct_description_sm":["This polygon shapefile contains estimates of the number of Jewish persons in the U.S. by county in 2010 census geographies, based upon multiple sources of data, including Jewish community studies available at the Jewish Data Bank, the Data Bank's Current Jewish Population Report series, and the American Community Survey. Joshua Comenetz used indicators like language spoken and ancestry in the absence of standard demographic data to measure Jewish populations. For more information on the methodology used to compile this data set, see the Jewish Data Bank."],"dct_language_sm":["English"],"dct_publisher_sm":[""],"schema_provider_s":"NYU","gbl_resourceClass_sm":["Datasets"],"gbl_resourceType_sm":["Polygon data"],"dct_subject_sm":["Demographics","Religion","Judaism"],"dct_temporal_sm":["2010"],"gbl_indexYear_im":[2010],"dct_spatial_sm":["United States"],"locn_geometry":"ENVELOPE(-179.14734, 179.778465, 71.390482, 17.881242)","dct_accessRights_s":"Public","dct_format_s":"Shapefile","gbl_wxsIdentifier_s":"sdr:nyu_2451_33876","dct_references_s":"{\"http://schema.org/url\": \"http://hdl.handle.net/2451/33876\", \"http://schema.org/downloadUrl\": {\"url\": \"https://archive.nyu.edu/bitstream/2451/33876/2/nyu_2451_33876.zip\"}, \"http://www.opengis.net/def/serviceType/ogc/wfs\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs\", \"http://www.opengis.net/def/serviceType/ogc/wms\": \"https://maps-public.geo.nyu.edu/geoserver/sdr/wms\"}","dct_identifier_sm":["http://hdl.handle.net/2451/33876"],"gbl_mdModified_dt":"2020-11-25T08:00:43","gbl_mdVersion_s":"Aardvark"},"b1g":{"publication_state":"published"}},"meta":{"@context":"https://gin.btaa.org/ld/contexts/ogm-aardvark-btaa.context.jsonld","@type":"BtaaAardvarkRecord","ui":{"citation":"[Creator not found], (n.d.). National Jewish Population Map by County. . http://hdl.handle.net/2451/33876","downloads":[{"label":"Download ZIP","url":"https://archive.nyu.edu/bitstream/2451/33876/2/nyu_2451_33876.zip","type":"zip","format":"zip"}],"links":{"Visit Source":[{"label":"Visit Source","url":"http://hdl.handle.net/2451/33876"}],"Web Services":[{"label":"Web Mapping Service (WMS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms"},{"label":"Web Feature Service (WFS)","url":"https://maps-public.geo.nyu.edu/geoserver/sdr/wfs"}]},"relationships":{},"viewer":{"protocol":"wms","endpoint":"https://maps-public.geo.nyu.edu/geoserver/sdr/wms","geometry":{"type":"Polygon","coordinates":[[[-179.14734,71.390482],[-179.14734,17.881242],[179.778465,17.881242],[179.778465,71.390482],[-179.14734,71.390482]]]}},"static_map":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/nyu-2451-33876/static-map","similar_items":[]},"score":1.0}}],"included":[{"type":"facet","id":"dct_spatial_sm","attributes":{"label":"Dct Spatial","items":[{"attributes":{"label":"Canada","value":"Canada","hits":1283},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Canada"}},{"attributes":{"label":"Mexico","value":"Mexico","hits":387},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Mexico"}},{"attributes":{"label":"Northwest Territories, Canada","value":"Northwest Territories, Canada","hits":287},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Northwest+Territories%2C+Canada"}},{"attributes":{"label":"Ontario, Canada","value":"Ontario, Canada","hits":287},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Ontario%2C+Canada"}},{"attributes":{"label":"Manitoba, Canada","value":"Manitoba, Canada","hits":256},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Manitoba%2C+Canada"}},{"attributes":{"label":"Alberta, Canada","value":"Alberta, Canada","hits":250},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Alberta%2C+Canada"}},{"attributes":{"label":"Saskatchewan, Canada","value":"Saskatchewan, Canada","hits":233},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Saskatchewan%2C+Canada"}},{"attributes":{"label":"New Hampshire, United States","value":"New Hampshire, United States","hits":119},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=New+Hampshire%2C+United+States"}},{"attributes":{"label":"United States of America","value":"United States of America","hits":102},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=United+States+of+America"}},{"attributes":{"label":"New York, New York, United States","value":"New York, New York, United States","hits":97},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=New+York%2C+New+York%2C+United+States"}},{"attributes":{"label":"Kelowna, Canada","value":"Kelowna, Canada","hits":95},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_spatial_sm%5D%5B%5D=Kelowna%2C+Canada"}}]}},{"type":"facet","id":"gbl_resourceClass_sm","attributes":{"label":"Gbl Resourceclass","items":[{"attributes":{"label":"Datasets","value":"Datasets","hits":4096},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Datasets"}},{"attributes":{"label":"Other","value":"Other","hits":18},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Other"}},{"attributes":{"label":"Imagery","value":"Imagery","hits":9},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Imagery"}}]}},{"type":"facet","id":"gbl_resourceType_sm","attributes":{"label":"Gbl Resourcetype","items":[{"attributes":{"label":"Raster data","value":"Raster data","hits":1386},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Raster+data"}},{"attributes":{"label":"Polygon data","value":"Polygon data","hits":1213},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Polygon+data"}},{"attributes":{"label":"Point data","value":"Point data","hits":814},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Point+data"}},{"attributes":{"label":"Line data","value":"Line data","hits":577},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Line+data"}},{"attributes":{"label":"Multi-spectral data","value":"Multi-spectral data","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Multi-spectral+data"}},{"attributes":{"label":"Satellite imagery","value":"Satellite imagery","hits":52},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_resourceType_sm%5D%5B%5D=Satellite+imagery"}}]}},{"type":"facet","id":"gbl_indexYear_im","attributes":{"label":"Gbl Indexyear Im","items":[{"attributes":{"label":1945,"value":1945,"hits":1258},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=1945"}},{"attributes":{"label":2016,"value":2016,"hits":977},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2016"}},{"attributes":{"label":2015,"value":2015,"hits":529},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2015"}},{"attributes":{"label":1978,"value":1978,"hits":493},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=1978"}},{"attributes":{"label":2010,"value":2010,"hits":207},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2010"}},{"attributes":{"label":2018,"value":2018,"hits":154},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2018"}},{"attributes":{"label":2001,"value":2001,"hits":109},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2001"}},{"attributes":{"label":2017,"value":2017,"hits":67},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2017"}},{"attributes":{"label":2004,"value":2004,"hits":65},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2004"}},{"attributes":{"label":2011,"value":2011,"hits":60},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2011"}},{"attributes":{"label":2007,"value":2007,"hits":30},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bgbl_indexYear_im%5D%5B%5D=2007"}}]}},{"type":"facet","id":"time_period","attributes":{"label":"Time Period","items":[{"attributes":{"label":"2020-2024","value":"2020-2024","hits":4},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2020-2024"}},{"attributes":{"label":"2015-2019","value":"2015-2019","hits":1728},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2015-2019"}},{"attributes":{"label":"2010-2014","value":"2010-2014","hits":335},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2010-2014"}},{"attributes":{"label":"2005-2009","value":"2005-2009","hits":79},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2005-2009"}},{"attributes":{"label":"2000-2004","value":"2000-2004","hits":188},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=2000-2004"}},{"attributes":{"label":"1950-1999","value":"1950-1999","hits":522},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1950-1999"}},{"attributes":{"label":"1900-1949","value":"1900-1949","hits":1259},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1900-1949"}},{"attributes":{"label":"1850-1899","value":"1850-1899","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1850-1899"}},{"attributes":{"label":"1800-1849","value":"1800-1849","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1800-1849"}},{"attributes":{"label":"1700s","value":"1700s","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1700s"}},{"attributes":{"label":"1400s-earlier","value":"1400s-earlier","hits":5},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Btime_period%5D%5B%5D=1400s-earlier"}}]}},{"type":"facet","id":"dct_language_sm","attributes":{"label":"Dct Language","items":[{"attributes":{"label":"English","value":"English","hits":3202},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=English"}},{"attributes":{"label":"Russian","value":"Russian","hits":493},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Russian"}},{"attributes":{"label":"Spanish","value":"Spanish","hits":403},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Spanish"}},{"attributes":{"label":"Arabic","value":"Arabic","hits":11},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Arabic"}},{"attributes":{"label":"Chinese","value":"Chinese","hits":10},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=Chinese"}},{"attributes":{"label":"eng","value":"eng","hits":3},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=eng"}},{"attributes":{"label":"English|Arabic","value":"English|Arabic","hits":1},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_language_sm%5D%5B%5D=English%7CArabic"}}]}},{"type":"facet","id":"dct_creator_sm","attributes":{"label":"Dct Creator","items":[{"attributes":{"label":"United States. National Geospatial-Intelligence Agency","value":"United States. National Geospatial-Intelligence Agency","hits":856},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=United+States.+National+Geospatial-Intelligence+Agency"}},{"attributes":{"label":"Debra F. Laefer","value":"Debra F. Laefer","hits":82},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Debra+F.+Laefer"}},{"attributes":{"label":"Anh-Vu Vo","value":"Anh-Vu Vo","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Anh-Vu+Vo"}},{"attributes":{"label":"Hamid Gharibi","value":"Hamid Gharibi","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Hamid+Gharibi"}},{"attributes":{"label":"Linh Truong-Hong","value":"Linh Truong-Hong","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Linh+Truong-Hong"}},{"attributes":{"label":"Saleh Abuwarda","value":"Saleh Abuwarda","hits":81},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Saleh+Abuwarda"}},{"attributes":{"label":"Geological Survey (U.S.)","value":"Geological Survey (U.S.)","hits":34},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Geological+Survey+%28U.S.%29"}},{"attributes":{"label":"United States. Defense Mapping Agency","value":"United States. Defense Mapping Agency","hits":30},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=United+States.+Defense+Mapping+Agency"}},{"attributes":{"label":"Central Agency For Public Mobilization And Statistics (CAPMAS), Egypt 2017","value":"Central Agency For Public Mobilization And Statistics (CAPMAS), Egypt 2017","hits":13},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Central+Agency+For+Public+Mobilization+And+Statistics+%28CAPMAS%29%2C+Egypt+2017"}},{"attributes":{"label":"Instituto Nacional de Estadística (INE)","value":"Instituto Nacional de Estadística (INE)","hits":12},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Instituto+Nacional+de+Estad%C3%ADstica+%28INE%29"}},{"attributes":{"label":"Instituto Nacional de Estadística y Censo","value":"Instituto Nacional de Estadística y Censo","hits":11},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_creator_sm%5D%5B%5D=Instituto+Nacional+de+Estad%C3%ADstica+y+Censo"}}]}},{"type":"facet","id":"schema_provider_s","attributes":{"label":"Schema Provider S","items":[{"attributes":{"label":"NYU","value":"NYU","hits":4123},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bschema_provider_s%5D%5B%5D=NYU"}}]}},{"type":"facet","id":"dct_accessRights_s","attributes":{"label":"Dct Accessrights S","items":[{"attributes":{"label":"Public","value":"Public","hits":2130},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_accessRights_s%5D%5B%5D=Public"}},{"attributes":{"label":"Restricted","value":"Restricted","hits":1993},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&include_filters%5Bdct_accessRights_s%5D%5B%5D=Restricted"}}]}},{"type":"facet","id":"gbl_georeferenced_b","attributes":{"label":"Gbl Georeferenced B","items":[]}},{"type":"facet","id":"geo_country","attributes":{"label":"Geo Country","items":[]}},{"type":"facet","id":"geo_region","attributes":{"label":"Geo Region","items":[]}},{"type":"facet","id":"geo_county","attributes":{"label":"Geo County","items":[]}},{"type":"sort","id":"relevance","attributes":{"label":"Relevance"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=relevance"}},{"type":"sort","id":"year_desc","attributes":{"label":"Year (Newest first)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=year_desc"}},{"type":"sort","id":"year_asc","attributes":{"label":"Year (Oldest first)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=year_asc"}},{"type":"sort","id":"title_asc","attributes":{"label":"Title (A-Z)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=title_asc"}},{"type":"sort","id":"title_desc","attributes":{"label":"Title (Z-A)"},"links":{"self":"https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search?q=&search_field=all_fields&sort=title_desc"}}]}
+\ No newline at end of file
+diff --git a/scripts/generate-config.js b/scripts/generate-config.js
+new file mode 100644
+index 0000000..b2ba29f
+--- /dev/null
++++ b/scripts/generate-config.js
+@@ -0,0 +1,40 @@
++
++import fs from 'fs';
++import yaml from 'js-yaml';
++import path from 'path';
++import { fileURLToPath } from 'url';
++
++const __filename = fileURLToPath(import.meta.url);
++const __dirname = path.dirname(__filename);
++
++const CONFIG_PATH = path.resolve(__dirname, '../institution.yaml');
++const OUTPUT_CSS_PATH = path.resolve(__dirname, '../src/config/theme.css');
++
++// Ensure output directory exists
++const configDir = path.dirname(OUTPUT_JSON_PATH);
++if (!fs.existsSync(configDir)) {
++    fs.mkdirSync(configDir, { recursive: true });
++}
++
++try {
++    const fileContents = fs.readFileSync(CONFIG_PATH, 'utf8');
++    const config = yaml.load(fileContents);
++
++    // Generate CSS variables
++    if (config.branding && config.branding.colors) {
++        const { primary, active } = config.branding.colors;
++        const cssContent = `
++:root {
++  --color-primary: ${primary};
++  --color-active: ${active};
++}
++    `.trim();
++
++        fs.writeFileSync(OUTPUT_CSS_PATH, cssContent);
++        console.log(`Generated ${OUTPUT_CSS_PATH}`);
++    }
++
++} catch (e) {
++    console.error('Error generating config:', e);
++    process.exit(1);
++}
+diff --git a/src/components/FacetList.tsx b/src/components/FacetList.tsx
+index aeede1a..129b9ac 100644
+--- a/src/components/FacetList.tsx
++++ b/src/components/FacetList.tsx
+@@ -4,23 +4,20 @@ import { MinusCircle } from 'lucide-react';
+ import { FACET_LABELS, normalizeFacetId } from '../utils/facetLabels';
+ import { CONFIGURED_FACETS } from '../constants/facets';
+ import { FacetMoreModal } from './search/FacetMoreModal';
++import {
++  normalizeFacetItems,
++  type FacetItem,
++  type FacetLinks,
++} from '../utils/normalizeFacetItems';
+ 
+ // New JSON:API facet structure
+ interface JsonApiFacet {
+   type: 'facet';
+   id: string;
++  links?: FacetLinks;
+   attributes: {
+     label: string;
+-    items: Array<{
+-      attributes: {
+-        label: string;
+-        value: string | number;
+-        hits: number;
+-      };
+-      links: {
+-        self: string;
+-      };
+-    }>;
++    items: FacetItem[];
+   };
+ }
+ 
+@@ -112,12 +109,7 @@ export function FacetList({ facets }: FacetListProps) {
+     .map((facet) => ({
+       id: normalizeFacetId(facet.id),
+       label: facet.attributes.label,
+-      items: facet.attributes.items.map((item) => ({
+-        label: item.attributes.label,
+-        value: item.attributes.value,
+-        hits: item.attributes.hits,
+-        url: item.links.self,
+-      })),
++      items: normalizeFacetItems(facet.attributes.items, facet.links),
+     }));
+ 
+   // Order facets according to CONFIGURED_FACETS and filter to only show configured ones
+diff --git a/src/components/SearchField.tsx b/src/components/SearchField.tsx
+index 346bf19..50c8be5 100644
+--- a/src/components/SearchField.tsx
++++ b/src/components/SearchField.tsx
+@@ -692,7 +692,7 @@ export function SearchField({
+         )}
+         <button
+           type="submit"
+-          className={`absolute inset-y-1 ${showAdvancedButton ? 'right-1' : 'right-1'} flex items-center px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
++          className={`absolute inset-y-1 ${showAdvancedButton ? 'right-1' : 'right-1'} flex items-center px-4 py-1.5 text-sm font-medium text-white bg-nyu-purple hover:bg-nyu-purple/90 rounded-md focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 transition-colors`}
+           aria-label="Submit search"
+         >
+           Search
+diff --git a/src/components/SearchResults.tsx b/src/components/SearchResults.tsx
+index 4a4598f..02d1c63 100644
+--- a/src/components/SearchResults.tsx
++++ b/src/components/SearchResults.tsx
+@@ -154,7 +154,10 @@ export function SearchResults({
+                     to={`/resources/${result.id}`}
+                     state={{
+                       searchResults: results,
+-                      currentIndex: getAbsoluteIndex(index) - 1,
++                      // Index within the currently-loaded page (NOT absolute)
++                      currentIndex: index,
++                      // Absolute index across the full result set (0-based)
++                      absoluteIndex: (currentPage - 1) * 10 + index,
+                       totalResults: totalResults,
+                       searchUrl: location.pathname + location.search,
+                       currentPage: currentPage,
+diff --git a/src/components/layout/Header.tsx b/src/components/layout/Header.tsx
+index 6adc67a..bcb5d75 100644
+--- a/src/components/layout/Header.tsx
++++ b/src/components/layout/Header.tsx
+@@ -6,6 +6,7 @@ import {
+ } from 'react-router-dom';
+ import { SearchField } from '../SearchField';
+ import { ResourceClassFilterTabs } from '../search/ResourceClassFilterTabs';
++import config from '../../config/institution';
+ 
+ export function Header() {
+   const location = useLocation();
+@@ -94,27 +95,31 @@ export function Header() {
+   };
+ 
+   return (
+-    <header className="sticky top-0 z-50 bg-nyu-purple shadow text-white">
++    <header className="sticky top-0 z-50 bg-nyu-purple text-white shadow-[0_2px_10px_rgba(0,0,0,0.15)]">
+       <div className="w-full px-4 sm:px-6 lg:px-8">
+-        <div className="min-h-16 py-2 grid grid-cols-12 items-center gap-8">
+-          {/* Branding - matches facets column width */}
+-          <div className="col-span-2 flex items-center gap-3">
+-            <Link to="/" className="text-xl font-bold text-white flex items-center gap-2">
+-              <svg
+-                viewBox="0 0 79 32"
+-                className="h-8 fill-current"
+-                aria-label="NYU Logo"
+-              >
+-                <path d="M25.75 0v24.22h-6.28V6.15h-5.59v18.07h-6.3V6.15H1.96V0h23.79M35.15 0h6.63l7.98 10.99L57.75 0h6.62L52.89 15.65v8.57h-6.3v-8.57L35.15 0M77.04 0v18.07h-5.61V6.15h-5.63v18.07h-6.26V0h17.5" />
+-              </svg>
+-              <span className="hidden lg:inline border-l border-white/30 pl-3 ml-1">Spatial Data Repository</span>
++        {/* Two-row header grid: row 1 = search, row 2 = resource class tabs.
++            Logo spans both rows so it appears centered within the full header height. */}
++        <div className="pt-2 pb-0 grid grid-cols-12 grid-rows-2 gap-x-8 gap-y-4 items-center">
++          {/* Branding - matches facets column width (spans both rows) */}
++          <div className="col-span-3 row-span-2 flex items-center justify-start">
++            <Link
++              to="/"
++              className="text-xl font-bold text-white flex items-center gap-2"
++            >
++              <img
++                src={config.institution.logo_url}
++                alt={`${config.institution.name} Logo`}
++                className="h-12 sm:h-14 lg:h-16 w-auto object-contain"
++              />
++              {/* Keep name for accessibility, but hide it visually */}
++              <span className="sr-only">{config.institution.name}</span>
+             </Link>
+           </div>
+ 
+-          {/* Search Field - matches results column width */}
+-          <div className="col-span-6 flex items-center">
++          {/* Search (center column) */}
++          <div className="col-span-6 flex items-center justify-center">
+             {!isHomePage && (
+-              <div className="w-full">
++              <div className="w-full relative top-4">
+                 <SearchField
+                   placeholder="Search for maps, data, imagery..."
+                   onSearch={handleSearch}
+@@ -125,38 +130,23 @@ export function Header() {
+             )}
+           </div>
+ 
+-          {/* Navigation - matches map column width */}
+-          <nav className="col-span-4 flex items-center justify-end space-x-4">
+-            <Link
+-              to="/map"
+-              className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium"
+-            >
+-              Map
+-            </Link>
++          {/* Links (right column) */}
++          <nav className="col-span-3 flex items-center justify-end pt-2">
+             <Link
+               to="/bookmarks"
+-              className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium"
++              className="text-white/95 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+             >
+               Bookmarks
+             </Link>
+-            <Link
+-              to="/"
+-              className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium"
+-            >
+-              Search
+-            </Link>
+           </nav>
+-        </div>
+-        {/* Resource Class Filter Tabs - positioned below search input, aligned with col-span-6 */}
+-        {!isHomePage && (
+-          <div className="grid grid-cols-12 gap-8 pb-0">
+-            <div className="col-span-2"></div>
+-            <div className="col-span-6">
++
++          {/* Resource Class Filter Tabs (row 2, centered column) */}
++          {!isHomePage && (
++            <div className="col-span-6 col-start-4 self-end">
+               <ResourceClassFilterTabs />
+             </div>
+-            <div className="col-span-4"></div>
+-          </div>
+-        )}
++          )}
++        </div>
+       </div>
+     </header>
+   );
+diff --git a/src/components/map/MapUpdaterCountry.tsx b/src/components/map/MapUpdaterCountry.tsx
+index 9c3275c..b614df5 100644
+--- a/src/components/map/MapUpdaterCountry.tsx
++++ b/src/components/map/MapUpdaterCountry.tsx
+@@ -50,7 +50,7 @@ export function MapUpdaterCountry({
+ 
+   // Precompute scale for choropleth intensity
+   const currentData = data.country;
+-  const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
++  const maxHits = Math.max(...currentData.map((d) => d.hits), 1);
+ 
+   if (!geoJson || !geoJson.features) {
+     return (
+@@ -66,7 +66,7 @@ export function MapUpdaterCountry({
+   // Map API facet label to GeoJSON feature name for hit lookup
+   const getHits = (featureName: string) => {
+     const item = currentData.find((dataItem) => {
+-      const dataLabel = dataItem.attributes.label.toLowerCase();
++      const dataLabel = dataItem.label.toLowerCase();
+       const geoName = featureName.toLowerCase();
+       if (dataLabel === geoName) return true;
+       const nd = normalizeName(dataLabel);
+@@ -79,7 +79,7 @@ export function MapUpdaterCountry({
+           (ng.includes('usa') || ng === 'us' || ng.includes('united states')))
+       );
+     });
+-    return item ? item.attributes.hits : 0;
++    return item ? item.hits : 0;
+   };
+ 
+   // Render GeoJSON and wire style and popups
+diff --git a/src/components/map/MapUpdaterCounty.tsx b/src/components/map/MapUpdaterCounty.tsx
+index 0361bac..439e712 100644
+--- a/src/components/map/MapUpdaterCounty.tsx
++++ b/src/components/map/MapUpdaterCounty.tsx
+@@ -50,7 +50,7 @@ export function MapUpdaterCounty({
+ 
+   // Precompute scale for choropleth intensity
+   const currentData = data.county;
+-  const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
++  const maxHits = Math.max(...currentData.map((d) => d.hits), 1);
+ 
+   if (!geoJson || !geoJson.features) {
+     return (
+diff --git a/src/components/map/MapUpdaterRegion.tsx b/src/components/map/MapUpdaterRegion.tsx
+index c0b35e3..9ce9c2c 100644
+--- a/src/components/map/MapUpdaterRegion.tsx
++++ b/src/components/map/MapUpdaterRegion.tsx
+@@ -42,7 +42,7 @@ export function MapUpdaterRegion({
+ 
+   // Precompute scale for choropleth intensity
+   const currentData = data.region;
+-  const maxHits = Math.max(...currentData.map((d) => d.attributes.hits), 1);
++  const maxHits = Math.max(...currentData.map((d) => d.hits), 1);
+ 
+   if (!geoJson || !geoJson.features) {
+     return (
+@@ -58,11 +58,11 @@ export function MapUpdaterRegion({
+   // Map API facet label to state feature name (simple partial match)
+   const getHits = (featureName: string) => {
+     const dataItem = currentData.find((d) => {
+-      const label = d.attributes.label.toLowerCase();
++      const label = d.label.toLowerCase();
+       const geo = featureName.toLowerCase();
+       return label === geo || label.includes(geo) || geo.includes(label);
+     });
+-    return dataItem ? dataItem.attributes.hits : 0;
++    return dataItem ? dataItem.hits : 0;
+   };
+ 
+   // Render GeoJSON and wire style and popups
+diff --git a/src/components/resource/SimilarItemsCarousel.tsx b/src/components/resource/SimilarItemsCarousel.tsx
+index d8048e2..a9be0ac 100644
+--- a/src/components/resource/SimilarItemsCarousel.tsx
++++ b/src/components/resource/SimilarItemsCarousel.tsx
+@@ -6,6 +6,7 @@ import { getResourceIcon } from '../../utils/resourceIcons';
+ 
+ interface SimilarItemsCarouselProps {
+   similarItems?: GeoDocument[];
++  title?: string;
+ }
+ 
+ interface SimilarItemCardProps {
+@@ -57,9 +58,9 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
+         {/* Image Container */}
+         <div className="aspect-video w-full bg-gray-50 relative overflow-hidden">
+           {thumbnailUrl &&
+-          typeof thumbnailUrl === 'string' &&
+-          thumbnailUrl.trim() !== '' &&
+-          !imageError ? (
++            typeof thumbnailUrl === 'string' &&
++            thumbnailUrl.trim() !== '' &&
++            !imageError ? (
+             <img
+               src={thumbnailUrl}
+               alt={title}
+@@ -107,6 +108,7 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
+ 
+ export function SimilarItemsCarousel({
+   similarItems,
++  title = 'Similar Items',
+ }: SimilarItemsCarouselProps) {
+   const [currentPage, setCurrentPage] = useState(0);
+   const itemsPerPage = 4;
+@@ -162,7 +164,7 @@ export function SimilarItemsCarousel({
+   return (
+     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden my-8">
+       <div className="px-6 py-4 border-b border-gray-200">
+-        <h2 className="text-xl font-semibold text-gray-900">Similar Items</h2>
++        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+       </div>
+ 
+       <div className="relative px-6 py-6">
+@@ -193,11 +195,10 @@ export function SimilarItemsCarousel({
+                 <button
+                   key={i}
+                   onClick={() => setCurrentPage(i)}
+-                  className={`w-2 h-2 rounded-full transition-colors ${
+-                    i === currentPage
+-                      ? 'bg-blue-600'
+-                      : 'bg-gray-300 hover:bg-gray-400'
+-                  }`}
++                  className={`w-2 h-2 rounded-full transition-colors ${i === currentPage
++                    ? 'bg-blue-600'
++                    : 'bg-gray-300 hover:bg-gray-400'
++                    }`}
+                   aria-label={`Go to page ${i + 1}`}
+                   aria-current={i === currentPage ? 'page' : undefined}
+                 />
+diff --git a/src/components/search/ResourceClassFilterTabs.tsx b/src/components/search/ResourceClassFilterTabs.tsx
+index 2d2f8cc..5e570fb 100644
+--- a/src/components/search/ResourceClassFilterTabs.tsx
++++ b/src/components/search/ResourceClassFilterTabs.tsx
+@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
+ import { useNavigate, useSearchParams } from 'react-router-dom';
+ import { fetchSearchResults } from '../../services/api';
+ import { normalizeFacetId } from '../../utils/facetLabels';
++import { normalizeFacetItems } from '../../utils/normalizeFacetItems';
+ 
+ interface ResourceClassItem {
+   value: string;
+@@ -40,24 +41,18 @@ function setCachedResourceClasses(items: ResourceClassItem[]): void {
+ }
+ 
+ function sortResourceClasses(items: ResourceClassItem[]): ResourceClassItem[] {
+-  // Separate "Other" from the rest
++  // Sort by hits (descending), but always place "Other" at the end.
+   const otherItem = items.find(
+     (item) =>
+-      item.value.toLowerCase() === 'other' ||
+-      item.label.toLowerCase() === 'other'
++      item.value.toLowerCase() === 'other' || item.label.toLowerCase() === 'other'
+   );
+-  const otherItems = otherItem ? [otherItem] : [];
+   const regularItems = items.filter(
+     (item) =>
+-      item.value.toLowerCase() !== 'other' &&
+-      item.label.toLowerCase() !== 'other'
++      item.value.toLowerCase() !== 'other' && item.label.toLowerCase() !== 'other'
+   );
+ 
+-  // Sort regular items by hits (descending)
+   regularItems.sort((a, b) => b.hits - a.hits);
+-
+-  // Return regular items first, then "Other" at the end
+-  return [...regularItems, ...otherItems];
++  return otherItem ? [...regularItems, otherItem] : regularItems;
+ }
+ 
+ export function ResourceClassFilterTabs() {
+@@ -100,11 +95,15 @@ export function ResourceClassFilterTabs() {
+           'items' in resourceClassFacet.attributes
+         ) {
+           const items: ResourceClassItem[] =
+-            resourceClassFacet.attributes.items?.map((item) => ({
+-              value: item.attributes.value as string,
+-              label: item.attributes.label || (item.attributes.value as string),
+-              hits: item.attributes.hits,
+-            })) || [];
++            normalizeFacetItems(
++              resourceClassFacet.attributes.items || [],
++              resourceClassFacet.links
++            )
++              .map((item) => ({
++                value: String(item.value),
++                label: item.label || String(item.value),
++                hits: item.hits,
++              })) || [];
+ 
+           // Sort by hits (descending), with "Other" placed last
+           const sortedItems = sortResourceClasses(items);
+@@ -168,13 +167,13 @@ export function ResourceClassFilterTabs() {
+   }
+ 
+   return (
+-    <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
++    <div className="flex w-full items-center justify-center gap-1 overflow-x-auto scrollbar-hide">
+       <button
+         onClick={() => handleTabClick(null)}
+         className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+           !currentResourceClass
+-            ? 'text-blue-600 border-blue-600 mb-[-2px]'
+-            : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
++            ? 'text-white border-white'
++            : 'text-white border-transparent hover:border-white/70'
+         }`}
+         aria-label="Show all resources"
+         aria-current={!currentResourceClass ? 'page' : undefined}
+@@ -189,8 +188,8 @@ export function ResourceClassFilterTabs() {
+             onClick={() => handleTabClick(resourceClass.value)}
+             className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+               isActive
+-                ? 'text-blue-600 border-blue-600 mb-[-2px]'
+-                : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
++                ? 'text-white border-white'
++                : 'text-white border-transparent hover:border-white/70'
+             }`}
+             aria-label={`Filter by ${resourceClass.label}`}
+             aria-current={isActive ? 'page' : undefined}
+diff --git a/src/components/search/StaticResultMap.tsx b/src/components/search/StaticResultMap.tsx
+index 71d05a7..3ba2278 100644
+--- a/src/components/search/StaticResultMap.tsx
++++ b/src/components/search/StaticResultMap.tsx
+@@ -13,9 +13,15 @@ export function StaticResultMap({ result }: StaticResultMapProps) {
+ 
+   // Build static map URL
+   const getStaticMapUrl = (): string => {
++    // Prefer API-provided static map URL
++    if (result.meta?.ui?.static_map) {
++      return result.meta.ui.static_map;
++    }
++
++    // Fallback (though API should provide it)
+     const baseUrl = import.meta.env.VITE_API_BASE_URL
+       ? `${import.meta.env.VITE_API_BASE_URL}/resources/${result.id}/static-map`
+-      : `https://geo.btaa.org/api/v1/resources/${result.id}/static-map`;
++      : `https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/${result.id}/static-map`;
+     return baseUrl;
+   };
+ 
+diff --git a/src/config/institution.ts b/src/config/institution.ts
+new file mode 100644
+index 0000000..7803480
+--- /dev/null
++++ b/src/config/institution.ts
+@@ -0,0 +1,65 @@
++import yaml from 'js-yaml';
++
++// Single source of truth for app configuration.
++// We load `institution.yaml` from the repo root as raw text (Vite `?raw`),
++// then parse it at runtime in the browser.
++import institutionYaml from '../../institution.yaml?raw';
++
++export interface InstitutionConfig {
++  institution: {
++    name: string;
++    logo_url: string;
++    hero_text?: string;
++    hero_description?: string;
++  };
++  branding?: {
++    colors?: {
++      primary?: string;
++      active?: string;
++    };
++    fonts?: {
++      sans?: string;
++    };
++  };
++  api: {
++    base_url: string;
++    search_path?: string;
++    /**
++     * Extra query params to append to every API request.
++     * Use `key=value` strings (value may contain `[]` etc).
++     * Example: `fq=ogm_repo[]=nyu.edu`
++     */
++    default_query_params?: string[];
++    /**
++     * Legacy/special API param config used by parts of the app.
++     * Example:
++     * params:
++     *   include_filters:
++     *     schema_provider_s: "NYU"
++     */
++    params?: {
++      include_filters?: Record<string, string>;
++    };
++  };
++  homepage?: {
++    featured?: Array<{
++      title: string;
++      field: string;
++      value: string;
++      sort: string;
++      limit: number;
++    }>;
++  };
++}
++
++function parseInstitutionYaml(raw: string): InstitutionConfig {
++  const parsed = yaml.load(raw);
++  if (!parsed || typeof parsed !== 'object') {
++    throw new Error('Invalid institution.yaml: expected an object at top-level');
++  }
++  return parsed as InstitutionConfig;
++}
++
++const config = parseInstitutionYaml(institutionYaml);
++export default config;
++
+diff --git a/src/config/theme.css b/src/config/theme.css
+new file mode 100644
+index 0000000..cdee6dd
+--- /dev/null
++++ b/src/config/theme.css
+@@ -0,0 +1,4 @@
++:root {
++  --color-primary: #57068C;
++  --color-active: #8900E1;
++}
+\ No newline at end of file
+diff --git a/src/hooks/useCountyAutoFit.ts b/src/hooks/useCountyAutoFit.ts
+index c8b9ffd..f0ea304 100644
+--- a/src/hooks/useCountyAutoFit.ts
++++ b/src/hooks/useCountyAutoFit.ts
+@@ -10,7 +10,7 @@ import type { GeoJsonData, GeoJsonFeature } from '../types/map';
+ interface Params {
+   map: L.Map;
+   geoJson: GeoJsonData | null;
+-  countyItems: Array<{ attributes: { value: string; hits: number } }>;
++  countyItems: Array<{ value: string; hits: number }>;
+   searchQuery: string;
+ }
+ 
+@@ -35,13 +35,13 @@ export function useCountyAutoFit({
+     // Find top county by hits and compute bounds from GeoJSON
+     const topCountyItem = countyItems.reduce(
+       (max, item) =>
+-        (item.attributes.hits || 0) > (max?.attributes.hits || 0) ? item : max,
++        (item.hits || 0) > (max?.hits || 0) ? item : max,
+       countyItems[0]
+     );
+     if (!topCountyItem) return;
+ 
+     const { stateAbbr, countyName } = parseCountyFacetValue(
+-      topCountyItem.attributes.value
++      topCountyItem.value
+     );
+     const targetStateFips = stateAbbrToFips[stateAbbr];
+     if (!targetStateFips || !countyName) return;
+diff --git a/src/hooks/useGeoFacets.ts b/src/hooks/useGeoFacets.ts
+index 826dff6..a816269 100644
+--- a/src/hooks/useGeoFacets.ts
++++ b/src/hooks/useGeoFacets.ts
+@@ -1,7 +1,8 @@
+ import { useEffect, useState } from 'react';
+ import { fetchSearchResults } from '../services/api';
+ import type { JsonApiResponse } from '../types/api';
+-import type { ChoroplethData, GeoFacet } from '../types/map';
++import type { ChoroplethData } from '../types/map';
++import { normalizeFacetItems } from '../utils/normalizeFacetItems';
+ 
+ // Fetches search facet aggregations (country/region/county) for a given query.
+ // Returns normalized choropleth data structure + loading/error states.
+@@ -32,7 +33,7 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
+         if (response.included) {
+           // Extract only the three geo facets we're interested in (field-named IDs)
+           const geoFacets = response.included.filter(
+-            (item): item is GeoFacet =>
++            (item) =>
+               item.type === 'facet' &&
+               ['geo_country', 'geo_region', 'geo_county'].includes(item.id)
+           );
+@@ -43,12 +44,19 @@ export function useGeoFacets(query: string, onApiCall?: (url: string) => void) {
+             county: [],
+           };
+           geoFacets.forEach((facet) => {
+-            if (facet.id === 'geo_country')
+-              newData.country = facet.attributes.items;
+-            if (facet.id === 'geo_region')
+-              newData.region = facet.attributes.items;
+-            if (facet.id === 'geo_county')
+-              newData.county = facet.attributes.items;
++            const normalized = normalizeFacetItems(
++              facet.attributes?.items || [],
++              facet.links
++            ).map((i) => ({
++              label: i.label,
++              value: String(i.value),
++              hits: i.hits,
++              url: i.url,
++            }));
++
++            if (facet.id === 'geo_country') newData.country = normalized;
++            if (facet.id === 'geo_region') newData.region = normalized;
++            if (facet.id === 'geo_county') newData.county = normalized;
+           });
+           setData(newData);
+         } else {
+diff --git a/src/index.css b/src/index.css
+index 9e6f188..5d1fbb9 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -1,3 +1,4 @@
++@import './config/theme.css';
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+@@ -14,10 +15,13 @@ a {
+ 
+ /* Hide scrollbar but keep scrolling functionality */
+ .scrollbar-hide {
+-  -ms-overflow-style: none; /* IE and Edge */
+-  scrollbar-width: none; /* Firefox */
++  -ms-overflow-style: none;
++  /* IE and Edge */
++  scrollbar-width: none;
++  /* Firefox */
+ }
+ 
+ .scrollbar-hide::-webkit-scrollbar {
+-  display: none; /* Chrome, Safari and Opera */
+-}
++  display: none;
++  /* Chrome, Safari and Opera */
++}
+\ No newline at end of file
+diff --git a/src/pages/HomePage.tsx b/src/pages/HomePage.tsx
+index 02020a9..46db9c7 100644
+--- a/src/pages/HomePage.tsx
++++ b/src/pages/HomePage.tsx
+@@ -15,14 +15,18 @@ import {
+   Search,
+ } from 'lucide-react';
+ import { fetchSearchResults } from '../services/api';
++import { SimilarItemsCarousel } from '../components/resource/SimilarItemsCarousel';
++import type { GeoDocument } from '../types/api';
++import config from '../config/institution';
++import { normalizeFacetItems } from '../utils/normalizeFacetItems';
+ 
+ export function HomePage() {
+   const navigate = useNavigate();
+   const [searchParams] = useSearchParams();
+-  const [resourceCounts, setResourceCounts] = useState<Record<string, number>>(
+-    {}
+-  );
++  const [resourceCounts, setResourceCounts] = useState<Record<string, number>>({});
+   const [isLoading, setIsLoading] = useState(true);
++  const [featuredCollections, setFeaturedCollections] = useState<GeoDocument[]>([]);
++  const [featuredMaps, setFeaturedMaps] = useState<GeoDocument[]>([]);
+ 
+   useEffect(() => {
+     const fetchCounts = async () => {
+@@ -35,16 +39,15 @@ export function HomePage() {
+               item.id === 'resource_class_agg')
+         );
+         const facetCounts =
+-          (resourceClassFacet?.attributes &&
+-          'items' in resourceClassFacet.attributes
+-            ? resourceClassFacet.attributes.items?.reduce(
+-                (acc, item) => {
+-                  acc[item.attributes.value as string] = item.attributes.hits;
+-                  return acc;
+-                },
+-                {} as Record<string, number>
+-              )
+-            : {}) || {};
++          resourceClassFacet?.attributes && 'items' in resourceClassFacet.attributes
++            ? normalizeFacetItems(
++                resourceClassFacet.attributes.items || [],
++                resourceClassFacet.links
++              ).reduce((acc, item) => {
++                acc[String(item.value)] = item.hits;
++                return acc;
++              }, {} as Record<string, number>)
++            : {};
+         setResourceCounts(facetCounts);
+       } catch (error) {
+         console.error('Error fetching resource counts:', error);
+@@ -53,7 +56,38 @@ export function HomePage() {
+       }
+     };
+ 
++    const fetchFeatured = async () => {
++      try {
++        const featuredItems = config.homepage?.featured || [];
++        const results = await Promise.all(
++          featuredItems.map(async (item) => {
++            const data = await fetchSearchResults(
++              '',
++              1,
++              item.limit,
++              [{ field: item.field, value: item.value }],
++              undefined,
++              item.sort
++            );
++            return { title: item.title, data: data?.data || [] };
++          })
++        );
++
++        // Map results back to specific state for backward compatibility/simplicity in this refactor
++        // Ideally we would map over these results in the JSX
++        const collections = results.find((r) => r.title === "Featured Collections");
++        const maps = results.find((r) => r.title === "Featured Maps");
++
++        if (collections?.data) setFeaturedCollections(collections.data);
++        if (maps?.data) setFeaturedMaps(maps.data);
++
++      } catch (error) {
++        console.error('Error fetching featured items:', error);
++      }
++    };
++
+     fetchCounts();
++    fetchFeatured();
+   }, []);
+ 
+   const resourceClasses = [
+@@ -64,6 +98,7 @@ export function HomePage() {
+       icon: <Database className="w-6 h-6" />,
+       aggValue: 'Datasets',
+     },
++    // ... existing resourceClasses ...
+     {
+       id: 'Map',
+       label: 'Maps',
+@@ -108,6 +143,7 @@ export function HomePage() {
+     },
+   ];
+ 
++  /* ... handlers (handleSearch, handleAdvancedSearchClick, handleResourceClassClick, handleBrowseAll) ... */
+   const handleSearch = (query: string) => {
+     if (query.trim()) {
+       const newParams = new URLSearchParams();
+@@ -191,14 +227,13 @@ export function HomePage() {
+       <main className="flex-1 bg-gray-50">
+         <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-4rem)]">
+           <div className="col-span-1 lg:col-span-8 px-4 md:px-8 lg:px-12 py-4 lg:py-4 flex flex-col">
+-            <div className="space-y-6 lg:space-y-8 max-w-3xl">
++            <div className="space-y-6 lg:space-y-8 max-w-4xl w-full">
+               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
+-                BTAA Geoportal
++                {config.institution.name}
+               </h1>
+ 
+               <p className="text-lg lg:text-xl text-gray-600">
+-                Search geospatial resources from Big Ten Academic Alliance
+-                institutions
++                {config.institution.hero_text}
+               </p>
+ 
+               <div className="w-full">
+@@ -220,6 +255,23 @@ export function HomePage() {
+                   resources.
+                 </p>
+               </div>
++
++              {/* Featured Sections */}
++              <div className="space-y-8 pt-4">
++                {featuredCollections.length > 0 && (
++                  <SimilarItemsCarousel
++                    similarItems={featuredCollections}
++                    title="Featured Collections"
++                  />
++                )}
++
++                {featuredMaps.length > 0 && (
++                  <SimilarItemsCarousel
++                    similarItems={featuredMaps}
++                    title="Featured Maps"
++                  />
++                )}
++              </div>
+             </div>
+           </div>
+ 
+diff --git a/src/pages/ResourceView.tsx b/src/pages/ResourceView.tsx
+index 91f804e..87bcd03 100644
+--- a/src/pages/ResourceView.tsx
++++ b/src/pages/ResourceView.tsx
+@@ -20,6 +20,7 @@ import { LocationMap } from '../components/resource/LocationMap';
+ import { DownloadsTable } from '../components/resource/DownloadsTable';
+ import { LinksTable } from '../components/resource/LinksTable';
+ import { SimilarItemsCarousel } from '../components/resource/SimilarItemsCarousel';
++import { parseSearchParams } from '../utils/searchParams';
+ 
+ // Define types for search results
+ interface SearchResult {
+@@ -36,11 +37,6 @@ interface SearchState {
+   absoluteIndex?: number;
+ }
+ 
+-interface FacetFilter {
+-  field: string;
+-  value: string;
+-}
+-
+ // Define the ResourceData type to match the actual API response
+ interface ResourceData extends GeoDocument {
+   meta?: {
+@@ -164,16 +160,8 @@ export function ResourceView() {
+       const urlParams = new URLSearchParams(
+         searchState.searchUrl.split('?')[1] || ''
+       );
+-      const query = urlParams.get('q') || '';
+-
+-      // Extract facets from the URL if they exist
+-      const facets: FacetFilter[] = [];
+-      for (const [key, value] of urlParams.entries()) {
+-        if (key.startsWith('fq[') && key.endsWith('][]')) {
+-          const field = key.slice(3, -3); // Extract field name from fq[field][]
+-          facets.push({ field, value });
+-        }
+-      }
++      const { query, facets, excludeFacets, advancedQuery } =
++        parseSearchParams(urlParams);
+ 
+       // Get current sort value if it exists
+       const sort = urlParams.get('sort') || undefined;
+@@ -184,7 +172,9 @@ export function ResourceView() {
+         10,
+         facets,
+         setLastApiUrl,
+-        sort
++        sort,
++        excludeFacets,
++        advancedQuery
+       );
+ 
+       return results.data;
+@@ -204,16 +194,8 @@ export function ResourceView() {
+       const urlParams = new URLSearchParams(
+         searchState.searchUrl.split('?')[1] || ''
+       );
+-      const query = urlParams.get('q') || '';
+-
+-      // Extract facets from the URL if they exist
+-      const facets: FacetFilter[] = [];
+-      for (const [key, value] of urlParams.entries()) {
+-        if (key.startsWith('fq[') && key.endsWith('][]')) {
+-          const field = key.slice(3, -3); // Extract field name from fq[field][]
+-          facets.push({ field, value });
+-        }
+-      }
++      const { query, facets, excludeFacets, advancedQuery } =
++        parseSearchParams(urlParams);
+ 
+       // Get current sort value if it exists
+       const sort = urlParams.get('sort') || undefined;
+@@ -224,7 +206,9 @@ export function ResourceView() {
+         10,
+         facets,
+         setLastApiUrl,
+-        sort
++        sort,
++        excludeFacets,
++        advancedQuery
+       );
+ 
+       return results.data;
+diff --git a/src/pages/SearchPage.tsx b/src/pages/SearchPage.tsx
+index 287252d..e763d41 100644
+--- a/src/pages/SearchPage.tsx
++++ b/src/pages/SearchPage.tsx
+@@ -1,4 +1,4 @@
+-import React, { useState, useEffect } from 'react';
++import React from 'react';
+ import { useSearchParams } from 'react-router-dom';
+ import { SearchResults } from '../components/SearchResults';
+ import { Pagination } from '../components/Pagination';
+@@ -21,13 +21,6 @@ function SearchContent() {
+ 
+   const [searchParams, setSearchParams] = useSearchParams();
+   const showAdvancedParam = searchParams.get('showAdvanced') === 'true';
+-  const [showAdvancedBuilder, setShowAdvancedBuilder] =
+-    useState(showAdvancedParam);
+-
+-  // Update showAdvancedBuilder when URL param changes
+-  useEffect(() => {
+-    setShowAdvancedBuilder(showAdvancedParam);
+-  }, [showAdvancedParam]);
+ 
+   const {
+     query,
+@@ -114,7 +107,10 @@ function SearchContent() {
+ 
+   const handleAdvancedApply = (clauses: typeof advancedQuery) => {
+     updateSearch({ advancedQuery: clauses });
+-    setShowAdvancedBuilder(false);
++    // Close the builder by clearing the URL param (gear icon is source of truth)
++    const next = new URLSearchParams(searchParams);
++    next.delete('showAdvanced');
++    setSearchParams(next);
+   };
+ 
+   const handleAdvancedReset = () => {
+@@ -174,30 +170,16 @@ function SearchContent() {
+             onClearAll={handleClearAll}
+           />
+ 
+-          <div className="mb-6">
+-            <button
+-              type="button"
+-              onClick={(e) => {
+-                setShowAdvancedBuilder((prev) => !prev);
+-                // Blur the button so it doesn't interfere with autofocus
+-                (e.currentTarget as HTMLButtonElement).blur();
+-              }}
+-              className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+-                advancedQuery.length > 0
+-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+-                  : 'bg-white text-blue-700 border border-blue-300 hover:border-blue-400 hover:text-blue-900'
+-              }`}
+-            >
+-              Advanced Search
+-            </button>
+-          </div>
+-
+-          {showAdvancedBuilder && (
++          {showAdvancedParam && (
+             <div className="mb-8">
+               <AdvancedSearchBuilder
+                 clauses={advancedQuery}
+                 onApply={handleAdvancedApply}
+-                onCancel={() => setShowAdvancedBuilder(false)}
++                onCancel={() => {
++                  const next = new URLSearchParams(searchParams);
++                  next.delete('showAdvanced');
++                  setSearchParams(next);
++                }}
+                 onReset={handleAdvancedReset}
+               />
+             </div>
+diff --git a/src/services/api.ts b/src/services/api.ts
+index c6dce43..6c01e9c 100644
+--- a/src/services/api.ts
++++ b/src/services/api.ts
+@@ -7,6 +7,7 @@ import {
+   GazetteerPlace,
+ } from '../types/api';
+ import { AdvancedClause, FacetFilter } from '../types/search';
++import config from '../config/institution';
+ 
+ export class ApiError extends Error {
+   constructor(
+@@ -45,6 +46,19 @@ function ensureHttps(url: string): string {
+ function createApiUrl(baseUrl: string): URL {
+   const url = new URL(ensureHttps(baseUrl));
+   url.searchParams.set('format', 'json');
++
++  // Apply always-on query params from config (institution.yaml)
++  const defaults = config.api.default_query_params || [];
++  defaults.forEach((entry) => {
++    if (!entry) return;
++    const idx = entry.indexOf('=');
++    const key = idx >= 0 ? entry.slice(0, idx) : entry;
++    const value = idx >= 0 ? entry.slice(idx + 1) : '';
++    // Avoid duplicating identical key/value pairs
++    if (url.searchParams.getAll(key).includes(value)) return;
++    url.searchParams.append(key, value);
++  });
++
+   return url;
+ }
+ 
+@@ -227,7 +241,7 @@ export async function fetchSearchResults(
+     advancedClauses: advancedQuery.length,
+   });
+ 
+-  const baseUrl = 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search';
++  const baseUrl = `${config.api.base_url}/search`;
+   const url = createApiUrl(baseUrl);
+ 
+   url.searchParams.set('search_field', 'all_fields');
+@@ -239,8 +253,11 @@ export async function fetchSearchResults(
+   // Only apply them if all required geo filter parameters are present
+   // This ensures we don't apply partial or stale geo filters
+ 
+-  // ALWAYS apply NYU provider filter
+-  url.searchParams.append('include_filters[schema_provider_s][]', 'NYU');
++  // ALWAYS apply configured provider filter
++  const includeFilters = config.api.params?.include_filters || {};
++  Object.entries(includeFilters).forEach(([key, value]) => {
++    url.searchParams.append(`include_filters[${key}][]`, value);
++  });
+ 
+   if (typeof window !== 'undefined') {
+     const currentUrl = new URL(window.location.href);
+@@ -372,7 +389,7 @@ export async function fetchFacetValues({
+ }: FetchFacetValuesParams): Promise<FacetValuesResponse> {
+   // ? `${import.meta.env.VITE_API_BASE_URL}/search/facets/${facetName}`
+   // : `https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search/facets/${facetName}`;
+-  const baseUrl = `https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search/facets/${facetName}`;
++  const baseUrl = `${config.api.base_url}/search/facets/${facetName}`;
+ 
+   const url = createApiUrl(baseUrl);
+ 
+@@ -432,7 +449,7 @@ export async function fetchResourceDetails(
+ ): Promise<GeoDocumentDetails> {
+   // ? `${import.meta.env.VITE_API_BASE_URL}/resources/`
+   // : 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/';
+-  const baseUrl = 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/resources/';
++  const baseUrl = `${config.api.base_url}/resources/`;
+   const url = createApiUrl(`${baseUrl}${id}`);
+   onApiCall?.(url.toString());
+ 
+@@ -475,7 +492,7 @@ export async function fetchSuggestions(
+ 
+   // ? `${import.meta.env.VITE_API_BASE_URL}/suggest`
+   // : 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/suggest';
+-  const baseUrl = 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/suggest';
++  const baseUrl = `${config.api.base_url}/suggest`;
+ 
+   const url = createApiUrl(baseUrl);
+   url.searchParams.set('q', query);
+@@ -520,7 +537,7 @@ export async function fetchBookmarkedResources(
+ 
+   // ? `${import.meta.env.VITE_API_BASE_URL}/search/`
+   // : 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search/';
+-  const baseUrl = 'https://lib-btaageoapi-dev-app-01.oit.umn.edu/api/v1/search/';
++  const baseUrl = `${config.api.base_url}/search/`;
+   const url = createApiUrl(baseUrl);
+ 
+   url.searchParams.set('search_field', 'all_fields');
+diff --git a/src/types/api.ts b/src/types/api.ts
+index 0fdd5d5..0fcbeb7 100644
+--- a/src/types/api.ts
++++ b/src/types/api.ts
+@@ -56,6 +56,7 @@ export interface GeoDocument {
+   meta?: {
+     ui?: {
+       thumbnail_url?: string;
++      static_map?: string;
+       citation?: string;
+       downloads?: Array<{
+         label: string;
+@@ -87,20 +88,27 @@ export interface ParsedFacet {
+   value: string;
+ }
+ 
+-interface FacetItem {
++type FacetTupleItem = [string | number, number];
++
++interface FacetObjectItem {
+   attributes: {
+-    label: string;
++    label?: string;
+     value: string | number;
+     hits: number;
+   };
+-  links: {
+-    self: string;
++  links?: {
++    self?: string;
+   };
+ }
+ 
++type FacetItem = FacetTupleItem | FacetObjectItem;
++
+ interface Facet {
+   type: 'facet';
+   id: string;
++  links?: {
++    applyTemplate?: string;
++  };
+   attributes: {
+     label: string;
+     items: FacetItem[];
+diff --git a/src/types/map.ts b/src/types/map.ts
+index 341b201..d6a5e17 100644
+--- a/src/types/map.ts
++++ b/src/types/map.ts
+@@ -1,29 +1,16 @@
+ export type ZoomLevel = 'country' | 'region' | 'county';
+ 
+-export interface GeoFacetItem {
+-  attributes: {
+-    label: string;
+-    value: string;
+-    hits: number;
+-  };
+-  links: {
+-    self: string;
+-  };
+-}
+-
+-export interface GeoFacet {
+-  type: 'facet';
+-  id: string;
+-  attributes: {
+-    label: string;
+-    items: GeoFacetItem[];
+-  };
++export interface ChoroplethFacetItem {
++  label: string;
++  value: string;
++  hits: number;
++  url?: string;
+ }
+ 
+ export interface ChoroplethData {
+-  country: GeoFacetItem[];
+-  region: GeoFacetItem[];
+-  county: GeoFacetItem[];
++  country: ChoroplethFacetItem[];
++  region: ChoroplethFacetItem[];
++  county: ChoroplethFacetItem[];
+ }
+ 
+ // GeoJSON feature types for map components
+diff --git a/src/utils/geoCounty.ts b/src/utils/geoCounty.ts
+index 1bf6cb9..7ba0371 100644
+--- a/src/utils/geoCounty.ts
++++ b/src/utils/geoCounty.ts
+@@ -90,7 +90,7 @@ import type { GeoJsonFeature } from '../types/map';
+ 
+ export function getCountyHitsFromFeature(
+   feature: GeoJsonFeature,
+-  countyItems: Array<{ attributes: { value: string; hits: number } }>
++  countyItems: Array<{ value: string; hits: number }>
+ ): number {
+   const featureCountyNameRaw =
+     feature?.properties?.NAME ||
+@@ -109,26 +109,26 @@ export function getCountyHitsFromFeature(
+ 
+   const item = countyItems.find((dataItem) => {
+     const { stateAbbr, countyName } = parseCountyFacetValue(
+-      dataItem.attributes.value
++      dataItem.value
+     );
+     if (!stateAbbr || !countyName) return false;
+     const normCounty = normalizeName(countyName);
+     return featureStateAbbr === stateAbbr && normCounty === featureCountyName;
+   });
+ 
+-  return item ? item.attributes.hits : 0;
++  return item ? item.hits : 0;
+ }
+ 
+ // Determine which state has the most county hits overall
+ export function getTopStateAbbrByCountyHits(
+-  countyItems: Array<{ attributes: { value: string; hits: number } }>
++  countyItems: Array<{ value: string; hits: number }>
+ ): string | null {
+   const hitsByState: Record<string, number> = {};
+   for (const item of countyItems) {
+-    const parsed = parseCountyFacetValue(item.attributes.value);
++    const parsed = parseCountyFacetValue(item.value);
+     if (!parsed.stateAbbr) continue;
+     hitsByState[parsed.stateAbbr] =
+-      (hitsByState[parsed.stateAbbr] || 0) + (item.attributes.hits || 0);
++      (hitsByState[parsed.stateAbbr] || 0) + (item.hits || 0);
+   }
+   const top = Object.entries(hitsByState).sort((a, b) => b[1] - a[1])[0];
+   return top ? top[0] : null;
+diff --git a/src/utils/normalizeFacetItems.ts b/src/utils/normalizeFacetItems.ts
+new file mode 100644
+index 0000000..59ead69
+--- /dev/null
++++ b/src/utils/normalizeFacetItems.ts
+@@ -0,0 +1,97 @@
++export type FacetValue = string | number;
++
++// New backend facet structure: attributes.items is a list of [value, count] tuples
++export type FacetTupleItem = [FacetValue, number];
++
++// Older/alternate facet structure used in some endpoints/components
++export interface FacetObjectItem {
++  attributes: {
++    label?: string;
++    value: FacetValue;
++    hits: number;
++  };
++  links?: {
++    self?: string;
++  };
++}
++
++export type FacetItem = FacetTupleItem | FacetObjectItem;
++
++export interface FacetLinks {
++  applyTemplate?: string;
++  // Some JSON:API resources use `links.self`; allow it so callers can pass through
++  // unioned link shapes without extra narrowing.
++  self?: string;
++}
++
++export interface NormalizedFacetItem {
++  label: string;
++  value: FacetValue;
++  hits: number;
++  url?: string;
++}
++
++function isTupleItem(item: unknown): item is FacetTupleItem {
++  return (
++    Array.isArray(item) &&
++    item.length === 2 &&
++    (typeof item[0] === 'string' || typeof item[0] === 'number') &&
++    typeof item[1] === 'number'
++  );
++}
++
++function isObjectItem(item: unknown): item is FacetObjectItem {
++  if (!item || typeof item !== 'object') return false;
++  const maybe = item as Partial<FacetObjectItem>;
++  return !!(
++    maybe.attributes &&
++    (typeof maybe.attributes.value === 'string' ||
++      typeof maybe.attributes.value === 'number') &&
++    typeof maybe.attributes.hits === 'number'
++  );
++}
++
++function applyTemplateUrl(template: string | undefined, value: FacetValue) {
++  if (!template) return undefined;
++  // Backend sends `{value}` placeholder; keep it robust for numeric values too.
++  return template.replace('{value}', encodeURIComponent(String(value)));
++}
++
++/**
++ * Normalize facet items to a consistent `{label,value,hits,url?}` structure.
++ *
++ * Accepts:
++ * - New API: `[value, count]`
++ * - Old API: `{ attributes: { label, value, hits }, links: { self } }`
++ */
++export function normalizeFacetItems(
++  items: unknown[] | undefined,
++  links?: FacetLinks
++): NormalizedFacetItem[] {
++  if (!items || items.length === 0) return [];
++
++  return items
++    .map((item) => {
++      if (isTupleItem(item)) {
++        const [value, hits] = item;
++        return {
++          label: String(value),
++          value,
++          hits: typeof hits === 'number' ? hits : Number(hits) || 0,
++          url: applyTemplateUrl(links?.applyTemplate, value),
++        } satisfies NormalizedFacetItem;
++      }
++
++      if (!isObjectItem(item)) return null;
++
++      const value = item.attributes.value;
++      return {
++        label: item.attributes.label || String(value),
++        value,
++        hits: item.attributes.hits,
++        url: item.links?.self,
++      } satisfies NormalizedFacetItem;
++    })
++    .filter((x): x is NormalizedFacetItem => !!x && x.label !== '');
++}
++
+diff --git a/tailwind.config.js b/tailwind.config.js
+index 797d4d1..083abfa 100644
+--- a/tailwind.config.js
++++ b/tailwind.config.js
+@@ -4,8 +4,8 @@ export default {
+   theme: {
+     extend: {
+       colors: {
+-        'nyu-purple': '#57068C',
+-        'nyu-active': '#8900E1',
++        'nyu-purple': 'var(--color-primary)',
++        'nyu-active': 'var(--color-active)',
+       },
+     },
+   },
+diff --git a/tsconfig.app.json b/tsconfig.app.json
+index 881b420..9fed536 100644
+--- a/tsconfig.app.json
++++ b/tsconfig.app.json
+@@ -2,10 +2,13 @@
+   "compilerOptions": {
+     "target": "ES2022",
+     "useDefineForClassFields": true,
+-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
++    "lib": [
++      "ES2022",
++      "DOM",
++      "DOM.Iterable"
++    ],
+     "module": "ESNext",
+     "skipLibCheck": true,
+-
+     /* Bundler mode */
+     "moduleResolution": "bundler",
+     "allowImportingTsExtensions": true,
+@@ -13,13 +16,20 @@
+     "moduleDetection": "force",
+     "noEmit": true,
+     "jsx": "react-jsx",
+-
+     /* Linting */
+     "strict": true,
+     "noUnusedLocals": true,
+     "noUnusedParameters": true,
+-    "noFallthroughCasesInSwitch": true
++    "noFallthroughCasesInSwitch": true,
++    "resolveJsonModule": true
+   },
+-  "include": ["src", "src/vite-env.d.ts"],
+-  "types": ["jest", "@testing-library/jest-dom", "vite/client"]
+-}
++  "include": [
++    "src",
++    "src/vite-env.d.ts"
++  ],
++  "types": [
++    "jest",
++    "@testing-library/jest-dom",
++    "vite/client"
++  ]
++}
+\ No newline at end of file
