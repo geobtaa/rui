@@ -10,6 +10,7 @@ import {
 import { fetchFacetValues } from '../../services/api';
 import type { FacetValue } from '../../types/api';
 import { formatCount } from '../../utils/formatCount';
+import { facetValueLabel } from '../../utils/facetValueLabel';
 
 interface AdvancedSearchBuilderProps {
   clauses: AdvancedClause[];
@@ -635,7 +636,7 @@ export function AdvancedSearchBuilder({
                       ) : (
                         autocomplete.suggestions.map((suggestion, index) => {
                           const value = String(suggestion.attributes.value);
-                          const label = suggestion.attributes.label;
+                          const label = facetValueLabel(suggestion.attributes);
                           const hits = suggestion.attributes.hits;
                           const isSelected =
                             index === autocomplete.selectedIndex;

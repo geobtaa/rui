@@ -107,10 +107,33 @@ function SearchContent() {
   };
 
   const handleAdvancedApply = (clauses: typeof advancedQuery) => {
-    updateSearch({ advancedQuery: clauses });
-    // Close the builder by clearing the URL param (gear icon is source of truth)
+    // IMPORTANT: adv_q lives in the URL (source of truth for useSearch).
+    // We must update adv_q and close the builder in a single URL update,
+    // otherwise we can accidentally clobber the just-written adv_q.
     const next = new URLSearchParams(searchParams);
+
+    if (clauses.length > 0) {
+      const serialized = clauses.map(({ op, field, q }) => ({
+        op,
+        f: field,
+        q,
+      }));
+      next.set('adv_q', JSON.stringify(serialized));
+    } else {
+      next.delete('adv_q');
+    }
+
+    // Ensure a q param exists so searches run even with empty keyword queries.
+    if (!next.has('q')) {
+      next.set('q', query || '');
+    }
+
+    // Reset to page 1 when advanced clauses change
+    next.delete('page');
+
+    // Close the builder (gear icon is source of truth)
     next.delete('showAdvanced');
+
     setSearchParams(next);
   };
 
